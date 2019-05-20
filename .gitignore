@@ -1,0 +1,5 @@
+# Notepad++ backups #
+*.bak
+*.txt
+*.env
+*.http
