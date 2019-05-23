@@ -11,7 +11,11 @@ module.exports = class LoLRank {
         this.summonerName = queryString.summonername;
         this.region = queryString.region;
      //   this.shortRank = (queryString.short || process.env.shortRank);
-        this.showLp = (queryString.lp || process.env.showLP);
+        this.showLp = (process.env.showLP === "true");
+        if (typeof queryString["lp"] !== "undefined") {
+            this.showLp = (queryString.lp === "1")
+        }
+
         this.series = (queryString.series || process.env.series || 'WL-');
         this.apiKey = (process.env.apiKey);
         this.fullString =  (process.env.fullString || false);
@@ -92,12 +96,12 @@ module.exports = class LoLRank {
         var leaguePt = '';
         var series = this.summmonerLeague.getSeries(this.series);
         
-        if (this.showLp) {
+        if (this.showLp || this.showLp === "true") {
             leaguePt = this.summmonerLeague.getLeaguePoint();
         }
 
 
-        if (this.fullString) {
+        if (this.fullString === "true") {
             returnValue = `${ this.summonerName} est actuellement ${rankTiers}${leaguePt} ${series}`;
         } else {
             returnValue = `${rankTiers}${leaguePt} ${series}`

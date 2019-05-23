@@ -46,12 +46,6 @@ app.get('/', function (req, res) {
 });
 
 /*
-app.get('*', function(req, res) {
-    res.redirect('/')
-});
-*/
-
-/*
     League API
 
     get query&params in express etc. example.com/user/000000?sex=female
@@ -60,9 +54,7 @@ app.get('*', function(req, res) {
         const params = req.params; //params = {id:"000000"}
 
 })
-
 http://localhost:3000/rank/euw/name/bohe
-
 app.get('/rank/:region/name/:summonerName', async function (req, res) {
     res.send(req.params)
 })
