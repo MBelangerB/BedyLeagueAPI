@@ -11,11 +11,26 @@ const dotenv = require('dotenv');
     Init Module
 */
 var app = express();
+// var router = express.Router();
 
 /*
     Load Config
 */
 dotenv.config();
+
+/*
+    Custom Class
+*/
+const SummonerDTO = require('./class/SummonerDTO');
+const SummonerLeague = require('./class/SummonerLeague');
+const RiotUrlApi = require('./class/League/RiotUrlApi');
+// const RegionEndPoint = require('./class/League/RegionEndPoint');
+const LoLRank = require('./module/LoLRank')
+
+/*
+    Init Class
+*/
+
 
 /*
     Affectation APP
@@ -31,129 +46,78 @@ app.get('/', function (req, res) {
 });
 
 /*
+app.get('*', function(req, res) {
+    res.redirect('/')
+});
+*/
+
+/*
     League API
+
+    get query&params in express etc. example.com/user/000000?sex=female
+    app.get('/user/:id', function(req, res) {
+        const query = req.query;// query = {sex:"female"}
+        const params = req.params; //params = {id:"000000"}
+
+})
+
+http://localhost:3000/rank/euw/name/bohe
+
+app.get('/rank/:region/name/:summonerName', async function (req, res) {
+    res.send(req.params)
+})
+*/
+
+
+/*
+    Paramètre
+        summonername    : Nom de l'invocateur
+        region          : Serveur Riot
+
+        lp              : (facultatif) Afficher les LP
+        short           : (facultatif) Si possible, afficher le rang raccourcit. (Plat au lieu Platinium)
+        series          : (facultatif) Remplacer les symboles Win/Loose/Pending pour les séries
+
+        fullText        : (facultatif) Si Vrai (1) retourne la phrase complète. Sinon retourne seulement $rank ($lp) $series
 */
 app.get('/rank', async function (req, res) {
     try {
-        var info = {
-            summonerName: req.query.summonername,
-            region: req.query.region,
-            id: '',
-            apiKey: process.env.apiKey
-        }
-      if (process.env.DEBUG) { console.log(info) } 
-
-        // Validation
-        if (info.summonerName.trim().length === 0) {
-            res.send("Vous devez spécifier le nom de l'invocateur 'summonerName=TEST'")
+     //   console.time("ValidateQueryString")
+        var isValid = LoLRank.validateQueryString(req.query);
+        if (!isValid.isValid) {
+            res.json(isValid.errors)
             return;
         }
-        if (info.region.trim().length === 0) {
-            res.send("Vous devez spécifier la région 'region=NA1'")
+        var ranking = new LoLRank(req.query)
+  //      console.timeEnd("ValidateQueryString")
+
+        var result = await ranking.getSummonerDTO();
+        if (typeof result.statusCode !== 'undefined' && result.statusCode !== 200) {
+            res.json(result);
             return;
         }
 
-        // Obtenir les informations
-        var leagueUserData = await getSummonerInfo(info.region, info.summonerName, info.apiKey);
-        if (process.env.DEBUG) { console.info(`Summoner : ${JSON.stringify(leagueUserData)}`) } 
-        if (leagueUserData.status && leagueUserData.status.status_code !== 200) {      
-            throw new Error(`Une erreur s'est produite: ${leagueUserData.status.message} (${leagueUserData.status.status_code})`)
-        } else {
-            info.id = leagueUserData.id
+        var resultLeague = await ranking.getSummonerLeague();
+        if (typeof result.statusCode !== 'undefined' && resultLeague.statusCode !== 200) {
+            res.json(resultLeague);
+            return;
         }
+  //      if (process.env.DEBUG) { console.debug(ranking) }
 
-        var summonerLeagueData = await getLeagueUser(info.region, info.id, info.apiKey);
-        if (process.env.DEBUG) { console.info(`League : ${JSON.stringify(summonerLeagueData)}`) } 
+        /*
+       var t =  Regions.getTagByName('EUW');
+       var z =  Regions.isValid(req.query.region);
+        */
 
+        var returnValue = ranking.getReturnValue;
+        // console.log(returnValue);
+        res.send(returnValue);
 
-        // Préparer les informations sur le rank
-            var rankInfo = {
-                username: leagueUserData.name,
-                rank: summonerLeagueData[0].rank,
-                tier: summonerLeagueData[0].tier,
-                lp: summonerLeagueData[0].leaguePoints
-            }
-
-            if (summonerLeagueData[0].miniSeries) {
-                rankInfo.series = {
-                    wins: summonerLeagueData[0].miniSeries.wins,
-                    losses: summonerLeagueData[0].miniSeries.losses,
-                    target: summonerLeagueData[0].miniSeries.target,
-                    progress: summonerLeagueData[0].miniSeries.progress,
-                }
-            }
-
-
-            var returnTxt = '';
-            if (rankInfo.series) {
-                returnTxt = `${rankInfo.username} est actuellement  ${rankInfo.tier} ${rankInfo.rank}. (${rankInfo.lp} LP) - Promo: [${rankInfo.series.progress}]`;
-            } else {
-                returnTxt = `${rankInfo.username} est actuellement  ${rankInfo.tier} ${rankInfo.rank}. (${rankInfo.lp} LP)`;
-            } console.log(returnTxt);
-
-            res.send(returnTxt);
-     
     } catch (ex) {
         console.error(ex);
         res.send(ex);
     }
 });
-
-// Step 2
-function getLeagueUser(region, userid, apiKey) {
-    return new Promise(resolve => {
-        var summonerRankURL = `https://${region}.api.riotgames.com/lol/league/v4/entries/by-summoner/${userid}?api_key=${apiKey}`
-
-        console.log(` Traitement 2 : ${summonerRankURL}`)
-
-        https.get(summonerRankURL, (resp) => {
-            let ChunkData1 = '';
-
-            // A chunk of data has been recieved.
-            resp.on('data', (chunk) => {
-                ChunkData1 += chunk;
-            });
-
-            resp.on('end', () => {
-                leagueJson = JSON.parse(ChunkData1);
-                //  console.log(leagueJson);
-
-                resolve(leagueJson);
-            });
-
-        }).on("error", (err) => {
-            console.log("Error: " + err.message);
-        });
-
-    })
-}
-
-// Step 1
-function getSummonerInfo(region, username, apiKey) {
-    return new Promise(resolve => {
-        var UserAPIurl = `https://${region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/${username}?api_key=${apiKey}`;
-        var jsonData = '';
-
-        console.log(` Traitement 1 : ${UserAPIurl}`)
-
-        https.get(UserAPIurl, (resp) => {
-            let ChunkData = '';
-
-            resp.on('data', (chunk) => {
-                ChunkData += chunk;
-            });
-
-            resp.on('end', () => {
-                jsonData = JSON.parse(ChunkData)
-                resolve(jsonData);
-            });
-
-        }).on("error", (err) => {
-            console.log("Error: " + err.message);
-        });
-
-    })
-}
 
 /* Démarrage du serveur */
 app.listen(process.env.PORT, function () {
