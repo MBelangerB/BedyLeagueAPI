@@ -1,8 +1,8 @@
 /*
     Import Data
 */
-const http = require('http');
-const https = require('https');
+//const http = require('http');
+//const https = require('https');
 const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
@@ -21,16 +21,16 @@ dotenv.config();
 /*
     Custom Class
 */
-const SummonerDTO = require('./class/SummonerDTO');
-const SummonerLeague = require('./class/SummonerLeague');
-const RiotUrlApi = require('./class/League/RiotUrlApi');
-// const RegionEndPoint = require('./class/League/RegionEndPoint');
+//const SummonerDTO = require('./class/SummonerDTO');
+//const SummonerLeague = require('./class/SummonerLeague');
+//const RiotUrlApi = require('./class/League/RiotUrlApi');
+const RegionalEndPoint = require('./class/League/RegionEndPoint');
 const LoLRank = require('./module/LoLRank')
 
 /*
     Init Class
 */
-
+var Regions = new RegionalEndPoint()
 
 /*
     Affectation APP
@@ -84,22 +84,27 @@ app.get('/rank', async function (req, res) {
   //      console.timeEnd("ValidateQueryString")
 
         var result = await ranking.getSummonerDTO();
-        if (typeof result.statusCode !== 'undefined' && result.statusCode !== 200) {
+        if (typeof result.statusCode !== 'undefined' && result.statusCode === '200-1') {
+            res.json(result.statusMessage);
+            return;
+        } else if (typeof result.statusCode !== 'undefined' && result.statusCode !== 200) {
             res.json(result);
             return;
         }
 
         var resultLeague = await ranking.getSummonerLeague();
-        if (typeof result.statusCode !== 'undefined' && resultLeague.statusCode !== 200) {
+        if (typeof resultLeague.statusCode !== 'undefined' && resultLeague.statusCode === '200-1') {
+            res.json(resultLeague.statusMessage);
+            return;
+        } else if (typeof result.statusCode !== 'undefined' && resultLeague.statusCode !== 200) {
             res.json(resultLeague);
             return;
         }
   //      if (process.env.DEBUG) { console.debug(ranking) }
-
-        /*
-       var t =  Regions.getTagByName('EUW');
-       var z =  Regions.isValid(req.query.region);
-        */
+  
+        // Permet obtenir la Plateform via la region
+       // var t =  Regions.getTagByName('EUW');
+   
 
         var returnValue = ranking.getReturnValue;
         // console.log(returnValue);

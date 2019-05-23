@@ -1,42 +1,84 @@
 module.exports = class RegionalEndPoint { 
     constructor() {
-        this.region  = {
-            BR	    :'BR1',     //  br1.api.riotgames.com
-            EUNE	:'EUN1',    //  eun1.api.riotgames.com
-            EUW	    :'EUW1',    //  euw1.api.riotgames.com
-            JP	    :'JP1',     //  jp1.api.riotgames.com
-            KR	    :'KR',      //  kr.api.riotgames.com
-            LAN	    :'LA1',     //  la1.api.riotgames.com
-            LAS	    :'LA2',     //  la2.api.riotgames.com
-            NA	    :'NA1|NA',  //	na1.api.riotgames.com
-            OCE	    :'OC1',     //  oc1.api.riotgames.com
-            TR	    :'TR1',     //  tr1.api.riotgames.com
-            RU	    :'RU',      //  ru.api.riotgames.com
-            PBE	    :'PBE1',    //  pbe1.api.riotgames.com
+        this.region  = { 
+            "endpoint": [
+            {
+                "region" : "BR",
+                "platform" : "BR1",
+                "host" : "br1.api.riotgames.com"
+            },
+            {
+                "region" : "EUNE",
+                "platform" : "EUN1",
+                "host" : "eun1.api.riotgames.com"
+            },
+            {
+                "region" : "EUW",
+                "platform" : "EUW1",
+                "host" : "euw1.api.riotgames.com"
+            },
+            {
+                "region" : "JP",
+                "platform" : "JP1",
+                "host" : "jp1.api.riotgames.com"
+            },
+            {
+                "region" : "KR",
+                "platform" : "KR",
+                "host" : "kr.api.riotgames.com"
+            },
+            {
+                "region" : "LAN",
+                "platform" : "LA1",
+                "host" : "la1.api.riotgames.com"
+            },
+            {
+                "region" : "LAS",
+                "platform" : "LA2",
+                "host" : "la2.api.riotgames.com"
+            },
+            {
+                "region" : "NA",
+                "platform" : "NA1", // , NA *
+                "host" : "na1.api.riotgames.com"
+            },
+            {
+                "region" : "OCE",
+                "platform" : "OC1",
+                "host" : "oc1.api.riotgames.com"
+            },
+            {
+                "region" : "TR",
+                "platform" : "TR1",
+                "host" : "tr1.api.riotgames.com"
+            },
+            {
+                "region" : "RU",
+                "platform" : "RU",
+                "host" : "ru.api.riotgames.com"
+            },
+            {
+                "region" : "PBE",
+                "platform" : "PBE1",
+                "host" : "pbe1.api.riotgames.com"
             }
+        ]}
     }
 
     get getRegion() {
         return this.region;
     }
-
-    isValid(region) {
-      return  this.region(region);
+    get getEndPoint() {
+        return this.region.endpoint;
     }
 
-    getTagByName(tag) {
-        tag = tag.toUpperCase();
-        var keys = Object.keys(this.region);
-        var values = Object.values(this.region);
-
-        var i = 0;
-        for (i = 0; i < keys.length; i++) { 
-            if (keys[i] === tag) {
-                break;
-            }
-        }
-
-        if (i === keys.length) { return null; }
-        return values[i];
+    getTagByName(region) {
+        var endpoint = this.getEndPoint;
+        for (var i in endpoint) {
+            if (endpoint[i].region === region) {
+                return endpoint[i].platform;
+            } 
+          }
+          return null;
     }
 }

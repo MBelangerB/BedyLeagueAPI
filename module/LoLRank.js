@@ -19,6 +19,9 @@ module.exports = class LoLRank {
         this.series = (queryString.series || process.env.series || 'WL-');
         this.apiKey = (process.env.apiKey);
         this.fullString =  (process.env.fullString || false);
+        if (typeof queryString["fullString"] !== "undefined") {
+            this.fullString = (queryString.fullString === "1")
+        }
 
         var DTO = new SummonerDTO(this);
         var League = new SummonerLeague();
@@ -35,10 +38,18 @@ module.exports = class LoLRank {
             // console.log(result)
         }, function (error) {
             if (typeof error.message === "undefined") {
+                // UseCase : Invocateur n'existe pas.
+                if (error.statusMessage === "Not Found") {
+                    err = {
+                        statusCode : '200-1',
+                        statusMessage : "L'invocateur n'existe pas."
+                    } 
+                } else {
                 err = {
                     statusCode : error.statusCode,
                     statusMessage : error.statusMessage
                 } 
+            }
             } else {
                 err = {
                     statusCode : '',
@@ -60,7 +71,15 @@ module.exports = class LoLRank {
         var league;
         var err = { };
         await this.summmonerLeague.getLeagueInfo(this.summmonerDTO.id, this.region, this.apiKey).then(function (result) {
-            league = result[0];
+            if (result.length === 0) {
+                // UseCase : Pas de données de league donc pas de classement
+                err = {
+                    statusCode :"200-1",
+                    statusMessage : "Unranked"
+                } 
+            } else {
+                league = result[0];
+            }
         }, function (error) {
             if (typeof error.message === "undefined") {
                 err = {
@@ -90,6 +109,18 @@ module.exports = class LoLRank {
     }
 
     get getReturnValue() {
+
+        //TODO: Si invocateur existe mais pas de résultat retourner UNRANKED
+        /*
+            TODO: Gérer placement en cours
+
+                if($lang == 'fr') {
+            $league[$summonerId] = htmlspecialchars("Les 10 parties de placements ne sont pas encore terminé");
+        }
+        else {
+            $league[$summonerId] = "You need to finish the 10 placement games to get the ranking";
+        }
+        */
         var returnValue = '';
 
         var rankTiers = this.summmonerLeague.getTiersRank();
@@ -135,6 +166,16 @@ module.exports = class LoLRank {
             }
             if (typeof queryString.region === "undefined" || queryString.region.trim().length === 0) {
                 err.push("Le paramètre 'region' est obligatoire.");
+            }
+        }
+
+        // https://developer.riotgames.com/getting-started.html
+        //  Validating Calls (^[0-9\\p{L} _\\.]+$)
+        if (typeof queryString.summonername !== "undefined" && queryString.summonername.trim().length >= 0) {
+            var re = new RegExp('^[0-9 _.\\w]+$', 'giu');
+            var summonerName = queryString.summonername;
+            if (!re.test(summonerName)) {
+                err.push("Le paramètre 'summonerName' est invalide.");
             }
         }
 
