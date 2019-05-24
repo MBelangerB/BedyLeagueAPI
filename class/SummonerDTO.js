@@ -13,7 +13,6 @@ module.exports = class SummonerDTO {
         this.region = '*';
 
         if (rank) {
-        //    this.LoLRank = rank;
             this.name = rank.summonerName;
             this.region = rank.region;
         }

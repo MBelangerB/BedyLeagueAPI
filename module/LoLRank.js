@@ -1,5 +1,9 @@
 const SummonerDTO = require('../class/SummonerDTO');
 const SummonerLeague = require('../class/SummonerLeague');
+const CacheService = require('../module/Cache.Service');
+
+var ttl = 60 * 60 * 1; // cache for 1 Hour
+var cache = new CacheService(ttl); // Create a new cache service instance
 
 module.exports = class LoLRank {
     constructor(queryString) {
@@ -25,8 +29,49 @@ module.exports = class LoLRank {
 
         var DTO = new SummonerDTO(this);
         var League = new SummonerLeague();
-        this.summmonerDTO = DTO
-        this.summmonerLeague = League
+        this.summmonerDTO = DTO;
+        this.summmonerLeague = League;
+    }
+
+    getCacheKey() {
+        return `${this.summonerName}-${this.region}`
+    }
+
+    async GetCacheDTO() {
+        var key = this.getCacheKey();
+        // https://medium.com/@danielsternlicht/caching-like-a-boss-in-nodejs-9bccbbc71b9b
+       var cacheInfo = cache.getAsync(key);
+       var result;
+
+       // var a = this;
+
+         if (cacheInfo === null) {
+            cacheInfo = await this.getSummonerDTO()
+            cache.setCacheValue(key, cacheInfo);
+         } else {
+            cacheInfo.then(function(value) {
+                result = value;
+/*
+                if (result) {
+                   a.summmonerDTO.init(result.name, result.id, result.accountId, result.summonerLevel, result.profileIconId, this.region)
+                    return a.summmonerDTO;
+                 }
+                 */
+                // this.summmonerDTO = value;
+             })     
+         }
+
+         return (result || cacheInfo);
+        /*
+        cache.getAsync(key, async function() {
+           var res = await this.getSummonerDTO().then(function(r) {
+                var t = "a"
+           });
+           return res;
+        }).then((CacheResult) => {
+           return CacheResult;
+        });
+        */
     }
 
     // Step 1
@@ -35,7 +80,6 @@ module.exports = class LoLRank {
         var err = { };
         await this.summmonerDTO.getDTO(this.summonerName, this.region, this.apiKey).then(function (result) {
             dto = result;
-            // console.log(result)
         }, function (error) {
             if (typeof error.message === "undefined") {
                 // UseCase : Invocateur n'existe pas.
@@ -59,7 +103,7 @@ module.exports = class LoLRank {
         });
 
         if (dto) {
-            this.summmonerDTO.init(dto.name, dto.id, dto.accountId, dto.summonerLevel, dto.profileIconId, this.region)
+            this.summmonerDTO.init(dto.name, dto.id, dto.accountId, dto.summonerLevel, dto.profileIconId, this.region);
             return this.summmonerDTO;
         } else {
             return err;
