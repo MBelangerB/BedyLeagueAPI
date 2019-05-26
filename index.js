@@ -86,58 +86,59 @@ app.get('/rank', async function (req, res) {
         if (!isValid.isValid) {
             res.json(isValid.errors)
 
-            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running validateQueryString");}
+            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running validateQueryString"); }
             return;
         }
         var ranking = new LoLRank(req.query)
         if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running validateQueryString"); }
 
-        if (process.env.LOG_EXECUTION_TIME) { console.time("Running getSummonerDTO");}
-                // Cache
-                var result = await ranking.GetCacheDTO();
-                if (result && ranking.summmonerDTO.id === "") {
-                    ranking.summmonerDTO = result;
-                }
-                //
-                
-     //   var result = await ranking.getSummonerDTO();
+        if (process.env.LOG_EXECUTION_TIME) { console.time("Running getSummonerDTO"); }
+        // Cache
+        var result = await ranking.GetCacheDTO(); // anciennement  await ranking.getSummonerDTO();
+        if (result && ranking.summmonerDTO.id === "") {
+            ranking.summmonerDTO = result;
+        }
+
         if (typeof result.statusCode !== 'undefined' && result.statusCode === '200-1') {
             res.json(result.statusMessage);
 
-            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerDTO");}
+            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerDTO"); }
             return;
         } else if (typeof result.statusCode !== 'undefined' && result.statusCode !== 200) {
             res.json(result);
 
-            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerDTO");}
+            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerDTO"); }
             return;
         }
-        if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerDTO");}
+        if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerDTO"); }
 
 
-        if (process.env.LOG_EXECUTION_TIME) { console.time("Running getSummonerLeague");}
-        var resultLeague = await ranking.getSummonerLeague();
+        if (process.env.LOG_EXECUTION_TIME) { console.time("Running getSummonerLeague"); }
+        // Cache
+        var resultLeague = await ranking.getCacheLeague(); // await ranking.getSummonerLeague();
+        if (resultLeague && ranking.summmonerLeague.rank === "") {
+            ranking.summmonerLeague = resultLeague;
+        }
+
         if (typeof resultLeague.statusCode !== 'undefined' && resultLeague.statusCode === '200-1') {
             res.json(resultLeague.statusMessage);
-            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerLeague");}
+            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerLeague"); }
             return;
         } else if (typeof result.statusCode !== 'undefined' && resultLeague.statusCode !== 200) {
             res.json(resultLeague);
-            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerLeague");}
+            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerLeague"); }
             return;
         }
-        if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerLeague");}
+        if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerLeague"); }
 
-  //      if (process.env.DEBUG) { console.debug(ranking) }
-  
-        // Permet obtenir la Plateform via la region
-       // var t =  Regions.getTagByName('EUW');
-   
-       if (process.env.LOG_EXECUTION_TIME) { console.time("Running getReturnValue");}
+           // Permet obtenir la Plateform via la region
+        // var t =  Regions.getTagByName('EUW');
+
+        if (process.env.LOG_EXECUTION_TIME) { console.time("Running getReturnValue"); }
         var returnValue = ranking.getReturnValue;
         // console.log(returnValue);
         res.send(returnValue);
-        if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getReturnValue");}
+        if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getReturnValue"); }
     } catch (ex) {
         console.error(ex);
         res.send(ex);

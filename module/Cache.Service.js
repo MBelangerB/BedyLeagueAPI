@@ -13,13 +13,13 @@ module.exports = class Cache {
       return Promise.resolve(value);
     }
 
-    return storeFunction().then((result) => {
+    return storeFunction().then(function (result) {
       this.cache.set(key, result);
       return result;
     });
   }
 
-   getAsync(key) {
+  getAsync(key) {
     const value = this.cache.get(key);
     if (value) {
       return Promise.resolve(value);
