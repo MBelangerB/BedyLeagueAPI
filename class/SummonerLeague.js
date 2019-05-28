@@ -43,6 +43,11 @@ module.exports = class SummonerLeague {
         }
     }
 
+    getRatio()  {
+        var rates = (this.wins / (this.wins + this.losses) * 100);
+        return parseFloat(rates).toFixed(1);
+    }
+
     initSeries(miniSeries) {
         this.series = {
             enabled: true,
@@ -67,7 +72,7 @@ module.exports = class SummonerLeague {
             var cLoose = charSerie[1]; // L
             var cPending = charSerie[2]; // N
 
-            var series = `[${this.series.progress}]`;
+            var series = ` [${this.series.progress}]`;
             series = series.replaceAll('L', cLoose).replaceAll('W', cWin).replaceAll('N', cPending);
             return series;
         } else {

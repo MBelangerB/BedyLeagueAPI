@@ -17,7 +17,7 @@ module.exports = class LoLRank {
 
         this.summonerName = queryString.summonername;
         this.region = queryString.region;
-        this.showLp = (process.env.showLP === "true");
+        this.showLp = (process.env.showLP.toLocaleLowerCase() === "true");
         if (typeof queryString["lp"] !== "undefined") {
             this.showLp = (queryString.lp === "1")
         }
@@ -28,7 +28,11 @@ module.exports = class LoLRank {
         if (typeof queryString["fullString"] !== "undefined") {
             this.fullString = (queryString.fullString === "1")
         }
-
+        this.showWinRate = (process.env.showWinRate.toLocaleLowerCase() === "true"); 
+        if (typeof queryString["winrate"] !== "undefined") {
+            this.showWinRate = (queryString.winrate === "1")
+        }
+ 
         var DTO = new SummonerDTO(this);
         var League = new SummonerLeague();
         this.summmonerDTO = DTO;
@@ -182,17 +186,22 @@ module.exports = class LoLRank {
 
         var rankTiers = this.summmonerLeague.getTiersRank();
         var leaguePt = '';
+        var winRate = '';
         var series = this.summmonerLeague.getSeries(this.series);
 
         if (this.showLp || this.showLp === "true") {
             leaguePt = this.summmonerLeague.getLeaguePoint();
         }
 
+        if (this.showWinRate || this.showWinRate === "true") {
+            winRate = ` - ${this.summmonerLeague.getRatio()} % (${this.summmonerLeague.wins}W/${this.summmonerLeague.losses}L)`;
+        }
+
 
         if (this.fullString === "true") {
-            returnValue = `${this.summonerName} est actuellement ${rankTiers}${leaguePt} ${series}`;
+            returnValue = `${this.summonerName} est actuellement ${rankTiers}${leaguePt}${series}${winRate}`;
         } else {
-            returnValue = `${rankTiers}${leaguePt} ${series}`
+            returnValue = `${rankTiers}${leaguePt}${series}${winRate}`
         }
 
         return returnValue.trim();

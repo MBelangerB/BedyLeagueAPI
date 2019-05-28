@@ -1,4 +1,3 @@
-// import NodeCache from 'node-cache';
 const NodeCache = require('node-cache');
 
 module.exports = class Cache {
