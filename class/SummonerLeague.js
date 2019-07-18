@@ -1,5 +1,4 @@
-const RiotUrlApi = require('./League/RiotUrlApi');
-var request = require('request');
+// const RiotUrlApi = require('./League/RiotUrlApi');
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -25,7 +24,7 @@ module.exports = class SummonerLeague {
         }
     }
 
-    init(type, hotStreak, wins, losses, rank, tier, lp) {
+    init(type, hotStreak, wins, losses, rank, tier, lp, queueType) {
         this.queueType = type;
         this.hotStreak = hotStreak;
         this.wins = wins;
@@ -80,33 +79,4 @@ module.exports = class SummonerLeague {
         }
     }
 
-    async getLeagueInfo(userId, region, apiKey) {
-        return new Promise(function (resolve, reject) {
-            var RiotUrl = new RiotUrlApi();
-
-            // TODO: Réadapter exclue param passé par header
-            var options = {
-                url: `https://${region}.api.riotgames.com/lol/league/v4/entries/by-summoner/${userId}`,
-                headers: {
-                    "Origin": null,
-                    "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
-                    "X-Riot-Token": apiKey,
-                    "Accept-Language": "fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0"
-                },
-                json: true
-            };
-
-            request.get(options, function (err, respo, jsonData) {
-                if (err) {
-                    reject(err);
-                } else if (respo.statusCode === 200) {
-                    resolve(jsonData);
-                } else {
-                    reject(respo);
-                }
-            });
-
-        });
-    }
 }

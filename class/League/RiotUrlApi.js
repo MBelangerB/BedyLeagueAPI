@@ -1,4 +1,4 @@
-
+// NA
 module.exports = class RiotUrlApi {
     constructor() {
         this.Riot_V4_API = {
@@ -8,8 +8,13 @@ module.exports = class RiotUrlApi {
                 by_name: `/lol/summoner/v4/summoners/by-name/{summonerName}`
             },
             league: {
-                by_summoner: `/lol/league/v4/entries/by-summoner/{userid}`,
+                by_summoner: `/lol/league/v4/entries/by-summoner/{encryptedSummonerId}`,
                 leagues: `/lol/league/v4/leagues/{id}`
+            },
+            spectator: {
+                activeGame: {
+                    by_summoner: `/spectator/v4/active-games/by-summoner/{encryptedSummonerId}`
+                }
             }
         }
     }
@@ -22,11 +27,14 @@ module.exports = class RiotUrlApi {
     getMainUrl(region) {
         return this.Riot_V4_API.mainUrl.replace("{region}", region)
     }
-    getSummonerByName(summonername, apiKey) {
-        return this.Riot_V4_API.summoners.by_name.replace("{summonerName}", summonername)
+    getSummonerByName(summonerName, apiKey) {
+        return this.Riot_V4_API.summoners.by_name.replace("{summonerName}", summonerName)
     }
-    getLeagueByUserId(userId, apiKey) {
-        return this.Riot_V4_API.league.by_summoner.replace("{id}", userId)
+    getLeagueByUserId(encryptedSummonerId, apiKey) {
+        return this.Riot_V4_API.league.by_summoner.replace("{encryptedSummonerId}", encryptedSummonerId)
+    }
+    getCurrentGameByUserId(encryptedSummonerId, apiKey) {
+        return  this.Riot_V4_API.spectator.activeGame.by_summoner.replace("{encryptedSummonerId}", encryptedSummonerId)
     }
 }
 

@@ -73,72 +73,68 @@ app.get('/rank/:region/name/:summonerName', async function (req, res) {
         lp              : (facultatif) Afficher les LP
         short           : (facultatif) Si possible, afficher le rang raccourcit. (Plat au lieu Platinium)
         series          : (facultatif) Remplacer les symboles Win/Loose/Pending pour les séries
+        queueType           : (facultatif) Permet de spécifier le type de queue qu'on désire valider.
 
-        fullText        : (facultatif) Si Vrai (1) retourne la phrase complète. Sinon retourne seulement $rank ($lp) $series
 */
 
 app.get('/rank', async function (req, res) {
     try {
         if (process.env.DEBUG) { console.log(`  Execution pour : ${JSON.stringify(req.query)}`) }
+        if (process.env.LOG_EXECUTION_TIME) { console.time("Before Execute validateQueryString"); }
 
-        if (process.env.LOG_EXECUTION_TIME) { console.time("Running validateQueryString"); }
+        // Valider les paramètres
         var isValid = LoLRank.validateQueryString(req.query);
         if (!isValid.isValid) {
             res.json(isValid.errors)
-
-            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running validateQueryString"); }
+            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("After executing validateQueryString"); }
             return;
-        }
+        }    
+        if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("After executing validateQueryString"); }
         var ranking = new LoLRank(req.query)
-        if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running validateQueryString"); }
-
-        if (process.env.LOG_EXECUTION_TIME) { console.time("Running getSummonerDTO"); }
+          
         // Cache
-        var result = await ranking.GetCacheDTO(); // anciennement  await ranking.getSummonerDTO();
-        if (result && ranking.summmonerDTO.id === "") {
+        if (process.env.LOG_EXECUTION_TIME) { console.time("Before Execute GetCacheDTO"); }
+        var result = await ranking.GetCacheDTO(); 
+        if (result && typeof result.statusCode === "undefined" && ranking.summmonerDTO.id === "") {
             ranking.summmonerDTO = result;
+            if (result) { 
+                ranking.ReqQuery.setSummonerDTO(result);
+            }
         }
+        if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("After executing GetCacheDTO"); } 
 
+        // Gestion des cas erreur
         if (typeof result.statusCode !== 'undefined' && result.statusCode === '200-1') {
             res.json(result.statusMessage);
-
-            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerDTO"); }
             return;
         } else if (typeof result.statusCode !== 'undefined' && result.statusCode !== 200) {
             res.json(result);
-
-            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerDTO"); }
             return;
         }
-        if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerDTO"); }
 
 
-        if (process.env.LOG_EXECUTION_TIME) { console.time("Running getSummonerLeague"); }
+        if (process.env.LOG_EXECUTION_TIME) { console.time("Before execute getCacheLeague"); }
         // Cache
-        var resultLeague = await ranking.getCacheLeague(); // await ranking.getSummonerLeague();
-        if (resultLeague && ranking.summmonerLeague.rank === "") {
+        var resultLeague = await ranking.getCacheLeague();
+        if (resultLeague && ranking.summmonerLeague.length === 0) {
             ranking.summmonerLeague = resultLeague;
         }
 
         if (typeof resultLeague.statusCode !== 'undefined' && resultLeague.statusCode === '200-1') {
             res.json(resultLeague.statusMessage);
-            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerLeague"); }
             return;
         } else if (typeof result.statusCode !== 'undefined' && resultLeague.statusCode !== 200) {
             res.json(resultLeague);
-            if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerLeague"); }
             return;
         }
-        if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getSummonerLeague"); }
+        if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("After executing getCacheLeague"); }
 
-           // Permet obtenir la Plateform via la region
-        // var t =  Regions.getTagByName('EUW');
+    
 
-        if (process.env.LOG_EXECUTION_TIME) { console.time("Running getReturnValue"); }
-        var returnValue = ranking.getReturnValue;
-        // console.log(returnValue);
+        if (process.env.LOG_EXECUTION_TIME) { console.time("Before execute getReturnValue"); }
+        var returnValue = ranking.getReturnValue(ranking.castQueueType());
         res.send(returnValue);
-        if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("Running getReturnValue"); }
+        if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("After execute getReturnValue"); }
     } catch (ex) {
         console.error(ex);
         res.send(ex);

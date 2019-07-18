@@ -2,11 +2,17 @@ const SummonerDTO = require('../class/SummonerDTO');
 const SummonerLeague = require('../class/SummonerLeague');
 const CacheService = require('../module/Cache.Service');
 
+var ReqQuery = require(`./RiotQuery`);
+
+
 var ttDTO = 60 * 60 * 1; // cache for 1 Hour
 var ttlLeague = 60 * 1; // cache for 1 mn
 
 var cache = new CacheService(ttDTO); // Create a new cache service instance
 var LeagueCache = new CacheService(ttlLeague); // Create a new cache service instance
+
+
+
 
 module.exports = class LoLRank {
     constructor(queryString) {
@@ -23,195 +29,192 @@ module.exports = class LoLRank {
         }
 
         this.series = (queryString.series || process.env.series || 'WL-');
-        this.apiKey = (process.env.apiKey);
+
         this.fullString = (process.env.fullString || false);
         if (typeof queryString["fullString"] !== "undefined") {
             this.fullString = (queryString.fullString === "1")
         }
-        this.showWinRate = (process.env.showWinRate.toLocaleLowerCase() === "true"); 
+        this.showWinRate = (process.env.showWinRate.toLocaleLowerCase() === "true");
         if (typeof queryString["winrate"] !== "undefined") {
             this.showWinRate = (queryString.winrate === "1")
         }
- 
-        var DTO = new SummonerDTO(this);
-        var League = new SummonerLeague();
-        this.summmonerDTO = DTO;
-        this.summmonerLeague = League;
-    }
 
-    getCacheKey() {
-        return `${this.summonerName}-${this.region}`
-    }
-
-
-    async getCacheLeague() {
-        var key = this.getCacheKey();
-        var cacheInfo = LeagueCache.getAsync(key);
-        var result;
-
-        if (cacheInfo === null) {
-            // TODO: Gérer cas erreur ne pas mettre en cache
-            cacheInfo = await this.getSummonerLeague();
-            if (typeof cacheInfo.statusCode !== 'undefined' && cacheInfo.statusCode !== 200) {
-
-            } else {
-                LeagueCache.setCacheValue(key, cacheInfo);
-            }
-        } else {
-            cacheInfo.then(function (value) {
-                result = value;
-            })
+        this.queueType = process.env.queueType.toLocaleLowerCase();
+        if (typeof queryString["queueType"] !== "undefined" && this.isValidQueueType(queryString["queueType"])) {
+            this.queueType = queryString["queueType"].toLocaleLowerCase();
+        }
+        if (typeof this.queueType === "undefined" || this.isValidQueueType(this.queueType) === false) {
+            this.queueType = "solo5"
         }
 
-        return (result || cacheInfo);
+        var DTO = new SummonerDTO(this);
+        var reqQuery = new ReqQuery(this.region, this.summonerName);
+
+        this.ReqQuery = reqQuery;
+        this.summmonerDTO = DTO;
+        this.summmonerLeague = [];
     }
 
+
+
+    // https://developer.riotgames.com/ranked-info.html
+    // Valider si la queue est accepté
+    isValidQueueType(type) {
+        var valid = false;
+        switch (type) {
+            case 'solo5':
+                valid = true;
+                break;
+            case 'tft':
+                valid = true;
+                break;
+            case 'team5':
+            case 'team3':
+            case 'flex5':
+                valid = false;
+                break
+        }
+        return valid;
+    }
+
+    castQueueType() {
+        if (typeof this.queueType === "undefined" || this.isValidQueueType(this.queueType) === false) {
+            this.queueType = "solo5"
+        }
+        var riotQueue = "";
+
+        switch (this.queueType) {
+            case 'solo5':
+                riotQueue = "RANKED_SOLO_5x5";
+                break;
+            case 'tft':
+                riotQueue = "RANKED_TFT";
+                break;
+            case 'team5':
+            case 'team3':
+            case 'flex5':
+                riotQueue = "NA";
+                break;
+        }
+
+        return riotQueue
+    }
+
+
+
+    getCacheKey() {
+        return `${this.summonerName}-${this.region}`; // -${this.queueType}`
+    }
+
+
+    // Step 1
     async GetCacheDTO() {
         // https://medium.com/@danielsternlicht/caching-like-a-boss-in-nodejs-9bccbbc71b9b
         var key = this.getCacheKey();
         var cacheInfo = cache.getAsync(key);
         var result;
 
-        // var a = this;
-
         if (cacheInfo === null) {
             // TODO: Gérer cas erreur ne pas mettre en cache
-            cacheInfo = await this.getSummonerDTO();
-            if (typeof cacheInfo.statusCode !== 'undefined' && cacheInfo.statusCode !== 200) {
+            var resultCode = await this.ReqQuery.getSummonerData();
+            if (resultCode === 200) {
+                cacheInfo = await this.ReqQuery.summonerDTO;
+            }
+
+            if (!cacheInfo || typeof cacheInfo === 'undefined') {
+                result = this.ReqQuery.result.err;
 
             } else {
+                this.summmonerDTO.init(cacheInfo.name, cacheInfo.id, cacheInfo.accountId, cacheInfo.summonerLevel,
+                                        cacheInfo.profileIconId, this.region);
+
                 cache.setCacheValue(key, cacheInfo);
             }
         } else {
             cacheInfo.then(function (value) {
                 result = value;
             })
+         
         }
 
         return (result || cacheInfo);
     }
 
-    // Step 1
-    async getSummonerDTO() {
-        var dto;
-        var err = {};
-        await this.summmonerDTO.getDTO(this.summonerName, this.region, this.apiKey).then(function (result) {
-            dto = result;
-        }, function (error) {
-            if (typeof error.message === "undefined") {
-                // UseCase : Invocateur n'existe pas.
-                if (error.statusMessage === "Not Found") {
-                    err = {
-                        statusCode: '200-1',
-                        statusMessage: "L'invocateur n'existe pas."
-                    }
-                } else {
-                    err = {
-                        statusCode: error.statusCode,
-                        statusMessage: error.statusMessage
-                    }
-                }
-            } else {
-                err = {
-                    statusCode: '',
-                    statusMessage: error.message
-                }
-            }
-        });
-
-        if (dto) {
-            this.summmonerDTO.init(dto.name, dto.id, dto.accountId, dto.summonerLevel, dto.profileIconId, this.region);
-            return this.summmonerDTO;
-        } else {
-            return err;
-        }
-    }
-
     // Step 2
-    async getSummonerLeague() {
-        var league;
-        var err = {};
-        await this.summmonerLeague.getLeagueInfo(this.summmonerDTO.id, this.region, this.apiKey).then(function (result) {
-            if (result.length === 0) {
-                // UseCase : Pas de données de league donc pas de classement
-                err = {
-                    statusCode: "200-1",
-                    statusMessage: "Unranked"
-                }
+    async getCacheLeague() {
+        var key = this.getCacheKey();
+        var cacheInfo = LeagueCache.getAsync(key);
+        var result;
+
+        var tmpCacheInfo;
+
+        if (cacheInfo === null) {
+            // TODO: Gérer cas erreur ne pas mettre en cache
+            var resultCode = await this.ReqQuery.getSummonerLeague();
+            if (resultCode === 200) {
+                cacheInfo = await this.ReqQuery.summonerLeague;
+            }
+
+            if (!cacheInfo || typeof cacheInfo === 'undefined') {
+                result = this.ReqQuery.result.err;
+
             } else {
-                league = result[0];
-            }
-        }, function (error) {
-            if (typeof error.message === "undefined") {
-                err = {
-                    statusCode: error.statusCode,
-                    statusMessage: error.statusMessage
-                }
-            } else {
-                err = {
-                    statusCode: '',
-                    statusMessage: error.message
-                }
-            }
+                tmpCacheInfo = [];
 
-        });
+                cacheInfo.forEach(league => {
+                    var sLeague = new SummonerLeague();
+                    sLeague.init(league.queueType, league.hotStreak, league.wins,
+                        league.losses, league.rank, league.tier, league.leaguePoints);
 
-        if (league) {
-            this.summmonerLeague.init(league.queueType, league.hotStreak, league.wins, league.losses, league.rank, league.tier, league.leaguePoints);
-
-            if (typeof league.miniSeries !== "undefined") {
-                this.summmonerLeague.initSeries(league.miniSeries)
+                    if (typeof league.miniSeries !== "undefined") {
+                        sLeague.initSeries(league.miniSeries)
+                    }
+                    tmpCacheInfo.push(sLeague)
+                });
+                this.summmonerLeague = tmpCacheInfo;
+    
+               LeagueCache.setCacheValue(key, tmpCacheInfo);  
             }
 
-            return this.summmonerLeague;
         } else {
-            return err;
+            cacheInfo.then(function (value) {
+                result = value;
+            })
         }
+
+        return (result || tmpCacheInfo || cacheInfo);
     }
 
-    get getReturnValue() {
-
-        //TODO: Si invocateur existe mais pas de résultat retourner UNRANKED
-        /*
-            TODO: Gérer placement en cours
-
-                if($lang == 'fr') {
-            $league[$summonerId] = htmlspecialchars("Les 10 parties de placements ne sont pas encore terminé");
-        }
-        else {
-            $league[$summonerId] = "You need to finish the 10 placement games to get the ranking";
-        }
-        */
+ 
+    getReturnValue(type) {
         var returnValue = '';
 
-        var rankTiers = this.summmonerLeague.getTiersRank();
-        var leaguePt = '';
-        var winRate = '';
-        var series = this.summmonerLeague.getSeries(this.series);
+        var league = this.summmonerLeague.find(league => league.queueType === type);
 
-        if (this.showLp || this.showLp === "true") {
-            leaguePt = this.summmonerLeague.getLeaguePoint();
+        if (league) {
+            var rankTiers = league.getTiersRank();
+            var leaguePt = '';
+            var winRate = '';
+            var series = league.getSeries(this.series);
+    
+            if (this.showLp || this.showLp === "true") {
+                leaguePt = league.getLeaguePoint();
+            }
+    
+            if (this.showWinRate || this.showWinRate === "true") {
+                winRate = ` - ${league.getRatio()} % (${league.wins}W/${league.losses}L)`;
+            }
+    
+    
+            if (this.fullString === "true") {
+                returnValue = `${this.summonerName} est actuellement ${rankTiers}${leaguePt}${series}${winRate}`;
+            } else {
+                returnValue = `${rankTiers}${leaguePt}${series}${winRate}`
+            }
         }
-
-        if (this.showWinRate || this.showWinRate === "true") {
-            winRate = ` - ${this.summmonerLeague.getRatio()} % (${this.summmonerLeague.wins}W/${this.summmonerLeague.losses}L)`;
-        }
-
-
-        if (this.fullString === "true") {
-            returnValue = `${this.summonerName} est actuellement ${rankTiers}${leaguePt}${series}${winRate}`;
-        } else {
-            returnValue = `${rankTiers}${leaguePt}${series}${winRate}`
-        }
+   
 
         return returnValue.trim();
-        /*
-                if (info.rankInfo.series) {
-                    returnTxt = `${info.rankInfo.username} est actuellement  ${info.rankInfo.tier} ${info.rankInfo.rank}. (${info.rankInfo.lp} LP) - Promo: [${info.rankInfo.series.progress}]`;
-                } else {
-                    returnTxt = `${info.rankInfo.username} est actuellement  ${info.rankInfo.tier} ${info.rankInfo.rank}. (${info.rankInfo.lp} LP)`;
-                } 
-        */
     }
 
 
