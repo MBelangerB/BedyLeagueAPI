@@ -187,7 +187,7 @@ module.exports = class RiotQuery {
         return new Promise(function (resolve, reject) {
             // TODO: Réadapter exclue param passé par header
             var options = {
-                url: requestUrl,
+                url: encodeURI(requestUrl),
                 headers: requestHeaders,
                 json: true
             };

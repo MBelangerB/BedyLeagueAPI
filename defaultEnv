@@ -1,0 +1,27 @@
+# Configuration initial de Node
+NODE_ENV=development
+PORT=3000
+DEBUG=false
+LOG_EXECUTION_TIME=false
+
+# Riot API Config
+apiKey=''
+
+# API Config
+# fullString=false
+# defaultRegion='NA1'
+
+# lp
+showLP=true
+
+# series
+series="✓X-"
+
+# winrate          
+showWinRate=true
+# queueType
+queueType='solo5'
+
+# Limiter
+QueryBySecs=20
+QueryByTwoMin=100

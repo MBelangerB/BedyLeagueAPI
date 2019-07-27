@@ -22,9 +22,71 @@
                 <td>Vous devez spécifié la région (server) pour lequel vous voulez obtenir l'information :NA1, EUW1 <br/>
                     Vous devez spécifier le nom de l'invocateur</td>
                 <th>/rank?region=NA1&summonerName=test</th>
-                <th><a href="/rank?region=NA1&summonername=Bohe">ICI</a></th>
+                <th><a href="/rank?region=NA1&summonername=Test">ICI</a></th>
             </tr>
         </tbody>
+    </table>
+
+        <br/>
+        <h2>Liste des paramètres possibles</h2>
+        <table style="width:100%; border:1px" border="1">
+            <thead>
+                <th>Paramètres</th>
+                <th>Obligatoire</th>
+                <th>Description</th>
+                <th>Valeur disponible</th>
+                <th>Exemple</th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>region</td>
+                    <td>OUI</td>
+                    <td>Spécifier le serveur ou vous jouez</td>
+                    <td>NA1, EUW1</td>
+                    <td>/rank?<strong>region=NA1</strong></td>
+                </tr>
+
+                <tr>
+                    <td>summonerName</td>
+                    <td>OUI</td>
+                    <td>Le nom de l'invocateur</td>
+                    <td></td>
+                    <td>/rank?region=NA1&<strong>summonerName=Bedy90</strong></td>
+                </tr>
+
+                <tr><td colspan="5"></td></tr>
+
+                <tr>
+                    <td>winRate</td>
+                    <td>NON</td>
+                    <td>Afficher le % victoires</td>
+                    <td>0 ou 1</td>
+                    <td>/rank?region=NA1&summonerName=Bedy90?<strong>winRate=0</strong></td>
+                </tr>
+
+                <tr>
+                    <td>lp</td>
+                    <td>NON</td>
+                    <td>Afficher ou non les  LP</td>
+                    <td>0 ou 1</td>
+                    <td>/rank?region=NA1&summonerName=Bedy90?<strong>lp=0</strong></td>
+                </tr>
+                <tr>
+                    <td>series</td>
+                    <td>NON</td>
+                    <td>Caractères de remplacer pour les Wins/Losses/Not Play</td>
+                    <td></td>
+                    <td>/rank?region=NA1&summonerName=Bedy90?<strong>series=XYZ</strong></td>
+                </tr>
+                <tr>
+                    <td>queueType</td>
+                    <td>NON</td>
+                    <td>Définir la queue pour laquel on désire obtenir le rang</td>
+                    <td>solo5, tft</td>
+                    <td>/rank?region=NA1&summonerName=Bedy90?<strong>queueType=tft</strong></td>
+                </tr>
+            </tbody>
+        </table>
     </table>
 </body>
 

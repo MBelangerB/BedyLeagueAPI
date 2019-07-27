@@ -241,7 +241,9 @@ module.exports = class LoLRank {
         // https://developer.riotgames.com/getting-started.html
         //  Validating Calls (^[0-9\\p{L} _\\.]+$)
         if (typeof queryString.summonername !== "undefined" && queryString.summonername.trim().length >= 0) {
-            var re = new RegExp('^[0-9 _.\\w]+$', 'giu');
+            // https://stackoverflow.com/questions/20690499/concrete-javascript-regex-for-accented-characters-diacritics
+            // Pour pseudo avec caractère accentué
+            var re = new RegExp('^[0-9\u00C0-\u024F _.\\w]+$', 'giu');
             var summonerName = queryString.summonername;
             if (!re.test(summonerName)) {
                 err.push("Le paramètre 'summonerName' est invalide.");

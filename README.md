@@ -16,7 +16,6 @@ Cette commande permet d'obtenir le rang de l'invocateur.
 | region  | Oui|Le serveur|NA1, EUW1|/rank?**region=NA1**
 | summonerName| Oui | Le nom de l'invocateur|| /rank?region=NA1&**summonerName=Bedy90**
 |||||
-|type|Non|Type de Queue|(1=Solo 5c5, 2=Flex 5c5, 3=Flex 3c3)||
 |WinRate|Non|Afficher le % victoires|0 ou 1||
 |lp|Non|Afficher ou non les  LP|0 ou 1|/rank?region=NA1&summonerName=Bedy90?**lp=0**|
 |series|Non|Caractères de remplacer pour les Wins/Losses/Not Play||/rank?region=NA1&summonerName=Bedy90?series=abc|
