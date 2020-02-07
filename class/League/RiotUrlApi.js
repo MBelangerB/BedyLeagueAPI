@@ -15,6 +15,9 @@ module.exports = class RiotUrlApi {
                 activeGame: {
                     by_summoner: `/spectator/v4/active-games/by-summoner/{encryptedSummonerId}`
                 }
+            },
+            champion: {
+                championInfo: `/lol/platform/v3/champion-rotations`
             }
         }
     }
@@ -25,16 +28,20 @@ module.exports = class RiotUrlApi {
 
 
     getMainUrl(region) {
-        return this.Riot_V4_API.mainUrl.replace("{region}", region)
+        return this.Riot_V4_API.mainUrl.replace("{region}", region);
     }
     getSummonerByName(summonerName, apiKey) {
-        return this.Riot_V4_API.summoners.by_name.replace("{summonerName}", summonerName)
+        return this.Riot_V4_API.summoners.by_name.replace("{summonerName}", summonerName);
     }
     getLeagueByUserId(encryptedSummonerId, apiKey) {
-        return this.Riot_V4_API.league.by_summoner.replace("{encryptedSummonerId}", encryptedSummonerId)
+        return this.Riot_V4_API.league.by_summoner.replace("{encryptedSummonerId}", encryptedSummonerId);
     }
     getCurrentGameByUserId(encryptedSummonerId, apiKey) {
-        return  this.Riot_V4_API.spectator.activeGame.by_summoner.replace("{encryptedSummonerId}", encryptedSummonerId)
+        return  this.Riot_V4_API.spectator.activeGame.by_summoner.replace("{encryptedSummonerId}", encryptedSummonerId);
+    }
+    getChampionInfo() {
+        return  this.Riot_V4_API.champion.championInfo;
+     
     }
 }
 

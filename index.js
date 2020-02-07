@@ -22,6 +22,7 @@ dotenv.config();
 */
 const RegionalEndPoint = require('./class/League/RegionEndPoint');
 const LoLRank = require('./module/LoLRank')
+const LoLRotate = require('./module/LolRotate')
 
 /*
     Init Class
@@ -76,10 +77,9 @@ app.get('/rank/:region/name/:summonerName', async function (req, res) {
         queueType           : (facultatif) Permet de spécifier le type de queue qu'on désire valider.
 
 */
-
 app.get('/rank', async function (req, res) {
     try {
-        if (process.env.DEBUG) { console.log(`  Execution pour : ${JSON.stringify(req.query)}`) }
+        if (process.env.DEBUG) { console.log(`  Execution pour /rank : ${JSON.stringify(req.query)}`) }
         if (process.env.LOG_EXECUTION_TIME) { console.time("Before Execute validateQueryString"); }
 
         // Valider les paramètres
@@ -135,6 +135,38 @@ app.get('/rank', async function (req, res) {
         var returnValue = ranking.getReturnValue(ranking.castQueueType());
         res.send(returnValue);
         if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("After execute getReturnValue"); }
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
+    }
+});
+
+
+app.get('/rotate', async function (req, res) {
+    try {
+        if (process.env.DEBUG) { console.log(`  Execution pour /rotate : ${JSON.stringify(req.query)}`) }
+
+        // Valider les paramètres
+        var isValid = LoLRotate.validateQueryString(req.query);
+        if (!isValid.isValid) {
+            res.json(isValid.errors)
+            return;
+        }    
+        var rotate = new LoLRotate(req.query)
+          
+        // Cache
+        var result = await rotate.GetCacheRotate(); 
+        
+        if (result && typeof result.statusCode === "undefined" && rotate.rotateData.freeChampionIds.length === 0) {
+            rotate.rotateData = result;
+            if (result) { 
+                rotate.setCacheRotate(result);
+            }
+        }
+
+        var returnValue = rotate.getReturnValue();
+        res.send(returnValue);
+
     } catch (ex) {
         console.error(ex);
         res.send(ex);

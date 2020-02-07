@@ -1,5 +1,17 @@
 # Notepad++ backups #
 *.bak
 *.txt
-*.env
 *.http
+
+
+# Dependency directories
+./node_modules/
+./jspm_packages/
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# dotenv environment variables file
+.env

@@ -4,7 +4,8 @@ module.exports = class RiotQuery {
 
     constructor(region, summonerName) {
         this.summonerByNameURL = `https://${region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}`;
-        this.leagueEntriesURL = `https://${region}.api.riotgames.com/lol/league/v4/entries/by-summoner/`
+        this.leagueEntriesURL = `https://${region}.api.riotgames.com/lol/league/v4/entries/by-summoner/`;
+        this.championRotateURL = `https://${region}.api.riotgames.com/lol/platform/v3/champion-rotations`;
 
         this.header = {
             "Origin": null,
@@ -15,6 +16,12 @@ module.exports = class RiotQuery {
         }
     }
 
+    /*
+        Permet d'obtenir les information sur l'invocateur    
+
+        Utilisé par
+            /rank
+    */
     async getSummonerData() {
         try {
             var riot;
@@ -41,6 +48,12 @@ module.exports = class RiotQuery {
         }
     }
 
+    /*
+        Permet d'obtenir les information sur le classement
+
+        Utilisé par
+            /rank
+    */
     async getSummonerLeague(summonerId) {
         try {
             this.summonerId = summonerId;
@@ -60,18 +73,43 @@ module.exports = class RiotQuery {
         } catch (ex) {
             console.error(ex);
         }
-        return riot.code;      
+        return riot.code;
     }
+
     /*
-    setSummonerLeague(league) {
-        if (typeof dto !== "undefined") {
-            this.summonerDTO = league;
-        }
-    }
+        Permet d'obtenir les informations sur le rotation en cours
+
+        Utilisé par
+            /rotate
     */
+    async getRotateData() {
+        try {
+            var riot;
+
+            await this.getRotateInfo().then(function (res) {
+                riot = res;
+            }, function (err) {
+                console.error(error);
+                return;
+            });
+
+            if (typeof riot !== "undefined" && riot.code === 200) {
+                this.rotateDTO = {
+                    "freeChampionIds": riot.ChampionIds.freeChampionIds,
+                    "freeChampionIdsForNewPlayers": riot.ChampionIds.freeChampionIdsForNewPlayers,
+                    "freeChampion": [],
+                    "freeChampionForNewPlayers": []
+                } 
+            }
+
+        } catch (ex) {
+            console.error(ex);
+        }
+        return riot.code;
+    }
 
 
-    
+
     // Step 1 - Information de invocateur
     async getSummonerInfo() {
         var result = {
@@ -127,7 +165,7 @@ module.exports = class RiotQuery {
         this.result = result;
         return result;
     }
-
+    // Step 2 - Information sur la league
     async getSummonerLeagueInfo() {
         var result = {
             "code": 0,
@@ -162,7 +200,7 @@ module.exports = class RiotQuery {
                         statusMessage: error.message
                     }
                 }
-    
+
             });
 
             if (result && result.league !== '') {
@@ -178,6 +216,64 @@ module.exports = class RiotQuery {
         this.resultLeague = result;
         return result;
     }
+    // Step 3 - Rotation
+    async getRotateInfo() {
+        var result = {
+            "code": 0,
+            "ChampionIds": [],
+            "err": {}
+        }
+
+        try {
+            // Get Login Info
+            await this.ExecuteRequest(this.championRotateURL, this.header).then(function (res) {
+                // UseCase : Invocateur existe
+                if (res && typeof res.status === "undefined") {
+                    result.ChampionIds = res;
+                    
+                } else if (res && typeof res.status !== "undefined" && res.status.status_code === 404) {
+                    result.code = res.status.status_code;
+                }
+
+            }, function (error) {
+                if (typeof error.message === "undefined") {
+                    // UseCase : Invocateur n'existe pas.
+                    if (error.statusMessage === "Not Found") {
+                        result.err = {
+                            statusCode: '200-1',
+                            statusMessage: "L'invocateur n'existe pas."
+                        }
+                    } else {
+                        result.err = {
+                            statusCode: error.statusCode,
+                            statusMessage: error.statusMessage
+                        }
+                    }
+                } else {
+                    // error.code = 'ENOTFOUND'     -> mauvais serveur
+                    result.err = {
+                        statusCode: '',
+                        statusMessage: error.message
+                    }
+                }
+            });
+
+            if (result && result.ChampionIds !== '') {
+                result.code = 200;
+            } else {
+                result.code = 404;
+            }
+
+        } catch (err) {
+            result.code = -1;
+        }
+
+        this.result = result;
+        return result;
+    }
+
+
+
 
 
     /*
