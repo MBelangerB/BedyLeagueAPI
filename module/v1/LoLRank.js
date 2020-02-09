@@ -1,7 +1,7 @@
-const SummonerDTO = require('../class/SummonerDTO');
-const SummonerLeague = require('../class/SummonerLeague');
-const CacheService = require('../module/Cache.Service');
+const SummonerDTO = require('../../class/v1/SummonerDTO');
+const SummonerLeague = require('../../class/v1/SummonerLeague');
 
+const CacheService = require('./Cache.Service');
 var ReqQuery = require(`./RiotQuery`);
 
 
@@ -153,10 +153,22 @@ module.exports = class LoLRank {
             var resultCode = await this.ReqQuery.getSummonerLeague();
             if (resultCode === 200) {
                 cacheInfo = await this.ReqQuery.summonerLeague;
+            } else if (resultCode === 404) {
+                // NoData
+                return {
+                    "statusCode": 404,
+                    "statusMessage": "Une erreur est survenu"
+                }
             }
 
             if (!cacheInfo || typeof cacheInfo === 'undefined') {
-                result = this.ReqQuery.result.err;
+                // Err = undefined
+                if (this.ReqQuery.result && ! this.ReqQuery.result.err) {
+                    result = this.ReqQuery.result.err;
+                } else {
+                    result = ""
+                }
+               
 
             } else {
                 tmpCacheInfo = [];

@@ -1,8 +1,6 @@
 /*
     Import Data
 */
-//const http = require('http');
-//const https = require('https');
 const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
@@ -10,7 +8,6 @@ const dotenv = require('dotenv');
     Init Module
 */
 var app = express();
-// var router = express.Router();
 
 /*
     Load Config
@@ -20,14 +17,14 @@ dotenv.config();
 /*
     Custom Class
 */
-const RegionalEndPoint = require('./class/League/RegionEndPoint');
-const LoLRank = require('./module/LoLRank')
-const LoLRotate = require('./module/LolRotate')
+// const RegionalEndPoint = require('./class/v1/League/RegionEndPoint');
+const LoLRank = require('./module/v1/LoLRank')
+const LoLRotate = require('./module/v1/LolRotate')
 
 /*
     Init Class
 */
-var Regions = new RegionalEndPoint()
+// var Regions = new RegionalEndPoint()
 
 /*  Init RateLimit */
 // Enable if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
@@ -77,7 +74,7 @@ app.get('/rank/:region/name/:summonerName', async function (req, res) {
         queueType           : (facultatif) Permet de spécifier le type de queue qu'on désire valider.
 
 */
-app.get('/rank', async function (req, res) {
+app.get('/v1/rank', async function (req, res) {
     try {
         if (process.env.DEBUG) { console.log(`  Execution pour /rank : ${JSON.stringify(req.query)}`) }
         if (process.env.LOG_EXECUTION_TIME) { console.time("Before Execute validateQueryString"); }
@@ -123,8 +120,8 @@ app.get('/rank', async function (req, res) {
         if (typeof resultLeague.statusCode !== 'undefined' && resultLeague.statusCode === '200-1') {
             res.json(resultLeague.statusMessage);
             return;
-        } else if (typeof result.statusCode !== 'undefined' && resultLeague.statusCode !== 200) {
-            res.json(resultLeague);
+        } else if (typeof resultLeague.statusCode !== 'undefined' && resultLeague.statusCode !== 200) {
+            res.json(resultLeague.statusMessage);
             return;
         }
         if (process.env.LOG_EXECUTION_TIME) { console.timeEnd("After executing getCacheLeague"); }
@@ -142,7 +139,7 @@ app.get('/rank', async function (req, res) {
 });
 
 
-app.get('/rotate', async function (req, res) {
+app.get('/v1/rotate', async function (req, res) {
     try {
         if (process.env.DEBUG) { console.log(`  Execution pour /rotate : ${JSON.stringify(req.query)}`) }
 
