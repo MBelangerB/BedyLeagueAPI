@@ -1,7 +1,7 @@
 var champions = require('../../static/fr_fr/champion.json');
 var champInfo = require(`../../class/v1/Champions/ChampionInfo`);
 
-var CacheService = require('./Cache.Service');
+var CacheService = require('../Cache.Service');
 var ReqQuery = require(`./RiotQuery`);
 
 var cacheTimer = 60 * 60 * 1; // cache for 1 Hour

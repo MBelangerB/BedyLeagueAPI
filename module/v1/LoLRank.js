@@ -1,7 +1,7 @@
 const SummonerDTO = require('../../class/v1/SummonerDTO');
 const SummonerLeague = require('../../class/v1/SummonerLeague');
 
-const CacheService = require('./Cache.Service');
+const CacheService = require('../Cache.Service');
 var ReqQuery = require(`./RiotQuery`);
 
 
@@ -249,12 +249,11 @@ module.exports = class LoLRank {
                 err.push("Le paramètre 'region' est obligatoire.");
             }
         }
-
         // https://developer.riotgames.com/getting-started.html
+        // https://stackoverflow.com/questions/20690499/concrete-javascript-regex-for-accented-characters-diacritics
+        // Pour pseudo avec caractère accentué
         //  Validating Calls (^[0-9\\p{L} _\\.]+$)
         if (typeof queryString.summonername !== "undefined" && queryString.summonername.trim().length >= 0) {
-            // https://stackoverflow.com/questions/20690499/concrete-javascript-regex-for-accented-characters-diacritics
-            // Pour pseudo avec caractère accentué
             var re = new RegExp('^[0-9\u00C0-\u024F _.\\w]+$', 'giu');
             var summonerName = queryString.summonername;
             if (!re.test(summonerName)) {

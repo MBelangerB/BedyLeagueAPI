@@ -1,20 +1,25 @@
-// const RiotUrlApi = require('./League/RiotUrlApi');
-
+/*
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
     return target.replace(new RegExp(search, 'g'), replacement);
-};
+};*/
 
-module.exports = class SummonerLeague {
-    constructor() {
-        this.queueType = '';
+class LeagueQueue {
+    constructor(type) {
+        this.queueType = type;
         this.hotStreak = false;
+        this.veteran = false;
+        this.inactive = false;
+        this.freshBlood = false;
+
+        this.leagueId = "";
         this.wins = 0;
         this.losses = 0;
-
+        this.leaguePoints = 0;
+   
         this.rank = '';
         this.tier = '';
-        this.leaguePoints = 0;
+
         this.series = {
             enabled: false,
             wins: 0,
@@ -24,35 +29,10 @@ module.exports = class SummonerLeague {
         }
     }
 
-    init(type, hotStreak, wins, losses, rank, tier, lp, queueType) {
-        this.queueType = type;
-        this.hotStreak = hotStreak;
-        this.wins = wins;
-        this.losses = losses;
-
-        this.rank = rank;
-        this.tier = tier;
-        this.leaguePoints = lp;
-        this.series = {
-            enabled: false,
-            wins: 0,
-            losses: 0,
-            target: 0,
-            progress: ''
-        }
+    getQueueType() {
+        return this.queueType;
     }
 
-    initSeries(miniSeries) {
-        this.series = {
-            enabled: true,
-            wins: miniSeries.wins,
-            losses: miniSeries.losses,
-            target: miniSeries.target,
-            progress: miniSeries.progress
-        }
-    }
-
-    
     getRatio()  {
         var rates = (this.wins / (this.wins + this.losses) * 100);
         return parseFloat(rates).toFixed(1);
@@ -79,5 +59,6 @@ module.exports = class SummonerLeague {
             return '';
         }
     }
-
 }
+
+module.exports = LeagueQueue;

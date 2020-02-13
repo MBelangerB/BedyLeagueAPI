@@ -15,23 +15,21 @@ var app = express();
 dotenv.config();
 
 /*
-    Custom Class
+    Custom Class V1
 */
-// const RegionalEndPoint = require('./class/v1/League/RegionEndPoint');
-const LoLRank = require('./module/v1/LoLRank')
-const LoLRotate = require('./module/v1/LolRotate')
+const LoLRank = require('./module/v1/LoLRank');
+const LoLRotate = require('./module/v1/LolRotate');
 
 /*
-    Init Class
+    Custom Class V2
 */
-// var Regions = new RegionalEndPoint()
+const SummonerQueue = require('./module/v2/SummonerQueue');
 
-/*  Init RateLimit */
-// Enable if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
-// see https://expressjs.com/en/guide/behind-proxies.html
-// app.set('trust proxy', 1);
-
-
+/*
+    Init custom class
+*/
+var Logging = require('./module/logging');
+require('./static/Prototype.js');
 
 /*
     Affectation APP
@@ -138,7 +136,6 @@ app.get('/v1/rank', async function (req, res) {
     }
 });
 
-
 app.get('/v1/rotate', async function (req, res) {
     try {
         if (process.env.DEBUG) { console.log(`  Execution pour /rotate : ${JSON.stringify(req.query)}`) }
@@ -170,9 +167,61 @@ app.get('/v1/rotate', async function (req, res) {
     }
 });
 
+
+
+app.get('/v2/rank', async function (req, res) {
+    try {
+        Logging.writeLog('/v2/rank', `Execute GetRank with data ${JSON.stringify(req.query)}`, 
+                         'validateQueryString', true);
+
+        // Valider les paramètres
+        var validation = SummonerQueue.validateQueryString(req.query);
+        if (validation && validation.isValid === false) {
+            res.json(validation.errors)
+            Logging.writeLog('/v2/rank', ``, 'validateQueryString', false);
+            return;
+        }    
+        Logging.writeLog('/v2/rank', ``, 'validateQueryString', false); 
+
+        // Obtenir les informations sur l'invocateur
+        Logging.writeLog('/v2/rank', `Before init SummonerQueue`, 'SummonerQueue', true);
+        var locSummoner = new SummonerQueue(req.query);
+        var result = await locSummoner.getSummonerInfo();
+        if (typeof result.code !== 'undefined' && result.code === 201) {
+            res.json(result.err.statusMessage);
+            return;
+
+        } else if (typeof result.statusCode !== 'undefined' && result.code !== 200) {
+            res.json(result.err.statusMessage);
+            return;
+        }
+        Logging.writeLog('/v2/rank', ``, 'SummonerQueue', false);
+
+        Logging.writeLog('/v2/rank', `Before getReturnValue`, 'SummonerQueue', true);
+        var response = locSummoner.getReturnValue(locSummoner.queueType);   
+        Logging.writeLog('/v2/rank', ``, 'SummonerQueue', false);
+        res.send(response);
+
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
+    }
+});
+app.get('/v2/rotate', async function (req, res) {
+
+});
+app.get('/v2/livegame', async function (req, res) {
+
+});
+app.get('/v2/lastgame', async function (req, res) {
+
+});
+
 /* Démarrage du serveur */
 app.listen(process.env.PORT, function () {
     var port = process.env.PORT;
+    Logging = new Logging(process.env);
+
     console.log(`Démarrage du serveur le '${new Date().toString()}' sur le port ${port}`)
 })
 
