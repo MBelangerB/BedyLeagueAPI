@@ -4,6 +4,8 @@
 const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
+const url = require('url');  
+
 /*
     Init Module
 */
@@ -60,6 +62,33 @@ app.get('/rank/:region/name/:summonerName', async function (req, res) {
 })
 */
 
+/*
+    Redirecton version
+*/
+app.get('/rank', async function (req, res) {
+    /*
+    var currentUrl = req.originalUrl;
+    var newUrl = `v2${currentUrl}`;
+    */
+    var passedUrl = url.format({
+        pathname:'/v2/rank',
+        query:req.query,
+      });
+
+    res.redirect(passedUrl);
+});
+app.get('/rotate', async function (req, res) {
+    /*
+    var currentUrl = req.originalUrl;
+    var newUrl = `v2${currentUrl}`;
+    */
+    var passedUrl = url.format({
+        pathname:'/v1/rotate',
+        query:req.query,
+      });
+
+    res.redirect(passedUrl);
+});
 
 /*
     Paramètre
@@ -167,8 +196,7 @@ app.get('/v1/rotate', async function (req, res) {
     }
 });
 
-
-
+// Version 2
 app.get('/v2/rank', async function (req, res) {
     try {
         Logging.writeLog('/v2/rank', `Execute GetRank with data ${JSON.stringify(req.query)}`, 
