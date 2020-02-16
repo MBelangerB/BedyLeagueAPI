@@ -1,8 +1,17 @@
 var info = require('../../static/info.json');
 var RequestManager = require(`./RequestManager`);
+const CacheService = require('../Cache.Service');
 
 var SummonerInfo = require('../../class/v2/SummonerInfo');
-// var LeagueQueue = require('../../class/v2/LeagueQueue');
+
+/*
+    Cache configuration
+*/
+var ttSummonerInfo = 60 * 60 * 1; // cache for 1 Hour
+var ttLeagueInfo = 60 * 1; // cache for 1 mn
+
+var summonerCache = new CacheService(ttSummonerInfo); // Create a new cache service instance
+var LeagueCache = new CacheService(ttLeagueInfo); // Create a new cache service instance
 
 class SummonerQueue {
     constructor(queryString) {
@@ -32,16 +41,91 @@ class SummonerQueue {
         }
 
         this.queueType = process.env.queueType.toLocaleLowerCase();
-        if (typeof queryString["queueType"] !== "undefined" && this.isValidQueueType(queryString["queueType"])) {
+        if (typeof queryString["queueType"] !== "undefined" && SummonerQueue.isValidQueueType(queryString["queueType"])) {
             this.queueType = queryString["queueType"].toLocaleLowerCase();
         }
-        if (typeof this.queueType === "undefined" || this.isValidQueueType(this.queueType) === false) {
+        if (typeof this.queueType === "undefined" || SummonerQueue.isValidQueueType(this.queueType) === false) {
             this.queueType = "solo5"
         }
-
-        //       this.summonerInfo = new SummonerInfo(this);
     }
 
+    //#region "CacheKey"
+    getSummonerCacheKey() {
+        return `${this.summonerName}-${this.region}`;
+    }
+    getLeagueCacheKey() {
+        return `${this.summonerName}-${this.region}-${this.queueType}`
+    }
+    //#endregion
+
+    // Step 1 : Execution de la Query qui obtient les informations sur l'invocateur
+    async querySummonerInfo(requestManager, result) {
+        var data;
+        var SummonerUrl = info.routes.v2.getBySummonerName.replace('{region}', this.region).replace('{summonerName}', this.summonerName);
+
+        // Le SummonerInfo n'est pas présent dans la cache
+        await requestManager.ExecuteRequest(SummonerUrl).then(function (res) {
+            data = res;
+        }, function (error) {
+            if (typeof error.status !== "undefined" && error.status.status_code === 404) {
+                if (error.status.message === "Data not found - summoner not found") {
+                    // UseCase : Invocateur n'existe pas.
+                    result.err = {
+                        statusCode: '200-1',
+                        statusMessage: "L'invocateur n'existe pas."
+                    }
+                } else {
+                    result.err = {
+                        statusCode: err.status.status_code,
+                        statusMessage: error.status.message
+                    }
+                }
+            } else {
+                // error.code = 'ENOTFOUND'     -> mauvais serveur
+                result.err = {
+                    statusCode: '',
+                    statusMessage: error.statusMessage
+                }
+            }
+        });
+        return data;
+    }
+    // Step 2 : Execution de la Query qui obtient les information sur la league
+    async queryLeagueInfo(requestManager, result, summonerId) {
+        var data;
+        // Obtenir l'information sur la queue        
+        var leagueUrl = info.routes.v2.getLeagueEntriesForSummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerId);
+        if (this.queueType === "tft") {
+            leagueUrl = info.routes.v2.getTFTLeagueEntriesForSummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerId);
+        }
+
+        await requestManager.ExecuteRequest(leagueUrl).then(function (res) {
+            if (res.length === 0) {
+                // UseCase : Pas de données de league donc pas de classement
+                result.err = {
+                    statusCode: "200-1",
+                    statusMessage: "Unranked"
+                }
+            } else {
+                data = res;
+            }
+        }, function (error) {
+            if (typeof error.message === "undefined") {
+                result.err = {
+                    statusCode: error.statusCode,
+                    statusMessage: error.statusMessage
+                }
+            } else {
+                result.err = {
+                    statusCode: '',
+                    statusMessage: error.message
+                }
+            }
+        });
+        return data;
+    }
+
+    // Requête principale
     async getSummonerInfo() {
         var result = {
             "code": 0,
@@ -49,72 +133,50 @@ class SummonerQueue {
         };
         var summonerInfo = new SummonerInfo(this);
         var requestManager = new RequestManager(this);
-        var SummonerUrl = info.routes.v2.getBySummonerName.replace('{region}', this.region).replace('{summonerName}', this.summonerName);
+        var me = this;
 
         try {
-            var data;
-            await requestManager.ExecuteRequest(SummonerUrl).then(function (res) {
-                data = res;
-            }, function (error) {
-                if (typeof error.status !== "undefined" && error.status.status_code === 404) {
-                    if (error.status.message === "Data not found - summoner not found") {
-                        // UseCase : Invocateur n'existe pas.
-                        result.err = {
-                            statusCode: '200-1',
-                            statusMessage: "L'invocateur n'existe pas."
-                        }
-                    } else {
-                        result.err = {
-                            statusCode: err.status.status_code,
-                            statusMessage: error.status.message
-                        }
-                    }
+            var key = this.getSummonerCacheKey();
+            var SummonerData = await summonerCache.getAsyncB(key).then(function (sumData) {
+                if (typeof sumData === "undefined") {
+                    // Le data n'est pas présent on doit l'obtenir
+                    var data = me.querySummonerInfo(requestManager, result);
+                    // On associe le SummonerInfo dans la cache
+                    summonerCache.setCacheValue(key, data);
+                    return data;
                 } else {
-                    // error.code = 'ENOTFOUND'     -> mauvais serveur
-                    result.err = {
-                        statusCode: '',
-                        statusMessage: error.statusMessage
-                    }
+                    // L'information est présente dans la cache
+                    return sumData;
                 }
             });
 
-            if (data) {
-                // Initialiser les informations sur invocateur
-                summonerInfo.init(data);
 
-                // Obtenir l'information sur la queue        
-                // Get Login Info
-                var leagueUrl = info.routes.v2.getLeagueEntriesForSummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerInfo.getId);
-                if (this.queueType === "tft") {
-                    leagueUrl = info.routes.v2.getTFTLeagueEntriesForSummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerInfo.getId);
-                }
-                await requestManager.ExecuteRequest(leagueUrl).then(function (res) {
-                    if (res.length === 0) {
-                        // UseCase : Pas de données de league donc pas de classement
-                        result.err = {
-                            statusCode: "200-1",
-                            statusMessage: "Unranked"
-                        }
-                    } else {
-                        summonerInfo.initQueue(res);
-                    }
-                }, function (error) {
-                    if (typeof error.message === "undefined") {
-                        result.err = {
-                            statusCode: error.statusCode,
-                            statusMessage: error.statusMessage
-                        }
-                    } else {
-                        result.err = {
-                            statusCode: '',
-                            statusMessage: error.message
-                        }
-                    }
+            if (SummonerData || typeof SummonerData !== "undefined") {
+                // TODO: Gérer le cas ou pas de data mais ERR
+                summonerInfo.init(SummonerData);
 
+                key = this.getLeagueCacheKey();
+
+                var leagueData = await LeagueCache.getAsyncB(key).then(function (sumData) {
+                    if (typeof sumData === "undefined") {
+                        // Le data n'est pas présent on doit l'obtenir
+                        var data = me.queryLeagueInfo(requestManager, result, summonerInfo.getId);
+                        // On associe le SummonerInfo dans la cache
+                        LeagueCache.setCacheValue(key, data);
+                        return data;
+                    } else {
+                        // L'information est présente dans la cache
+                        return sumData;
+                    }
                 });
+
+                if (leagueData || typeof leagueData !== "undefined") {
+                    // On initialise les queues dans SUmmonerInfo
+                    summonerInfo.initQueue(leagueData);
+                }
             }
 
-
+            // On traite le Resut
             if (result && typeof result.err.statusCode === "undefined") {
                 // Aucune erreur
                 this.summonerInfo = summonerInfo;
@@ -122,11 +184,9 @@ class SummonerQueue {
             } else if (result && result.err.statusCode === "200-1") {
                 // Erreur normal (pas classé, invocateur n'Existe pas)
                 result.code = 201;
-
             } else {
                 result.code = 404;
             }
-
 
         } catch (ex) {
             result.code = -1;
@@ -134,6 +194,8 @@ class SummonerQueue {
         }
         return result;
     }
+
+    //#region "Get League Data"
 
     getRatio() {
         var rates = (this.wins / (this.wins + this.losses) * 100);
@@ -161,8 +223,9 @@ class SummonerQueue {
             return '';
         }
     }
+    //#endregion
 
-
+    //#region  "Validation"
     // Validation
     static validateQueryString(queryString) {
         var err = [];
@@ -200,6 +263,11 @@ class SummonerQueue {
             });
         }
 
+        // VALIDER SI LA REGION EST VALIDE
+        if (!SummonerQueue.isValidRegion(queryString.region)) {
+            err.push("La paramètre 'region' est invalide.");
+        }
+
         var result = {
             isValid: (err.length === 0),
             errors: err
@@ -210,7 +278,7 @@ class SummonerQueue {
 
     // https://developer.riotgames.com/ranked-info.html
     // Valider si la queue est accepté
-    isValidQueueType(type) {
+    static isValidQueueType(type) {
         var valid = false;
         switch (type) {
             case 'solo5':
@@ -228,38 +296,53 @@ class SummonerQueue {
         return valid;
     }
 
+    static isValidRegion(region) {
+        var valid = false;
+        switch (region) {
+            case 'NA1':
+            case 'EUW1':
+                valid = true;
+                break;
+            default:
+                valid = false;
+                break
+        }
+        return valid;
+    }
+    //#endregion
 
 
     getReturnValue(type) {
         var returnValue = '';
 
-        var mappingQueue = SummonerInfo.getMappingQueueTypeToLeagueQueue();
+        try {
+            var mappingQueue = SummonerInfo.getMappingQueueTypeToLeagueQueue();
+            var league = this.summonerInfo.Queues.find(league => league.queueType === mappingQueue[type]);
 
-        //   var t = this.summonerInfo.getQueueInfo(type);
-        var league = this.summonerInfo.Queues.find(league => league.queueType === mappingQueue[type]);
+            if (league) {
+                var rankTiers = league.getTiersRank();
+                var leaguePt = '';
+                var winRate = '';
+                var series = league.getSeries(this.series);
 
-        if (league) {
-            var rankTiers = league.getTiersRank();
-            var leaguePt = '';
-            var winRate = '';
-            var series = league.getSeries(this.series);
+                if (this.showLp || this.showLp === "true") {
+                    leaguePt = league.getLeaguePoint();
+                }
 
-            if (this.showLp || this.showLp === "true") {
-                leaguePt = league.getLeaguePoint();
+                if (this.showWinRate || this.showWinRate === "true") {
+                    winRate = ` - ${league.getRatio()} % (${league.wins}W/${league.losses}L)`;
+                }
+
+
+                if (this.fullString === "true") {
+                    returnValue = `${this.summonerName} est actuellement ${rankTiers}${leaguePt}${series}${winRate}`;
+                } else {
+                    returnValue = `${rankTiers}${leaguePt}${series}${winRate}`
+                }
             }
-
-            if (this.showWinRate || this.showWinRate === "true") {
-                winRate = ` - ${league.getRatio()} % (${league.wins}W/${league.losses}L)`;
-            }
-
-
-            if (this.fullString === "true") {
-                returnValue = `${this.summonerName} est actuellement ${rankTiers}${leaguePt}${series}${winRate}`;
-            } else {
-                returnValue = `${rankTiers}${leaguePt}${series}${winRate}`
-            }
+        } catch (ex) {
+            console.error(ex);
         }
-
 
         return returnValue.trim();
     }
