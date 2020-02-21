@@ -8,7 +8,8 @@
             "getAllChampionMasteries": "https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{encryptedSummonerId}",
             "getMatchlist": "https://{region}.api.riotgames.com/lol/match/v4/matchlists/by-account/{encryptedAccountId}?endIndex={end}&beginIndex={begin}",
             "getLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/lol/league/v4/entries/by-summoner/{encryptedSummonerId}",
-            "getTFTLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{encryptedSummonerId}"
+            "getTFTLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{encryptedSummonerId}",
+            "getChampionRotate": "https://{region}.api.riotgames.com/lol/platform/v3/champion-rotations"
         }
     }
 }

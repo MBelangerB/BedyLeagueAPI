@@ -26,6 +26,7 @@ const LoLRotate = require('./module/v1/LolRotate');
     Custom Class V2
 */
 const SummonerQueue = require('./module/v2/SummonerQueue');
+const LeagueRotate = require('./module/v2/LeagueRotate');
 
 /*
     Init custom class
@@ -78,12 +79,8 @@ app.get('/rank', async function (req, res) {
     res.redirect(passedUrl);
 });
 app.get('/rotate', async function (req, res) {
-    /*
-    var currentUrl = req.originalUrl;
-    var newUrl = `v2${currentUrl}`;
-    */
     var passedUrl = url.format({
-        pathname:'/v1/rotate',
+        pathname:'/v2/rotate',
         query:req.query,
       });
 
@@ -215,11 +212,7 @@ app.get('/v2/rank', async function (req, res) {
         Logging.writeLog('/v2/rank', `Before init SummonerQueue`, 'SummonerQueue', true);
         var locSummoner = new SummonerQueue(req.query);
         var result = await locSummoner.getSummonerInfo();
-        if (typeof result.code !== 'undefined' && result.code === 201) {
-            res.json(result.err.statusMessage);
-            return;
-
-        } else if (typeof result.statusCode !== 'undefined' && result.code !== 200) {
+        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
             res.json(result.err.statusMessage);
             return;
         }
@@ -236,7 +229,36 @@ app.get('/v2/rank', async function (req, res) {
     }
 });
 app.get('/v2/rotate', async function (req, res) {
+    try {
+        Logging.writeLog('/v2/rotate', `Execute GetRotate`, 
+                         'GetRotate', true);
 
+                            // Valider les paramètres
+        var isValid = LeagueRotate.validateQueryString(req.query);
+        if (!isValid.isValid) {
+            res.json(isValid.errors)
+            return;
+        }    
+
+        var legData = new LeagueRotate(req.query);
+        var result = await legData.getLeagueRotate();
+
+        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
+            res.json(result.err.statusMessage);
+            return;
+        }
+        Logging.writeLog('/v2/rotate', ``, 'GetRotate', false); 
+
+
+        Logging.writeLog('/v2/rotate', `Before getReturnValue`, 'LeagueRotate', true);
+        var response = legData.getReturnValue();   
+        Logging.writeLog('/v2/rotate', `Before getReturnValue`, 'LeagueRotate', false);
+        res.send(response);
+
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
+    }
 });
 app.get('/v2/livegame', async function (req, res) {
 

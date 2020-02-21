@@ -7,8 +7,8 @@ var SummonerInfo = require('../../class/v2/SummonerInfo');
 /*
     Cache configuration
 */
-var ttSummonerInfo = 60 * 60 * 1; // cache for 1 Hour
-var ttLeagueInfo = 60 * 1; // cache for 1 mn
+var ttSummonerInfo = 60 * 60 * 1 * 24; // cache for 1 Hour
+var ttLeagueInfo = 60 * 1; // cache for 1 mn (60 sec * 1 min)
 
 var summonerCache = new CacheService(ttSummonerInfo); // Create a new cache service instance
 var LeagueCache = new CacheService(ttLeagueInfo); // Create a new cache service instance
