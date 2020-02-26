@@ -27,6 +27,7 @@ const LoLRotate = require('./module/v1/LolRotate');
 */
 const SummonerQueue = require('./module/v2/SummonerQueue');
 const LeagueRotate = require('./module/v2/LeagueRotate');
+const LeagueChampionMasteries = require('./module/v2/LeagueChampionMasteries');
 
 /*
     Init custom class
@@ -161,7 +162,6 @@ app.get('/v1/rank', async function (req, res) {
         res.send(ex);
     }
 });
-
 app.get('/v1/rotate', async function (req, res) {
     try {
         if (process.env.DEBUG) { console.log(`  Execution pour /rotate : ${JSON.stringify(req.query)}`) }
@@ -263,8 +263,43 @@ app.get('/v2/rotate', async function (req, res) {
 app.get('/v2/livegame', async function (req, res) {
 
 });
+// Stats 10 dernières games
 app.get('/v2/lastgame', async function (req, res) {
 
+});
+app.get('/v2/topMasteries', async function (req, res) {
+    try {
+        Logging.writeLog('/v2/topMasteries', `Execute GetTopMasteries with data ${JSON.stringify(req.query)}`, 
+                         'validateQueryString', true);
+
+        // Valider les paramètres
+        var validation = LeagueChampionMasteries.validateQueryString(req.query);
+        if (validation && validation.isValid === false) {
+            res.json(validation.errors)
+            Logging.writeLog('/v2/topMasteries', ``, 'validateQueryString', false);
+            return;
+        }    
+        Logging.writeLog('/v2/topMasteries', ``, 'validateQueryString', false); 
+
+        // Obtenir les informations sur l'invocateur
+        Logging.writeLog('/v2/topMasteries', `Before init LeagueChampionMasteries`, 'LeagueChampionMasteries', true);
+        var champMasteries = new LeagueChampionMasteries(req.query);
+        var result = await champMasteries.getChampionsMasteries();
+        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
+            res.json(result.err.statusMessage);
+            return;
+        }
+        Logging.writeLog('/v2/topMasteries', ``, 'LeagueChampionMasteries', false);
+
+        Logging.writeLog('/v2/topMasteries', `Before getReturnValue`, 'LeagueChampionMasteries', true);
+        var response = champMasteries.getReturnValue(champMasteries.queueType);   
+        Logging.writeLog('/v2/topMasteries', ``, 'LeagueChampionMasteries', false);
+        res.send(response);
+
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
+    }
 });
 
 /* Démarrage du serveur */

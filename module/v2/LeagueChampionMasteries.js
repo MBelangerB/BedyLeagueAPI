@@ -1,20 +1,26 @@
 var info = require('../../static/info.json');
-var RequestManager = require(`./RequestManager`);
-const CacheService = require('../Cache.Service');
+var champions = require('../../static/fr_fr/champion.json');
+var champInfo = require(`../../class/v1/Champions/ChampionInfo`);
 
+const CacheService = require('../Cache.Service');
+var RequestManager = require(`./RequestManager`);
 var SummonerDTO = require('../../class/v2/SummonerDTO');
+var ChampionMasteryDTO = require('../../class/v2/ChampionMasteryDTO');
 
 /*
     Cache configuration
 */
 var ttSummonerInfo = 60 * 60 * 1 * 24; // cache for 1 Hour
-var ttLeagueInfo = 60 * 1; // cache for 1 mn (60 sec * 1 min)
+var ttMasteriesInfo = 60 * 5; // cache for 1 mn (60 sec * 1 min)
 
 var summonerCache = new CacheService(ttSummonerInfo); // Create a new cache service instance
-var LeagueCache = new CacheService(ttLeagueInfo); // Create a new cache service instance
+var masteriesCache = new CacheService(ttMasteriesInfo); // Create a new cache service instance
 
-class SummonerQueue {
+module.exports = class LeagueChampionMasteries {
+
     constructor(queryString) {
+        this.loadChampionInfo();
+
         // Prepare Query
         for (var key in queryString) {
             queryString[key.toLowerCase()] = queryString[key];
@@ -22,41 +28,31 @@ class SummonerQueue {
         // Paramètre obligatoire
         this.summonerName = queryString.summonername;
         this.region = queryString.region;
-
-        // Paramètre facultatif
-        this.showLp = (process.env.showLP.toLocaleLowerCase() === "true");
-        if (typeof queryString["lp"] !== "undefined") {
-            this.showLp = (queryString.lp === "1")
-        }
-        this.series = (queryString.series || process.env.series || 'WL-');
-
-        this.fullString = (process.env.fullString || false);
-        if (typeof queryString["fullString"] !== "undefined") {
-            this.fullString = (queryString.fullString === "1")
-        }
-
-        this.showWinRate = (process.env.showWinRate.toLocaleLowerCase() === "true");
-        if (typeof queryString["winrate"] !== "undefined") {
-            this.showWinRate = (queryString.winrate === "1")
-        }
-
-        this.queueType = process.env.queueType.toLocaleLowerCase();
-        if (typeof queryString["queueType"] !== "undefined" && SummonerQueue.isValidQueueType(queryString["queueType"])) {
-            this.queueType = queryString["queueType"].toLocaleLowerCase();
-        }
-        if (typeof this.queueType === "undefined" || SummonerQueue.isValidQueueType(this.queueType) === false) {
-            this.queueType = "solo5"
-        }
+        this.nbMasteries = (queryString.nb || 5);
     }
 
-    //#region "CacheKey"
     getSummonerCacheKey() {
         return `${this.summonerName}-${this.region}`;
     }
-    getLeagueCacheKey() {
-        return `${this.summonerName}-${this.region}-${this.queueType}`
+    getMasteriesCacheKey() {
+        return `ChampMasteries-${this.summonerName}-${this.region}-${this.nbMasteries}`
     }
-    //#endregion
+
+    loadChampionInfo() {
+        var champArr = [];
+        for (var myKey in champions.data) {
+            var champName = champions.data[myKey].name;
+            var chamId = champions.data[myKey].key;
+
+            var rotChamp = new champInfo();
+            rotChamp.init(chamId, champName);
+
+            champArr.push(rotChamp);
+        }
+        if (champArr && champArr.length > 0) {
+            this.championList = champArr;
+        }
+    }
 
     // Step 1 : Execution de la Query qui obtient les informations sur l'invocateur
     async querySummonerInfo(requestManager, result) {
@@ -91,14 +87,11 @@ class SummonerQueue {
         return data;
     }
     // Step 2 : Execution de la Query qui obtient les information sur la league
-    async queryLeagueInfo(requestManager, result, summonerId) {
+    async queryMasteriesInfo(requestManager, result, summonerId) {
         var data;
-        // Obtenir l'information sur la queue        
-        var leagueUrl = info.routes.v2.getLeagueEntriesForSummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerId);
-        if (this.queueType === "tft") {
-            leagueUrl = info.routes.v2.getTFTLeagueEntriesForSummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerId);
-        }
-        
+        // Obtenir l'information sur la queue    
+        var leagueUrl = info.routes.v2.getChampionMasteriesBySummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerId);
+
         await requestManager.ExecuteRequest(leagueUrl).then(function (res) {
             if (res.length === 0) {
                 // UseCase : Pas de données de league donc pas de classement
@@ -122,11 +115,24 @@ class SummonerQueue {
                 }
             }
         });
-        return data;
+
+        var tmp = data.slice(0, this.nbMasteries);
+        var champList = this.championList;
+        var masteriesDTA = [];
+
+        tmp.forEach(function (masteriesData) {
+            var champion = champList.find(e => e.id === masteriesData.championId.toString());
+            var masteries = new ChampionMasteryDTO();
+            masteries.init(masteriesData, champion.championName);
+
+            masteriesDTA.push(masteries);
+        });
+
+        return masteriesDTA;
     }
 
     // Requête principale
-    async getSummonerInfo() {
+    async getChampionsMasteries() {
         var result = {
             "code": 0,
             "err": {}
@@ -155,14 +161,14 @@ class SummonerQueue {
                 // TODO: Gérer le cas ou pas de data mais ERR
                 summonerInfo.init(SummonerData);
 
-                key = this.getLeagueCacheKey();
+                key = this.getMasteriesCacheKey();
 
-                var leagueData = await LeagueCache.getAsyncB(key).then(function (sumData) {
+                var masteriesData = await masteriesCache.getAsyncB(key).then(function (sumData) {
                     if (typeof sumData === "undefined") {
                         // Le data n'est pas présent on doit l'obtenir
-                        var data = me.queryLeagueInfo(requestManager, result, summonerInfo.getId);
+                        var data = me.queryMasteriesInfo(requestManager, result, summonerInfo.getId);
                         // On associe le SummonerInfo dans la cache
-                        LeagueCache.setCacheValue(key, data);
+                        masteriesCache.setCacheValue(key, data);
                         return data;
                     } else {
                         // L'information est présente dans la cache
@@ -170,16 +176,15 @@ class SummonerQueue {
                     }
                 });
 
-                if (leagueData || typeof leagueData !== "undefined") {
-                    // On initialise les queues dans SUmmonerInfo
-                    summonerInfo.initQueue(leagueData);
+                if (masteriesData || typeof masteriesData !== "undefined") {
+                    this.masteriesDTO = masteriesData;
                 }
+
             }
 
             // On traite le Resut
             if (result && typeof result.err.statusCode === "undefined") {
                 // Aucune erreur
-                this.SummonerDTO = summonerInfo;
                 result.code = 200;
             } else if (result && result.err.statusCode === "200-1") {
                 // Erreur normal (pas classé, invocateur n'Existe pas)
@@ -195,38 +200,23 @@ class SummonerQueue {
         return result;
     }
 
-    //#region "Get League Data"
+    getReturnValue() {
+        var returnValue = '';
+    
+        this.masteriesDTO.forEach(function (masteries) {
+            if (returnValue.length > 0) { returnValue += " | " }
 
-    getRatio() {
-        var rates = (this.wins / (this.wins + this.losses) * 100);
-        return parseFloat(rates).toFixed(1);
+            returnValue += masteries.masterieInfo;
+        });
+
+        returnValue = returnValue.trimEnd();
+
+        return returnValue.trim();
     }
 
-    getTiersRank() {
-        return `${this.tier} ${this.rank}`;
-    }
 
-    getLeaguePoint() {
-        return ` (${this.leaguePoints} LP)`;
-    }
 
-    getSeries(charSerie) {
-        if (this.series.enabled) {
-            var cWin = charSerie[0]; // W
-            var cLoose = charSerie[1]; // L
-            var cPending = charSerie[2]; // N
 
-            var series = ` [${this.series.progress}]`;
-            series = series.replaceAll('L', cLoose).replaceAll('W', cWin).replaceAll('N', cPending);
-            return series;
-        } else {
-            return '';
-        }
-    }
-    //#endregion
-
-    //#region  "Validation"
-    // Validation
     static validateQueryString(queryString) {
         var err = [];
 
@@ -264,9 +254,11 @@ class SummonerQueue {
         }
 
         // VALIDER SI LA REGION EST VALIDE
+        /*
         if (!SummonerQueue.isValidRegion(queryString.region)) {
             err.push("La paramètre 'region' est invalide.");
         }
+        */
 
         var result = {
             isValid: (err.length === 0),
@@ -276,76 +268,4 @@ class SummonerQueue {
         return result;
     }
 
-    // https://developer.riotgames.com/ranked-info.html
-    // Valider si la queue est accepté
-    static isValidQueueType(type) {
-        var valid = false;
-        switch (type) {
-            case 'solo5':
-                valid = true;
-                break;
-            case 'tft':
-                valid = true;
-                break;
-            case 'team5':
-            case 'team3':
-            case 'flex5':
-                valid = false;
-                break
-        }
-        return valid;
-    }
-
-    static isValidRegion(region) {
-        var valid = false;
-        switch (region) {
-            case 'NA1':
-            case 'EUW1':
-                valid = true;
-                break;
-            default:
-                valid = false;
-                break
-        }
-        return valid;
-    }
-    //#endregion
-
-
-    getReturnValue(type) {
-        var returnValue = '';
-
-        try {
-            var mappingQueue = SummonerDTO.getMappingQueueTypeToLeagueQueue();
-            var league = this.SummonerDTO.Queues.find(league => league.queueType === mappingQueue[type]);
-
-            if (league) {
-                var rankTiers = league.getTiersRank();
-                var leaguePt = '';
-                var winRate = '';
-                var series = league.getSeries(this.series);
-
-                if (this.showLp || this.showLp === "true") {
-                    leaguePt = league.getLeaguePoint();
-                }
-
-                if (this.showWinRate || this.showWinRate === "true") {
-                    winRate = ` - ${league.getRatio()} % (${league.wins}W/${league.losses}L)`;
-                }
-
-
-                if (this.fullString === "true") {
-                    returnValue = `${this.summonerName} est actuellement ${rankTiers}${leaguePt}${series}${winRate}`;
-                } else {
-                    returnValue = `${rankTiers}${leaguePt}${series}${winRate}`
-                }
-            }
-        } catch (ex) {
-            console.error(ex);
-        }
-
-        return returnValue.trim();
-    }
 }
-
-module.exports = SummonerQueue;

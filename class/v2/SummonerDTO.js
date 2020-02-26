@@ -1,6 +1,6 @@
 const LeagueQueue = require('./LeagueQueue');
 
- class SummonerInfo {
+ class SummonerDTO {
     constructor(info) {
         this.name = '';
         this.id = '';
@@ -70,27 +70,7 @@ const LeagueQueue = require('./LeagueQueue');
 			'tft': 'RANKED_TFT'
 		};
     }
-    /*
-    static getLeagueQueue() {
-		const mapping = SummonerInfo.getMappingQueueTypeToLeagueQueue();
-		return Object.keys(mapping).map(region => {
-			return mapping[region];
-		});
-    }
-    */
-/*
-    getQueueInfo(queueType) {
-        var found;
 
-        if (this.Queues && this.Queues.length > 0) {
-            found = this.Queues.find(function(queueInfo) {
-                return (queueInfo.queueType === queueType);
-            });
-        }
-        
-        return found;
-    }
-*/
 }
 
-module.exports = SummonerInfo;
+module.exports = SummonerDTO;
