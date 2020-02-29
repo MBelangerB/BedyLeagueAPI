@@ -32,7 +32,7 @@ module.exports = class LeagueLiveGame {
         this.summonerName = queryString.summonername;
         this.region = queryString.region;
     }
-    
+
     loadChampionInfo() {
         var champArr = [];
         for (var myKey in champions.data) {
@@ -93,15 +93,15 @@ module.exports = class LeagueLiveGame {
     async queryActiveGame(requestManager, result, summonerId) {
         var data;
         var leagueUrl = info.routes.v2.liveGame.getCurrentGameInfoBySummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerId);
-
+        var summon = `${this.summonerName}`;
 
         await requestManager.ExecuteRequest(leagueUrl).then(function (res) {
             data = res;
         }, function (error) {
             if (error.status.status_code === 404 && error.status.message == "Data not found") {
                 result.err = {
-                    statusCode: '',
-                    statusMessage: 'Aucune game en cours'
+                    statusCode: '200-1',
+                    statusMessage: `${summon} n'est actuellement pas en jeu.`
                 }
 
             } else if (typeof error.message === "undefined") {
@@ -183,6 +183,7 @@ module.exports = class LeagueLiveGame {
             if (SummonerData || typeof SummonerData !== "undefined") {
                 // TODO: Gérer le cas ou pas de data mais ERR
                 summonerInfo.init(SummonerData);
+                this.SummonerDTO = summonerInfo;
 
                 key = this.getLiveCacheKey();
 
@@ -199,7 +200,7 @@ module.exports = class LeagueLiveGame {
                 });
 
                 if (activeGame || typeof activeGame !== "undefined") {
-                    this.activeGame = activeGame; 
+                    this.activeGame = activeGame;
                 }
 
             }
@@ -207,10 +208,9 @@ module.exports = class LeagueLiveGame {
             // On traite le Resut
             if (result && typeof result.err.statusCode === "undefined") {
                 // Aucune erreur
-                this.SummonerDTO = summonerInfo;
                 result.code = 200;
             } else if (result && result.err.statusCode === "200-1") {
-                // Erreur normal (pas classé, invocateur n'Existe pas)
+                // Erreur normal 
                 result.code = 201;
             } else {
                 result.code = 404;
@@ -257,8 +257,10 @@ module.exports = class LeagueLiveGame {
         // Bohe joue actuellement Lux (MasteriesPts - WIN RATE ?) en utilisant Flash/Ignite
         // Bohe joue actuellement Lux (xxx pts - xx partie). Sort d'invocateur : F/D
     }
+
     /* 
         Retourne les informations sur la parti en cours
+        Routes : livegame
     */
     getActionGameDetails() {
         var returnValue = '';
@@ -266,19 +268,20 @@ module.exports = class LeagueLiveGame {
         var gameInfo = this.activeGame;
         var champList = this.championList;
 
+        /*
         var mapId = gameInfo.mapId;
         var gameType = gameInfo.gameType;
         var queueId = gameInfo.gameQueueConfigId;
+        */
         var participants = [];
 
-       
-
+        // Parcours les participants
         gameInfo.participants.forEach(function (participant) {
             var participantGame = new ParticipantsGame;
             participantGame.init(participant.summonerId, participant.summonerName,
                 participant.championId, participant.spell1Id, participant.spell2Id, participant.teamId)
 
-            var champion = champList.find(e => e.id === participant.championId.toString());          
+            var champion = champList.find(e => e.id === participant.championId.toString());
             participantGame.setChampionName(champion.championName);
 
             participants.push(participantGame);
@@ -298,7 +301,7 @@ module.exports = class LeagueLiveGame {
                 */
 
                 teamRed += `${participant.summonerName} (${participant.championName})`;
-                 
+
             } else if (participant.teamId === 200) {
                 if (teamBlue.length > 0) { teamBlue += " | "; }
                 /*
@@ -326,11 +329,5 @@ module.exports = class LeagueLiveGame {
         returnValue = returnValue.trimEnd();
         return returnValue.trim();
     }
-
-
-
-
-
-
 
 }

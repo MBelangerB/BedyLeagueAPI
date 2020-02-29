@@ -21,8 +21,7 @@
                 "getMatchListByChampionAndQueue": "https://{region}.api.riotgames.com/lol/match/v4/matchlists/by-account/{encryptedAccountId}?champion={championId}&queue={queueId}&season={seasonId}",
                 "getMatchlist": "https://{region}.api.riotgames.com/lol/match/v4/matchlists/by-account/{encryptedAccountId}?endIndex={end}&beginIndex={begin}"
             },
-            "getChampionRotate": "https://{region}.api.riotgames.com/lol/platform/v3/champion-rotations"
-            
+            "getChampionRotate": "https://{region}.api.riotgames.com/lol/platform/v3/champion-rotations"       
         }
     }
 }
