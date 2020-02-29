@@ -6,6 +6,7 @@ Cette API servira de PONT de communication entre les ChatBot *(NightBot, StreamL
 |--|--|--|
 | /rank  | Permet d'obtenir le rang de invocateur  | GOLD IV (100 LP) [✓--]
 | /rotate  | Permet d'obtenir la rotation actuel  | 
+| /livegame  | Permet d'obtenir les informations sur les invocateurs/champion de la partie actuel | | /topMasteries  | Permet d'obtenir les 5 champions avec le plus de points de maitrises | 
 
 # Utilisation des commandes
 ## Rank
@@ -31,3 +32,24 @@ Cette commande permet d'obtenir la rotation actuel.
 |--|--|--|--|--|
 | region  | Oui|Le serveur|NA1, EUW1|/rank?**region=NA1**
 
+
+## livegame
+Permet d'obtenir les informations sur les invocateurs/champion de la partie actuel
+### Paramètres
+
+| Paramètres| Obligatoire|Description|Valeur disponible| Exemple
+|--|--|--|--|--|
+| region  | Oui|Le serveur|NA1, EUW1|/rank?**region=NA1**
+| summonerName| Oui | Le nom de l'invocateur|| /rank?region=NA1&**summonerName=Bedy90**
+
+
+## topMasteries
+Permet d'obtenir les 5 champions avec le plus de points de maitrises 
+### Paramètres
+
+| Paramètres| Obligatoire|Description|Valeur disponible| Exemple
+|--|--|--|--|--|
+| region  | Oui|Le serveur|NA1, EUW1|/rank?**region=NA1**
+| summonerName| Oui | Le nom de l'invocateur|| /rank?region=NA1&**summonerName=Bedy90**
+|||||
+|nb|Non|Nombre de données a afficher (5 par défaut)|||

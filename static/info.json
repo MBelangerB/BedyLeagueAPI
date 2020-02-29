@@ -3,14 +3,26 @@
     "region": ["NA1", "EUW1"],
     "routes": {
         "v2": {
-            "getBySummonerName": "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}",
-            "getCurrentGameInfoBySummoner": "https://{region}.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/{encryptedSummonerId}",
-            "getAllChampionMasteries": "https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{encryptedSummonerId}",
-            "getMatchlist": "https://{region}.api.riotgames.com/lol/match/v4/matchlists/by-account/{encryptedAccountId}?endIndex={end}&beginIndex={begin}",
-            "getLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/lol/league/v4/entries/by-summoner/{encryptedSummonerId}",
-            "getTFTLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{encryptedSummonerId}",
-            "getChampionRotate": "https://{region}.api.riotgames.com/lol/platform/v3/champion-rotations",
-            "getChampionMasteriesBySummoner": "https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{encryptedSummonerId}"
+            "summoner": {
+                "getBySummonerName": "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}"         
+            },
+           "masteries": {
+                "getChampionMasteriesBySummoner": "https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{encryptedSummonerId}",         
+                "getChampionMasteriesBySummonerAndChampionId": "https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{encryptedSummonerId}/by-champion/{championId}"      
+            },
+            "league": {
+                "getLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/lol/league/v4/entries/by-summoner/{encryptedSummonerId}",
+                "getTFTLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{encryptedSummonerId}"             
+            },
+            "liveGame": {
+                "getCurrentGameInfoBySummoner": "https://{region}.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/{encryptedSummonerId}"
+            },
+            "matchHistory": {
+                "getMatchListByChampionAndQueue": "https://{region}.api.riotgames.com/lol/match/v4/matchlists/by-account/{encryptedAccountId}?champion={championId}&queue={queueId}&season={seasonId}",
+                "getMatchlist": "https://{region}.api.riotgames.com/lol/match/v4/matchlists/by-account/{encryptedAccountId}?endIndex={end}&beginIndex={begin}"
+            },
+            "getChampionRotate": "https://{region}.api.riotgames.com/lol/platform/v3/champion-rotations"
+            
         }
     }
 }

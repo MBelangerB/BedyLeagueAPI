@@ -28,11 +28,13 @@ const LoLRotate = require('./module/v1/LolRotate');
 const SummonerQueue = require('./module/v2/SummonerQueue');
 const LeagueRotate = require('./module/v2/LeagueRotate');
 const LeagueChampionMasteries = require('./module/v2/LeagueChampionMasteries');
+const LeagueActiveGame = require('./module/v2/LeagueLiveGame');
 
 /*
     Init custom class
 */
 var Logging = require('./module/logging');
+var static = require('./static/staticFunction');
 require('./static/Prototype.js');
 
 /*
@@ -197,16 +199,16 @@ app.get('/v1/rotate', async function (req, res) {
 app.get('/v2/rank', async function (req, res) {
     try {
         Logging.writeLog('/v2/rank', `Execute GetRank with data ${JSON.stringify(req.query)}`, 
-                         'validateQueryString', true);
+                         'validateSummonerAndRegion', true);
 
         // Valider les paramètres
-        var validation = SummonerQueue.validateQueryString(req.query);
+        var validation = static.validateSummonerAndRegion(req.query);
         if (validation && validation.isValid === false) {
             res.json(validation.errors)
-            Logging.writeLog('/v2/rank', ``, 'validateQueryString', false);
+            Logging.writeLog('/v2/rank', ``, 'validateSummonerAndRegion', false);
             return;
         }    
-        Logging.writeLog('/v2/rank', ``, 'validateQueryString', false); 
+        Logging.writeLog('/v2/rank', ``, 'validateSummonerAndRegion', false); 
 
         // Obtenir les informations sur l'invocateur
         Logging.writeLog('/v2/rank', `Before init SummonerQueue`, 'SummonerQueue', true);
@@ -233,8 +235,8 @@ app.get('/v2/rotate', async function (req, res) {
         Logging.writeLog('/v2/rotate', `Execute GetRotate`, 
                          'GetRotate', true);
 
-                            // Valider les paramètres
-        var isValid = LeagueRotate.validateQueryString(req.query);
+       // Valider les paramètres
+        var isValid = static.validateRegion(req.query);
         if (!isValid.isValid) {
             res.json(isValid.errors)
             return;
@@ -261,25 +263,96 @@ app.get('/v2/rotate', async function (req, res) {
     }
 });
 app.get('/v2/livegame', async function (req, res) {
+    try {
+        Logging.writeLog('/v2/livegame', `Execute livegame with data ${JSON.stringify(req.query)}`, 
+                         'validateSummonerAndRegion', true);
 
+        // Valider les paramètres
+        var validation = static.validateSummonerAndRegion(req.query);
+        if (validation && validation.isValid === false) {
+            res.json(validation.errors)
+            Logging.writeLog('/v2/livegame', ``, 'validateSummonerAndRegion', false);
+            return;
+        }    
+        Logging.writeLog('/v2/livegame', ``, 'validateSummonerAndRegion', false); 
+
+        // Obtenir les informations sur l'invocateur
+        Logging.writeLog('/v2/livegame', `Before init LeagueActiveGame`, 'LeagueActiveGame', true);
+   
+        var activeGame = new LeagueActiveGame(req.query);
+        var result = await activeGame.getLiveGame();
+        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
+            res.json(result.err.statusMessage);
+            return;
+        }
+   
+        Logging.writeLog('/v2/livegame', ``, 'LeagueActiveGame', false);
+
+        Logging.writeLog('/v2/livegame', `Before getReturnValue`, 'getActionGameDetails', true);
+        var response = activeGame.getActionGameDetails();   
+        Logging.writeLog('/v2/livegame', ``, 'getActionGameDetails', false);
+        res.send(response);
+
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
+    }   
 });
 // Stats 10 dernières games
 app.get('/v2/lastgame', async function (req, res) {
 
 });
+app.get('/v2/currentChampion', async function (req, res) {
+    // en développeement
+    try {
+        Logging.writeLog('/v2/currentChampion', `Execute GetcurrentChampion with data ${JSON.stringify(req.query)}`, 
+                         'validateSummonerAndRegion', true);
+
+        // Valider les paramètres
+        var validation = static.validateSummonerAndRegion(req.query);
+        if (validation && validation.isValid === false) {
+            res.json(validation.errors)
+            Logging.writeLog('/v2/currentChampion', ``, 'validateSummonerAndRegion', false);
+            return;
+        }    
+        Logging.writeLog('/v2/currentChampion', ``, 'validateSummonerAndRegion', false); 
+
+        // Obtenir les informations sur l'invocateur
+        Logging.writeLog('/v2/topMasteries', `Before init LeagueChampionMasteries`, 'LeagueChampionMasteries', true);
+   
+        var activeGame = new LeagueActiveGame(req.query);
+        var result = await activeGame.getLiveGame();
+        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
+            res.json(result.err.statusMessage);
+            return;
+        }
+   
+        Logging.writeLog('/v2/currentChampion', ``, 'LeagueChampionMasteries', false);
+
+        Logging.writeLog('/v2/currentChampion', `Before getReturnValue`, 'LeagueChampionMasteries', true);
+        var response = activeGame.getCurrentChampionData();   
+        Logging.writeLog('/v2/currentChampion', ``, 'LeagueChampionMasteries', false);
+        res.send(response);
+
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
+    }
+});
+// Top stats masteries
 app.get('/v2/topMasteries', async function (req, res) {
     try {
         Logging.writeLog('/v2/topMasteries', `Execute GetTopMasteries with data ${JSON.stringify(req.query)}`, 
-                         'validateQueryString', true);
+                         'validateSummonerAndRegion', true);
 
         // Valider les paramètres
-        var validation = LeagueChampionMasteries.validateQueryString(req.query);
+        var validation = static.validateSummonerAndRegion(req.query);
         if (validation && validation.isValid === false) {
             res.json(validation.errors)
-            Logging.writeLog('/v2/topMasteries', ``, 'validateQueryString', false);
+            Logging.writeLog('/v2/topMasteries', ``, 'validateSummonerAndRegion', false);
             return;
         }    
-        Logging.writeLog('/v2/topMasteries', ``, 'validateQueryString', false); 
+        Logging.writeLog('/v2/topMasteries', ``, 'validateSummonerAndRegion', false); 
 
         // Obtenir les informations sur l'invocateur
         Logging.writeLog('/v2/topMasteries', `Before init LeagueChampionMasteries`, 'LeagueChampionMasteries', true);

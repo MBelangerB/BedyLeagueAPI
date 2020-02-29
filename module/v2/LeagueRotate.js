@@ -151,6 +151,7 @@ module.exports = class LeagueRotate {
     }
 
       // Validation
+      /*
       static validateQueryString(queryString) {
         var err = [];
         // Prepare Query
@@ -174,5 +175,6 @@ module.exports = class LeagueRotate {
 
         return result;
     }
+    */
 }
 

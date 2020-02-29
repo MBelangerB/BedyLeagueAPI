@@ -57,7 +57,7 @@ module.exports = class LeagueChampionMasteries {
     // Step 1 : Execution de la Query qui obtient les informations sur l'invocateur
     async querySummonerInfo(requestManager, result) {
         var data;
-        var SummonerUrl = info.routes.v2.getBySummonerName.replace('{region}', this.region).replace('{summonerName}', this.summonerName);
+        var SummonerUrl = info.routes.v2.summoner.getBySummonerName.replace('{region}', this.region).replace('{summonerName}', this.summonerName);
 
         // Le SummonerInfo n'est pas présent dans la cache
         await requestManager.ExecuteRequest(SummonerUrl).then(function (res) {
@@ -90,7 +90,7 @@ module.exports = class LeagueChampionMasteries {
     async queryMasteriesInfo(requestManager, result, summonerId) {
         var data;
         // Obtenir l'information sur la queue    
-        var leagueUrl = info.routes.v2.getChampionMasteriesBySummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerId);
+        var leagueUrl = info.routes.v2.masteries.getChampionMasteriesBySummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerId);
 
         await requestManager.ExecuteRequest(leagueUrl).then(function (res) {
             if (res.length === 0) {
@@ -217,7 +217,7 @@ module.exports = class LeagueChampionMasteries {
 
 
 
-    static validateQueryString(queryString) {
+   /* static validateQueryString(queryString) {
         var err = [];
 
         // Prepare Query
@@ -253,19 +253,12 @@ module.exports = class LeagueChampionMasteries {
             });
         }
 
-        // VALIDER SI LA REGION EST VALIDE
-        /*
-        if (!SummonerQueue.isValidRegion(queryString.region)) {
-            err.push("La paramètre 'region' est invalide.");
-        }
-        */
-
         var result = {
             isValid: (err.length === 0),
             errors: err
         }
 
         return result;
-    }
+    }*/
 
 }

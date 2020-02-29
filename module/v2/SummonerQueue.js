@@ -3,7 +3,7 @@ var RequestManager = require(`./RequestManager`);
 const CacheService = require('../Cache.Service');
 
 var SummonerDTO = require('../../class/v2/SummonerDTO');
-
+var staticFunc = require('../../static/staticFunction');
 /*
     Cache configuration
 */
@@ -41,12 +41,14 @@ class SummonerQueue {
         }
 
         this.queueType = process.env.queueType.toLocaleLowerCase();
-        if (typeof queryString["queueType"] !== "undefined" && SummonerQueue.isValidQueueType(queryString["queueType"])) {
+        
+        if (typeof queryString["queueType"] !== "undefined" && staticFunc.isValidQueueType(queryString["queueType"])) {
             this.queueType = queryString["queueType"].toLocaleLowerCase();
         }
-        if (typeof this.queueType === "undefined" || SummonerQueue.isValidQueueType(this.queueType) === false) {
+        if (typeof this.queueType === "undefined" || staticFunc.isValidQueueType(this.queueType) === false) {
             this.queueType = "solo5"
         }
+        
     }
 
     //#region "CacheKey"
@@ -61,7 +63,7 @@ class SummonerQueue {
     // Step 1 : Execution de la Query qui obtient les informations sur l'invocateur
     async querySummonerInfo(requestManager, result) {
         var data;
-        var SummonerUrl = info.routes.v2.getBySummonerName.replace('{region}', this.region).replace('{summonerName}', this.summonerName);
+        var SummonerUrl = info.routes.v2.summoner.getBySummonerName.replace('{region}', this.region).replace('{summonerName}', this.summonerName);
 
         // Le SummonerInfo n'est pas présent dans la cache
         await requestManager.ExecuteRequest(SummonerUrl).then(function (res) {
@@ -94,9 +96,9 @@ class SummonerQueue {
     async queryLeagueInfo(requestManager, result, summonerId) {
         var data;
         // Obtenir l'information sur la queue        
-        var leagueUrl = info.routes.v2.getLeagueEntriesForSummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerId);
+        var leagueUrl = info.routes.v2.league.getLeagueEntriesForSummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerId);
         if (this.queueType === "tft") {
-            leagueUrl = info.routes.v2.getTFTLeagueEntriesForSummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerId);
+            leagueUrl = info.routes.v2.league.getTFTLeagueEntriesForSummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerId);
         }
         
         await requestManager.ExecuteRequest(leagueUrl).then(function (res) {
@@ -227,7 +229,7 @@ class SummonerQueue {
 
     //#region  "Validation"
     // Validation
-    static validateQueryString(queryString) {
+    /*static validateQueryString(queryString) {
         var err = [];
 
         // Prepare Query
@@ -274,11 +276,11 @@ class SummonerQueue {
         }
 
         return result;
-    }
+    }*/
 
     // https://developer.riotgames.com/ranked-info.html
     // Valider si la queue est accepté
-    static isValidQueueType(type) {
+    /* static isValidQueueType(type) {
         var valid = false;
         switch (type) {
             case 'solo5':
@@ -308,7 +310,7 @@ class SummonerQueue {
                 break
         }
         return valid;
-    }
+    }*/
     //#endregion
 
 
