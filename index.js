@@ -69,26 +69,6 @@ app.get('/rank/:region/name/:summonerName', async function (req, res) {
 /*
     Redirecton version
 */
-app.get('/rank', async function (req, res) {
-    /*
-    var currentUrl = req.originalUrl;
-    var newUrl = `v2${currentUrl}`;
-    */
-    var passedUrl = url.format({
-        pathname:'/v2/rank',
-        query:req.query,
-      });
-
-    res.redirect(passedUrl);
-});
-app.get('/rotate', async function (req, res) {
-    var passedUrl = url.format({
-        pathname:'/v2/rotate',
-        query:req.query,
-      });
-
-    res.redirect(passedUrl);
-});
 
 /*
     Paramètre
@@ -101,6 +81,59 @@ app.get('/rotate', async function (req, res) {
         queueType           : (facultatif) Permet de spécifier le type de queue qu'on désire valider.
 
 */
+app.get('/rank', async function (req, res) {
+    /*
+    var currentUrl = req.originalUrl;
+    var newUrl = `v2${currentUrl}`;
+    */
+    var passedUrl = url.format({
+        pathname:'/v2/rank',
+        query:req.query,
+      });
+
+    res.redirect(passedUrl);
+});
+/*
+    Paramètre
+        region          : Serveur Riot
+*/
+app.get('/rotate', async function (req, res) {
+    var passedUrl = url.format({
+        pathname:'/v2/rotate',
+        query:req.query,
+      });
+
+    res.redirect(passedUrl);
+});
+/*
+    Paramètre
+        summonername    : Nom de l'invocateur
+        region          : Serveur Riot
+*/
+app.get('/livegame', async function (req, res) {
+    var passedUrl = url.format({
+        pathname:'/v2/livegame',
+        query:req.query,
+      });
+
+    res.redirect(passedUrl);
+});
+/*
+    Paramètre
+        summonername    : Nom de l'invocateur
+        region          : Serveur Riot
+        nb              : Nombre de champions a afficher
+*/
+app.get('/topMasteries', async function (req, res) {
+    var passedUrl = url.format({
+        pathname:'/v2/topMasteries',
+        query:req.query,
+      });
+
+    res.redirect(passedUrl);
+});
+
+// Version 1
 app.get('/v1/rank', async function (req, res) {
     try {
         if (process.env.DEBUG) { console.log(`  Execution pour /rank : ${JSON.stringify(req.query)}`) }
@@ -298,6 +331,43 @@ app.get('/v2/livegame', async function (req, res) {
         res.send(ex);
     }   
 });
+// Top stats masteries
+app.get('/v2/topMasteries', async function (req, res) {
+    try {
+        Logging.writeLog('/v2/topMasteries', `Execute GetTopMasteries with data ${JSON.stringify(req.query)}`, 
+                         'validateSummonerAndRegion', true);
+
+        // Valider les paramètres
+        var validation = static.validateSummonerAndRegion(req.query);
+        if (validation && validation.isValid === false) {
+            res.json(validation.errors)
+            Logging.writeLog('/v2/topMasteries', ``, 'validateSummonerAndRegion', false);
+            return;
+        }    
+        Logging.writeLog('/v2/topMasteries', ``, 'validateSummonerAndRegion', false); 
+
+        // Obtenir les informations sur l'invocateur
+        Logging.writeLog('/v2/topMasteries', `Before init LeagueChampionMasteries`, 'LeagueChampionMasteries', true);
+        var champMasteries = new LeagueChampionMasteries(req.query);
+        var result = await champMasteries.getChampionsMasteries();
+        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
+            res.json(result.err.statusMessage);
+            return;
+        }
+        Logging.writeLog('/v2/topMasteries', ``, 'LeagueChampionMasteries', false);
+
+        Logging.writeLog('/v2/topMasteries', `Before getReturnValue`, 'LeagueChampionMasteries', true);
+        var response = champMasteries.getReturnValue(champMasteries.queueType);   
+        Logging.writeLog('/v2/topMasteries', ``, 'LeagueChampionMasteries', false);
+        res.send(response);
+
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
+    }
+});
+
+
 // Stats 10 dernières games
 app.get('/v2/lastgame', async function (req, res) {
 
@@ -332,41 +402,6 @@ app.get('/v2/currentChampion', async function (req, res) {
         Logging.writeLog('/v2/currentChampion', `Before getReturnValue`, 'LeagueChampionMasteries', true);
         var response = activeGame.getCurrentChampionData();   
         Logging.writeLog('/v2/currentChampion', ``, 'LeagueChampionMasteries', false);
-        res.send(response);
-
-    } catch (ex) {
-        console.error(ex);
-        res.send(ex);
-    }
-});
-// Top stats masteries
-app.get('/v2/topMasteries', async function (req, res) {
-    try {
-        Logging.writeLog('/v2/topMasteries', `Execute GetTopMasteries with data ${JSON.stringify(req.query)}`, 
-                         'validateSummonerAndRegion', true);
-
-        // Valider les paramètres
-        var validation = static.validateSummonerAndRegion(req.query);
-        if (validation && validation.isValid === false) {
-            res.json(validation.errors)
-            Logging.writeLog('/v2/topMasteries', ``, 'validateSummonerAndRegion', false);
-            return;
-        }    
-        Logging.writeLog('/v2/topMasteries', ``, 'validateSummonerAndRegion', false); 
-
-        // Obtenir les informations sur l'invocateur
-        Logging.writeLog('/v2/topMasteries', `Before init LeagueChampionMasteries`, 'LeagueChampionMasteries', true);
-        var champMasteries = new LeagueChampionMasteries(req.query);
-        var result = await champMasteries.getChampionsMasteries();
-        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
-            res.json(result.err.statusMessage);
-            return;
-        }
-        Logging.writeLog('/v2/topMasteries', ``, 'LeagueChampionMasteries', false);
-
-        Logging.writeLog('/v2/topMasteries', `Before getReturnValue`, 'LeagueChampionMasteries', true);
-        var response = champMasteries.getReturnValue(champMasteries.queueType);   
-        Logging.writeLog('/v2/topMasteries', ``, 'LeagueChampionMasteries', false);
         res.send(response);
 
     } catch (ex) {
