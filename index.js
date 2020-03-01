@@ -237,7 +237,7 @@ app.get('/v2/rank', async function (req, res) {
         // Valider les paramètres
         var validation = static.validateSummonerAndRegion(req.query);
         if (validation && validation.isValid === false) {
-            res.json(validation.errors)
+            res.send(validation.errors)
             Logging.writeLog('/v2/rank', ``, 'validateSummonerAndRegion', false);
             return;
         }    
@@ -248,7 +248,7 @@ app.get('/v2/rank', async function (req, res) {
         var locSummoner = new SummonerQueue(req.query);
         var result = await locSummoner.getSummonerInfo();
         if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
-            res.json(result.err.statusMessage);
+            res.send(result.err.statusMessage);
             return;
         }
         Logging.writeLog('/v2/rank', ``, 'SummonerQueue', false);
@@ -279,7 +279,7 @@ app.get('/v2/rotate', async function (req, res) {
         var result = await legData.getLeagueRotate();
 
         if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
-            res.json(result.err.statusMessage);
+            res.send(result.err.statusMessage);
             return;
         }
         Logging.writeLog('/v2/rotate', ``, 'GetRotate', false); 
@@ -303,7 +303,7 @@ app.get('/v2/livegame', async function (req, res) {
         // Valider les paramètres
         var validation = static.validateSummonerAndRegion(req.query);
         if (validation && validation.isValid === false) {
-            res.json(validation.errors)
+            res.send(validation.errors)
             Logging.writeLog('/v2/livegame', ``, 'validateSummonerAndRegion', false);
             return;
         }    
@@ -315,7 +315,7 @@ app.get('/v2/livegame', async function (req, res) {
         var activeGame = new LeagueActiveGame(req.query);
         var result = await activeGame.getLiveGame();
         if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
-            res.json(result.err.statusMessage);
+            res.send(result.err.statusMessage);
             return;
         }
    
@@ -340,7 +340,7 @@ app.get('/v2/topMasteries', async function (req, res) {
         // Valider les paramètres
         var validation = static.validateSummonerAndRegion(req.query);
         if (validation && validation.isValid === false) {
-            res.json(validation.errors)
+            res.send(validation.errors)
             Logging.writeLog('/v2/topMasteries', ``, 'validateSummonerAndRegion', false);
             return;
         }    
@@ -351,7 +351,7 @@ app.get('/v2/topMasteries', async function (req, res) {
         var champMasteries = new LeagueChampionMasteries(req.query);
         var result = await champMasteries.getChampionsMasteries();
         if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
-            res.json(result.err.statusMessage);
+            res.send(result.err.statusMessage);
             return;
         }
         Logging.writeLog('/v2/topMasteries', ``, 'LeagueChampionMasteries', false);
@@ -375,7 +375,7 @@ app.get('/v2/lastgame', async function (req, res) {
 
 });
 app.get('/v2/currentChampion', async function (req, res) {
-    // en développeement
+    // en DEV
     try {
         Logging.writeLog('/v2/currentChampion', `Execute GetcurrentChampion with data ${JSON.stringify(req.query)}`, 
                          'validateSummonerAndRegion', true);

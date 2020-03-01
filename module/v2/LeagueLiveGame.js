@@ -314,7 +314,7 @@ module.exports = class LeagueLiveGame {
             }
         });
 
-        returnValue = `🔴 ${teamRed} Vs 🔵 ${teamBlue}`;
+        returnValue = `🔴${teamRed} Vs 🔵${teamBlue}`;
 
         /*
             🔴🔵
