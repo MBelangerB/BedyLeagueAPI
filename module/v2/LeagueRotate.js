@@ -74,23 +74,25 @@ module.exports = class LeagueRotate {
             }
         });
 
-        var resultData = {
-            "freeChampionIds": data.freeChampionIds,
-            "freeChampion": []
+        var resultData;
+        if (data) {
+            resultData = {
+                "freeChampionIds": data.freeChampionIds,
+                "freeChampion": []
+            }
+            var champList = this.championList;
+            var champArr = [];
+            resultData.freeChampionIds.forEach(function (championId) {
+                var champion = champList.find(e => e.id === championId.toString());
+                champArr.push(champion);
+            });
+            // Trie
+            champArr.sort(function (a, b) {
+                return a.championName.localeCompare(b.championName);
+            });
+            // Set Array
+            resultData.freeChampion = champArr;
         }
-        var champList = this.championList;
-        var champArr = [];
-        resultData.freeChampionIds.forEach(function (championId) {    
-            var champion = champList.find(e => e.id === championId.toString());
-            champArr.push(champion);
-        });
-        // Trie
-        champArr.sort(function (a, b) {
-            return a.championName.localeCompare(b.championName);
-        });
-        // Set Array
-        resultData.freeChampion = champArr;
-
         return resultData;
     }
 
@@ -139,7 +141,7 @@ module.exports = class LeagueRotate {
     // Return
     getReturnValue() {
         var returnValue = '';
-    
+
         this.rotateData.freeChampion.forEach(function (champ) {
             if (returnValue.length > 0) { returnValue += " | " }
             returnValue += champ.getChampionName;
@@ -150,31 +152,31 @@ module.exports = class LeagueRotate {
         return returnValue.trim();
     }
 
-      // Validation
-      /*
-      static validateQueryString(queryString) {
-        var err = [];
-        // Prepare Query
-        for (var key in queryString) {
-            queryString[key.toLowerCase()] = queryString[key];
-        }
+    // Validation
+    /*
+    static validateQueryString(queryString) {
+      var err = [];
+      // Prepare Query
+      for (var key in queryString) {
+          queryString[key.toLowerCase()] = queryString[key];
+      }
 
-        // Pré validation
-        if (Object.keys(queryString).length === 0) {
-            err.push("Paramètres marquant / missing parameters (region)");
-        } else {
-            if (typeof queryString.region === "undefined" || queryString.region.trim().length === 0) {
-                err.push("Le paramètre 'region' est obligatoire.");
-            }
-        }
+      // Pré validation
+      if (Object.keys(queryString).length === 0) {
+          err.push("Paramètres marquant / missing parameters (region)");
+      } else {
+          if (typeof queryString.region === "undefined" || queryString.region.trim().length === 0) {
+              err.push("Le paramètre 'region' est obligatoire.");
+          }
+      }
 
-        var result = {
-            isValid: (err.length === 0),
-            errors: err
-        }
+      var result = {
+          isValid: (err.length === 0),
+          errors: err
+      }
 
-        return result;
-    }
-    */
+      return result;
+  }
+  */
 }
 

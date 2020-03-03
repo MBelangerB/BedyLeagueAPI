@@ -30,11 +30,13 @@ const LeagueRotate = require('./module/v2/LeagueRotate');
 const LeagueChampionMasteries = require('./module/v2/LeagueChampionMasteries');
 const LeagueActiveGame = require('./module/v2/LeagueLiveGame');
 
+
 /*
     Init custom class
 */
 var Logging = require('./module/logging');
-var static = require('./static/staticFunction');
+var staticFunction = require('./static/staticFunction');
+// var clientInfo = require('./config/client.json');
 require('./static/Prototype.js');
 
 /*
@@ -235,7 +237,7 @@ app.get('/v2/rank', async function (req, res) {
                          'validateSummonerAndRegion', true);
 
         // Valider les paramètres
-        var validation = static.validateSummonerAndRegion(req.query);
+        var validation = staticFunction.validateSummonerAndRegion(req.query);
         if (validation && validation.isValid === false) {
             res.send(validation.errors)
             Logging.writeLog('/v2/rank', ``, 'validateSummonerAndRegion', false);
@@ -269,7 +271,7 @@ app.get('/v2/rotate', async function (req, res) {
                          'GetRotate', true);
 
        // Valider les paramètres
-        var isValid = static.validateRegion(req.query);
+        var isValid = staticFunction.validateRegion(req.query);
         if (!isValid.isValid) {
             res.json(isValid.errors)
             return;
@@ -301,7 +303,7 @@ app.get('/v2/livegame', async function (req, res) {
                          'validateSummonerAndRegion', true);
 
         // Valider les paramètres
-        var validation = static.validateSummonerAndRegion(req.query);
+        var validation = staticFunction.validateSummonerAndRegion(req.query);
         if (validation && validation.isValid === false) {
             res.send(validation.errors)
             Logging.writeLog('/v2/livegame', ``, 'validateSummonerAndRegion', false);
@@ -338,7 +340,7 @@ app.get('/v2/topMasteries', async function (req, res) {
                          'validateSummonerAndRegion', true);
 
         // Valider les paramètres
-        var validation = static.validateSummonerAndRegion(req.query);
+        var validation = staticFunction.validateSummonerAndRegion(req.query);
         if (validation && validation.isValid === false) {
             res.send(validation.errors)
             Logging.writeLog('/v2/topMasteries', ``, 'validateSummonerAndRegion', false);
@@ -381,7 +383,7 @@ app.get('/v2/currentChampion', async function (req, res) {
                          'validateSummonerAndRegion', true);
 
         // Valider les paramètres
-        var validation = static.validateSummonerAndRegion(req.query);
+        var validation = staticFunction.validateSummonerAndRegion(req.query);
         if (validation && validation.isValid === false) {
             res.json(validation.errors)
             Logging.writeLog('/v2/currentChampion', ``, 'validateSummonerAndRegion', false);

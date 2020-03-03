@@ -3,7 +3,7 @@ var RequestManager = require(`./RequestManager`);
 const CacheService = require('../Cache.Service');
 
 var SummonerDTO = require('../../class/v2/SummonerDTO');
-var staticFunc = require('../../static/staticFunction');
+var staticFunction = require('../../static/staticFunction');
 /*
     Cache configuration
 */
@@ -42,10 +42,10 @@ class SummonerQueue {
 
         this.queueType = process.env.queueType.toLocaleLowerCase();
         
-        if (typeof queryString["queueType"] !== "undefined" && staticFunc.isValidQueueType(queryString["queueType"])) {
+        if (typeof queryString["queueType"] !== "undefined" && staticFunction.isValidQueueType(queryString["queueType"])) {
             this.queueType = queryString["queueType"].toLocaleLowerCase();
         }
-        if (typeof this.queueType === "undefined" || staticFunc.isValidQueueType(this.queueType) === false) {
+        if (typeof this.queueType === "undefined" || staticFunction.isValidQueueType(this.queueType) === false) {
             this.queueType = "solo5"
         }
         

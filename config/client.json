@@ -1,0 +1,22 @@
+{
+    "configuration": [
+        {
+            "twitchName": "Bohe",
+            "userId": "B13Z45CX11",
+            "summonerName": "Boheee",
+            "region": "NA1"
+        },
+        {
+            "twitchName": "La Bohe",
+            "userId": "B13Z45CX12",
+            "summonerName": "La Bohe",
+            "region": "EUW1"         
+        },
+        {
+            "twitchName": "None",
+            "userId": "B99Z45CX12",
+            "summonerName": "Gold Edge",
+            "region": "EUW1"         
+        }
+    ]
+}
