@@ -1,5 +1,6 @@
+var clientInfo = require('../config/client.json');
 
- class staticFunction {
+class staticFunction {
     static validateSummonerAndRegion(queryString) {
         var err = [];
 
@@ -13,12 +14,27 @@
             err.push("Paramètres marquant / missing parameters (region, summonerName)");
 
         } else {
-            if (typeof queryString.summonername === "undefined" || queryString.summonername.trim().length === 0) {
-                err.push("Le paramètre 'summonerName' est obligatoire.");
+
+            if (typeof queryString.userId !== "undefined" && queryString.userId.trim().length !== 0) {
+                // Si on passe un userID alors on doit obtenir les info par CLIENT.JSON
+                var id = queryString.userId;
+                var userInfo = clientInfo.configuration.find(e => e.userId === id.toString());
+            
+                var region = userInfo.region;
+                var username = userInfo.summonerName;
+
+                queryString.summonername = username;
+                queryString.region = region;
+
+            } else {
+                if (typeof queryString.summonername === "undefined" || queryString.summonername.trim().length === 0) {
+                    err.push("Le paramètre 'summonerName' est obligatoire.");
+                }
+                if (typeof queryString.region === "undefined" || queryString.region.trim().length === 0) {
+                    err.push("Le paramètre 'region' est obligatoire.");
+                }
             }
-            if (typeof queryString.region === "undefined" || queryString.region.trim().length === 0) {
-                err.push("Le paramètre 'region' est obligatoire.");
-            }
+
         }
 
         // https://developer.riotgames.com/getting-started.html
@@ -65,8 +81,8 @@
             }
         }
 
-          // VALIDER SI LA REGION EST VALIDE
-          if (!staticFunction.isValidRegion(queryString.region)) {
+        // VALIDER SI LA REGION EST VALIDE
+        if (!staticFunction.isValidRegion(queryString.region)) {
             err.push("La paramètre 'region' est invalide.");
         }
 

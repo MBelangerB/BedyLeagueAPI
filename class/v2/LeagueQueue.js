@@ -47,6 +47,8 @@ class LeagueQueue {
     }
 
     getSeries(charSerie) {
+        //TODO: A TESTER car ça BUG
+        // series.replaceAll is not a function
         if (this.series.enabled) {
             var cWin = charSerie[0]; // W
             var cLoose = charSerie[1]; // L
