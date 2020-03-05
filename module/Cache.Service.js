@@ -18,13 +18,13 @@ module.exports = class Cache {
     });
   }
 
-   getAsync(key) {
+  getAsync(key) {
     const value = this.cache.get(key);
     if (value) {
       return Promise.resolve(value);
     } else {
-    //  return Promise.reject("NoData");
-        return null;
+      //  return Promise.reject("NoData");
+      return null;
     }
   }
 
@@ -33,7 +33,7 @@ module.exports = class Cache {
     return new Promise(function (resolve, reject) {
       const value = lCache.get(key);
       resolve(value);
-  });
+    });
   }
 
   setCacheValue(key, result) {
@@ -67,8 +67,8 @@ module.exports = class Cache {
 
     if (cacheInfo !== null) {
       cacheInfo.then(function (value) {
-          result = value;
-      }) 
+        result = value;
+      })
     }
 
     return (result || cacheInfo);

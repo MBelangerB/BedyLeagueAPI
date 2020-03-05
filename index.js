@@ -30,7 +30,7 @@ var Logging = require('./module/logging');
 */
 var jsonConfig = require('./class/jsonConfig');
 var staticFunction = require('./static/staticFunction');
-var clientInfo = require('./config/client.json');
+// var clientInfo = require('./config/client.json');
 require('./static/Prototype.js');
 
 /*
@@ -136,7 +136,8 @@ app.get('/v2/rank', async function (req, res) {
             'validateSummonerAndRegion', true);
 
         // Valider les paramètres
-        var validation = staticFunction.validateSummonerAndRegion(req.query);
+        var fpath = path.join(__dirname + '/config/client.json')
+        var validation = staticFunction.validateSummonerAndRegion(req.query, fpath);
         if (validation && validation.isValid === false) {
             res.send(validation.errors)
             Logging.writeLog('/v2/rank', ``, 'validateSummonerAndRegion', false);
@@ -202,7 +203,8 @@ app.get('/v2/livegame', async function (req, res) {
             'validateSummonerAndRegion', true);
 
         // Valider les paramètres
-        var validation = staticFunction.validateSummonerAndRegion(req.query);
+        var fpath = path.join(__dirname + '/config/client.json')
+        var validation = staticFunction.validateSummonerAndRegion(req.query, fpath);
         if (validation && validation.isValid === false) {
             res.send(validation.errors)
             Logging.writeLog('/v2/livegame', ``, 'validateSummonerAndRegion', false);
@@ -239,7 +241,8 @@ app.get('/v2/topMasteries', async function (req, res) {
             'validateSummonerAndRegion', true);
 
         // Valider les paramètres
-        var validation = staticFunction.validateSummonerAndRegion(req.query);
+        var fpath = path.join(__dirname + '/config/client.json')
+        var validation = staticFunction.validateSummonerAndRegion(req.query, fpath);
         if (validation && validation.isValid === false) {
             res.send(validation.errors)
             Logging.writeLog('/v2/topMasteries', ``, 'validateSummonerAndRegion', false);
@@ -269,42 +272,36 @@ app.get('/v2/topMasteries', async function (req, res) {
 });
 
 
-app.post('/setSummoner', async function (req, res) {
-    var query = {}; // = req.query;
-    // Prepare Query
-    for (var key in req.query) {
-        query[key.toLowerCase()] = req.query[key];
-    }
+app.get('/setSummoner', async function (req, res) {
+    try {
+        Logging.writeLog('/setSummoner', `Execute setSummoner with data ${JSON.stringify(req.query)}`,
+            'setSummoner', true);
 
-    var fpath = path.join(__dirname + '/config/client.json')
-    var config = new jsonConfig(fpath);
-    await config.loadData().then(function (sumData) {
-        config.replaceSummonerName(query.userid, query.summonername);
-    });
-    config.saveFile();
-
-    res.send(`La MAJ de '${query.summonername}' a été effectué avec succès.`)
-       // config.replaceSummonerName(query.summonerName);
-
-    /*
-    if (typeof query.userId !== "undefined" && query.userId.trim().length !== 0) {
-        // Si on passe un userID alors on doit obtenir les info par CLIENT.JSON
-        var id = query.userId;
-        var userInfo = clientInfo.configuration.find(e => e.userId === id.toString());
-
-        if (userInfo) {
-            var region = userInfo.region;
-            var username = userInfo.summonerName;
-
-            query.summonername = username;
-            query.region = region;
+        var query = {}; // = req.query;
+        // Prepare Query
+        for (var key in req.query) {
+            query[key.toLowerCase()] = req.query[key];
         }
 
-    }
-    */
+        var fpath = path.join(__dirname + '/config/client.json')
+        var config = new jsonConfig(fpath);
+        await config.loadData().then(function (sumData) {
+            config.replaceSummonerName(query.userid, query.summonername);
+            console.log('Update Complete')
+        });
+        config.saveFile();
 
+        Logging.writeLog('/setSummoner', ``, 'setSummoner', false);
+        res.send(`La MAJ de '${query.summonername}' a été effectué avec succès.`);
+       
+
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
+    }
 });
-app.post('/setRegion', async function (req, res) {
+
+app.get('/setRegion', async function (req, res) {
     var query = {}; // = req.query;
     // Prepare Query
     for (var key in req.query) {
@@ -336,7 +333,8 @@ app.get('/v2/currentChampion', async function (req, res) {
             'validateSummonerAndRegion', true);
 
         // Valider les paramètres
-        var validation = staticFunction.validateSummonerAndRegion(req.query);
+        var fpath = path.join(__dirname + '/config/client.json');
+        var validation = staticFunction.validateSummonerAndRegion(req.query, fpath);
         if (validation && validation.isValid === false) {
             res.json(validation.errors)
             Logging.writeLog('/v2/currentChampion', ``, 'validateSummonerAndRegion', false);

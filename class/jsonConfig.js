@@ -1,6 +1,18 @@
 'use strict';
 
 var fs = require('fs');
+// const CacheService = require('../module/Cache.Service');
+
+/*
+    Cache configuration
+*/
+/*
+var ttSummonerInfo = 60 * 60 * 1 * 24; // cache for 1 Hour
+var ttLeagueInfo = 60 * 1; // cache for 1 mn (60 sec * 1 min)
+
+var summonerCache = new CacheService(ttSummonerInfo); // Create a new cache service instance
+var LeagueCache = new CacheService(ttLeagueInfo); // Create a new cache service instance
+*/
 
 class jsonConfig {
     constructor(fileName) {
@@ -11,14 +23,22 @@ class jsonConfig {
 
     async loadData() {
         if (this.fileName) {
-            var result = await fs.readFileSync(this.fileName) /*, (err, data) => {
-                if (err) throw err;
-                let result = JSON.parse(data);
-             //   console.log(result);
+            var result = await fs.readFileSync(this.fileName);
 
-                this.data = result;
-                this.updateData = result;
-            });*/
+            if (result && result.length > 0) {
+                let dta = JSON.parse(result);
+                this.data = dta;
+                this.updateData = dta;
+            }
+        }
+
+        return (this.data);
+    }
+
+    loadDataNoSync() {
+        if (this.fileName) {
+            var result = fs.readFileSync(this.fileName);
+
             if (result && result.length > 0) {
                 let dta = JSON.parse(result);
                 this.data = dta;
@@ -35,6 +55,8 @@ class jsonConfig {
             if (userInfo) {
                 userInfo.summonerName = summonerName;
             }
+            summonerCache.flush();
+            LeagueCache.flush();
         }
     }
     replaceRegionName(userId, region) {

@@ -1,7 +1,10 @@
-var clientInfo = require('../config/client.json');
+// var clientInfo = require('../config/client.json');
+
+var jsonConfig = require('../class/jsonConfig');
+
 
 class staticFunction {
-    static validateSummonerAndRegion(queryString) {
+    static validateSummonerAndRegion(queryString, configPath) {
         var err = [];
 
         // Prepare Query
@@ -16,10 +19,20 @@ class staticFunction {
         } else {
 
             if (typeof queryString.userId !== "undefined" && queryString.userId.trim().length !== 0) {
+                var config = new jsonConfig(configPath);
+                this.configDta = [];
+                config.loadDataNoSync(); /* .then(function (data) {
+                    this.configDta = data;
+                });*/
+                this.configDta = config.data;
+
+
                 // Si on passe un userID alors on doit obtenir les info par CLIENT.JSON
                 var id = queryString.userId;
-                var userInfo = clientInfo.configuration.find(e => e.userId === id.toString());
+                // var userInfo = clientInfo.configuration.find(e => e.userId === id.toString());
+                var userInfo = this.configDta.configuration.find(e => e.userId === id.toString());
             
+
                 var region = userInfo.region;
                 var username = userInfo.summonerName;
 
