@@ -55,8 +55,10 @@ class jsonConfig {
             if (userInfo) {
                 userInfo.summonerName = summonerName;
             }
+            /*
             summonerCache.flush();
             LeagueCache.flush();
+            */
         }
     }
     replaceRegionName(userId, region) {
