@@ -5,11 +5,11 @@
 
 
 # Dependency directories
-./node_modules/
-./jspm_packages/
 node_modules/
 jspm_packages/
-# ./config/*.json
+
+# Disabled JSON (config)
+/config/*.json
 
 # Optional npm cache directory
 .npm
