@@ -271,6 +271,86 @@ app.get('/v2/topMasteries', async function (req, res) {
     }
 });
 
+// Stats 10 dernières games
+app.get('/v2/lastgame', async function (req, res) {
+
+});
+app.get('/v2/currentChampion', async function (req, res) {
+    // en DEV
+    try {
+        Logging.writeLog('/v2/currentChampion', `Execute GetcurrentChampion with data ${JSON.stringify(req.query)}`,
+            'validateSummonerAndRegion', true);
+
+        // Valider les paramètres
+        var fpath = path.join(__dirname + '/config/client.json');
+        var validation = staticFunction.validateSummonerAndRegion(req.query, fpath);
+        if (validation && validation.isValid === false) {
+            res.json(validation.errors)
+            Logging.writeLog('/v2/currentChampion', ``, 'validateSummonerAndRegion', false);
+            return;
+        }
+        Logging.writeLog('/v2/currentChampion', ``, 'validateSummonerAndRegion', false);
+
+        // Obtenir les informations sur l'invocateur
+        Logging.writeLog('/v2/topMasteries', `Before init LeagueChampionMasteries`, 'LeagueChampionMasteries', true);
+
+        var activeGame = new LeagueActiveGame(req.query);
+        var result = await activeGame.getLiveGame();
+        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
+            res.json(result.err.statusMessage);
+            return;
+        }
+
+        Logging.writeLog('/v2/currentChampion', ``, 'LeagueChampionMasteries', false);
+
+        Logging.writeLog('/v2/currentChampion', `Before getReturnValue`, 'LeagueChampionMasteries', true);
+        var response = activeGame.getCurrentChampionData();
+        Logging.writeLog('/v2/currentChampion', ``, 'LeagueChampionMasteries', false);
+        res.send(response);
+
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
+    }
+});
+
+
+/*
+    CONFIG FILE
+*/
+app.get('/insertNewUser', async function (req, res) {
+    var query = {}; // = req.query;
+    // Prepare Query
+    for (var key in req.query) {
+        query[key.toLowerCase()] = req.query[key];
+    }
+
+    var fpath = path.join(__dirname + '/config/client.json')
+    var config = new jsonConfig(fpath);
+
+    var row;
+    var data;
+    await config.loadData().then(function (dta) {
+        data = dta;    
+    });
+
+    await config.addNewClient(query.summonername, query.region, query.twitchname).then(function(a) {
+        console.log(a);
+        row = a;
+    }); 
+
+    if (row && typeof row.err !== "undefined") {
+        res.send(row.err);
+    } else if (row) {
+        config.saveFile();
+        res.send(`${row.userId} : L'usager '${query.summonername} (${query.region})' a été effectué avec succès.`)
+  
+    } else {
+        res.send("Une erreur s'est produites.");
+    }
+
+});
+
 
 app.get('/setSummoner', async function (req, res) {
     try {
@@ -319,51 +399,6 @@ app.get('/setRegion', async function (req, res) {
 });
 
 
-
-
-
-// Stats 10 dernières games
-app.get('/v2/lastgame', async function (req, res) {
-
-});
-app.get('/v2/currentChampion', async function (req, res) {
-    // en DEV
-    try {
-        Logging.writeLog('/v2/currentChampion', `Execute GetcurrentChampion with data ${JSON.stringify(req.query)}`,
-            'validateSummonerAndRegion', true);
-
-        // Valider les paramètres
-        var fpath = path.join(__dirname + '/config/client.json');
-        var validation = staticFunction.validateSummonerAndRegion(req.query, fpath);
-        if (validation && validation.isValid === false) {
-            res.json(validation.errors)
-            Logging.writeLog('/v2/currentChampion', ``, 'validateSummonerAndRegion', false);
-            return;
-        }
-        Logging.writeLog('/v2/currentChampion', ``, 'validateSummonerAndRegion', false);
-
-        // Obtenir les informations sur l'invocateur
-        Logging.writeLog('/v2/topMasteries', `Before init LeagueChampionMasteries`, 'LeagueChampionMasteries', true);
-
-        var activeGame = new LeagueActiveGame(req.query);
-        var result = await activeGame.getLiveGame();
-        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
-            res.json(result.err.statusMessage);
-            return;
-        }
-
-        Logging.writeLog('/v2/currentChampion', ``, 'LeagueChampionMasteries', false);
-
-        Logging.writeLog('/v2/currentChampion', `Before getReturnValue`, 'LeagueChampionMasteries', true);
-        var response = activeGame.getCurrentChampionData();
-        Logging.writeLog('/v2/currentChampion', ``, 'LeagueChampionMasteries', false);
-        res.send(response);
-
-    } catch (ex) {
-        console.error(ex);
-        res.send(ex);
-    }
-});
 
 /* Démarrage du serveur */
 app.listen(process.env.PORT, function () {

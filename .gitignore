@@ -9,6 +9,7 @@
 ./jspm_packages/
 node_modules/
 jspm_packages/
+# ./config/*.json
 
 # Optional npm cache directory
 .npm

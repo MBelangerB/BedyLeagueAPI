@@ -1,6 +1,7 @@
 'use strict';
 
 var fs = require('fs');
+const shortid = require('shortid');
 // const CacheService = require('../module/Cache.Service');
 
 /*
@@ -19,10 +20,18 @@ class jsonConfig {
         this.fileName = fileName;
         this.data = [];
         this.updateData = [];
+
     }
 
     async loadData() {
         if (this.fileName) {
+            var fName = this.fileName;
+            if (!fs.existsSync(this.fileName)) {
+                await this.createClientFile().then(function() {
+                    console.log(`Le fichier '${fName}' a été créer avec succès.`);
+                });
+            }
+
             var result = await fs.readFileSync(this.fileName);
 
             if (result && result.length > 0) {
@@ -48,17 +57,12 @@ class jsonConfig {
 
         return (this.data);
     }
-
     replaceSummonerName(userId, summonerName) {
         if (userId && summonerName) {
             var userInfo = this.updateData.configuration.find(e => e.userId === userId.toString());
             if (userInfo) {
                 userInfo.summonerName = summonerName;
             }
-            /*
-            summonerCache.flush();
-            LeagueCache.flush();
-            */
         }
     }
     replaceRegionName(userId, region) {
@@ -76,7 +80,43 @@ class jsonConfig {
             await fs.writeFileSync(this.fileName, data);
         }
     }
-    // fs.writeFile('myjsonfile.json', json, 'utf8', callback);
 
+    async createClientFile() {
+        var frame = {
+            "configuration": []
+        };
+        let data = JSON.stringify(frame, null, 2);
+        /*
+        fs.writeFile(this.fileName, data, (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!');
+        });
+        */
+        await fs.writeFileSync(this.fileName, data);
+    }
+    async addNewClient(summonerName, region, twitchName) {
+        var userInfo = this.data.configuration.find(e => e.summonerName === summonerName && e.region === region);
+        var row = {};
+        if (!userInfo) {
+            var userId = shortid.generate();
+
+            row = {
+                "twitchName": twitchName,
+                "userId": userId,
+                "summonerName": summonerName,
+                "region": region
+            }
+
+            this.data.configuration.push(row);
+            this.updateData = this.data;
+        } else {
+            return {
+                "err": `L'usager '${summonerName} (${region})' existe déjà.`
+            }
+        }
+
+        return row;
+        // await this.saveFile();
+    }
 }
 module.exports = jsonConfig;
