@@ -319,36 +319,45 @@ app.get('/v2/currentChampion', async function (req, res) {
     CONFIG FILE
 */
 app.get('/insertNewUser', async function (req, res) {
-    var query = {}; // = req.query;
-    // Prepare Query
-    for (var key in req.query) {
-        query[key.toLowerCase()] = req.query[key];
+    try {
+        Logging.writeLog('/insertNewUser', `Execute insertNewUser with data ${JSON.stringify(req.query)}`,
+            'insertNewUser', true);
+
+        var query = {}; // = req.query;
+        // Prepare Query
+        for (var key in req.query) {
+            query[key.toLowerCase()] = req.query[key];
+        }
+
+        var fpath = path.join(__dirname + '/config/client.json')
+        var config = new jsonConfig(fpath);
+
+        var row;
+        var data;
+        await config.loadData().then(function (dta) {
+            data = dta;
+        });
+
+        await config.addNewClient(query.summonername, query.region, query.twitchname).then(function (a) {
+            console.log(a);
+            row = a;
+        });
+
+        Logging.writeLog('/insertNewUser', ``, 'insertNewUser', false);
+
+        if (row && typeof row.err !== "undefined") {
+            res.send(row.err);
+        } else if (row) {
+            config.saveFile();
+            res.send(`${row.userId} : L'usager '${query.summonername} (${query.region})' a été effectué avec succès.`)
+
+        } else {
+            res.send("Une erreur s'est produites.");
+        }
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
     }
-
-    var fpath = path.join(__dirname + '/config/client.json')
-    var config = new jsonConfig(fpath);
-
-    var row;
-    var data;
-    await config.loadData().then(function (dta) {
-        data = dta;    
-    });
-
-    await config.addNewClient(query.summonername, query.region, query.twitchname).then(function(a) {
-        console.log(a);
-        row = a;
-    }); 
-
-    if (row && typeof row.err !== "undefined") {
-        res.send(row.err);
-    } else if (row) {
-        config.saveFile();
-        res.send(`${row.userId} : L'usager '${query.summonername} (${query.region})' a été effectué avec succès.`)
-  
-    } else {
-        res.send("Une erreur s'est produites.");
-    }
-
 });
 
 
@@ -373,7 +382,7 @@ app.get('/setSummoner', async function (req, res) {
 
         Logging.writeLog('/setSummoner', ``, 'setSummoner', false);
         res.send(`La MAJ de '${query.summonername}' a été effectué avec succès.`);
-       
+
 
     } catch (ex) {
         console.error(ex);
@@ -382,20 +391,48 @@ app.get('/setSummoner', async function (req, res) {
 });
 
 app.get('/setRegion', async function (req, res) {
-    var query = {}; // = req.query;
-    // Prepare Query
-    for (var key in req.query) {
-        query[key.toLowerCase()] = req.query[key];
+    try {
+        Logging.writeLog('/setRegion', `Execute setRegion with data ${JSON.stringify(req.query)}`,
+            'setRegion', true);
+        var query = {}; // = req.query;
+        // Prepare Query
+        for (var key in req.query) {
+            query[key.toLowerCase()] = req.query[key];
+        }
+
+        var fpath = path.join(__dirname + '/config/client.json')
+        var config = new jsonConfig(fpath);
+        await config.loadData().then(function (sumData) {
+            config.replaceRegionName(query.userid, query.region);
+        });
+        config.saveFile();
+
+        Logging.writeLog('/setRegion', ``, 'setRegion', false);
+
+        res.send(`La MAJ de '${query.summonername}' a été effectué avec succès.`);
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
     }
+});
 
-    var fpath = path.join(__dirname + '/config/client.json')
-    var config = new jsonConfig(fpath);
-    await config.loadData().then(function (sumData) {
-        config.replaceRegionName(query.userid, query.region);
-    });
-    config.saveFile();
+app.get('/getAllConfig', async function (req, res) {
+    try {
+        Logging.writeLog('/getAllConfig', `Execute getAllConfig`, 'getAllConfig', true);
 
-    res.send(`La MAJ de '${query.summonername}' a été effectué avec succès.`)
+        var fpath = path.join(__dirname + '/config/client.json')
+        var config = new jsonConfig(fpath);
+        var data;
+        await config.loadData().then(function (sumData) {
+            data = sumData
+        });
+
+        Logging.writeLog('/getAllConfig', ``, 'getAllConfig', false);
+        res.json(data);
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
+    }
 });
 
 

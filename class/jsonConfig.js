@@ -116,7 +116,6 @@ class jsonConfig {
         }
 
         return row;
-        // await this.saveFile();
     }
 }
 module.exports = jsonConfig;
