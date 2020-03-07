@@ -94,11 +94,13 @@ class jsonConfig {
         */
         await fs.writeFileSync(this.fileName, data);
     }
-    async addNewClient(summonerName, region, twitchName) {
+    async addNewClient(summonerName, region, twitchName, userId) {
         var userInfo = this.data.configuration.find(e => e.summonerName === summonerName && e.region === region);
         var row = {};
         if (!userInfo) {
-            var userId = shortid.generate();
+            if (userId) {
+                userId = shortid.generate();
+            }
 
             row = {
                 "twitchName": twitchName,

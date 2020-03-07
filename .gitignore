@@ -9,7 +9,8 @@ node_modules/
 jspm_packages/
 
 # Disabled JSON (config)
-/config/*.json
+# /config/*.json
+/config/clientA.json
 
 # Optional npm cache directory
 .npm

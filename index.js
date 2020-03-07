@@ -338,7 +338,7 @@ app.get('/insertNewUser', async function (req, res) {
             data = dta;
         });
 
-        await config.addNewClient(query.summonername, query.region, query.twitchname).then(function (a) {
+        await config.addNewClient(query.summonername, query.region, query.twitchname, query.userid) .then(function (a) {
             console.log(a);
             row = a;
         });
