@@ -129,6 +129,8 @@ app.get('/topMasteries', async function (req, res) {
     res.redirect(passedUrl);
 });
 
+
+
 // Version 2
 app.get('/v2/rank', async function (req, res) {
     try {
@@ -338,11 +340,10 @@ app.get('/insertNewUser', async function (req, res) {
             data = dta;
         });
 
-        await config.addNewClient(query.summonername, query.region, query.twitchname, query.userid) .then(function (a) {
-            console.log(a);
-            row = a;
+        await config.addNewClient(query.summonername, query.region, query.twitchname, query.userid) .then(function (usr) {
+            console.log(`Ajouts d'un nouvel utiisateur ${usr}`);
+            row = usr;
         });
-
         Logging.writeLog('/insertNewUser', ``, 'insertNewUser', false);
 
         if (row && typeof row.err !== "undefined") {

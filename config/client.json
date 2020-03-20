@@ -1,16 +1,3 @@
 {
-  "configuration": [
-    {
-      "twitchName": "Bohe",
-      "userId": "MlYy7xr2",
-      "summonerName": "Boheee",
-      "region": "NA1"
-    },
-    {
-      "twitchName": "Evalunna",
-      "userId": "yLBQ9F4o",
-      "summonerName": "I Play I Slay",
-      "region": "EUW1"
-    }
-  ]
+  "configuration": []
 }

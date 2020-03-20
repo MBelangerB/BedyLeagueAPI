@@ -98,7 +98,7 @@ class jsonConfig {
         var userInfo = this.data.configuration.find(e => e.summonerName === summonerName && e.region === region);
         var row = {};
         if (!userInfo) {
-            if (userId) {
+            if (!userId || userId.length() === 0) {
                 userId = shortid.generate();
             }
 
