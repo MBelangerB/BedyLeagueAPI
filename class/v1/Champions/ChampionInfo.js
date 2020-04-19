@@ -9,10 +9,10 @@ module.exports = class ChampionInfo {
         this.id = id;
     }
 
-    get getId() {
+    getId() {
         return this.id;
     }
-    get getChampionName() {
+    getChampionName() {
         return this.championName;
     }
 

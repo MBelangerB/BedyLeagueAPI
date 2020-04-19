@@ -1,7 +1,4 @@
-// var clientInfo = require('../config/client.json');
-
 var jsonConfig = require('../class/jsonConfig');
-
 
 class staticFunction {
     static validateSummonerAndRegion(queryString, configPath) {
@@ -21,23 +18,22 @@ class staticFunction {
             if (typeof queryString.userId !== "undefined" && queryString.userId.trim().length !== 0) {
                 var config = new jsonConfig(configPath);
                 this.configDta = [];
-                config.loadDataNoSync(); /* .then(function (data) {
-                    this.configDta = data;
-                });*/
+                config.loadDataNoSync(); 
                 this.configDta = config.data;
 
 
                 // Si on passe un userID alors on doit obtenir les info par CLIENT.JSON
                 var id = queryString.userId;
-                // var userInfo = clientInfo.configuration.find(e => e.userId === id.toString());
                 var userInfo = this.configDta.configuration.find(e => e.userId === id.toString());
             
 
                 var region = userInfo.region;
                 var username = userInfo.summonerName;
+                var queue = userInfo.queue;
 
                 queryString.summonername = username;
                 queryString.region = region;
+                queryString.queueType = queue;
 
             } else {
                 if (typeof queryString.summonername === "undefined" || queryString.summonername.trim().length === 0) {
@@ -124,15 +120,17 @@ class staticFunction {
     static isValidQueueType(type) {
         var valid = false;
         switch (type) {
-            case 'solo5':
+            case 'solo5', 'solo', 'soloq':
                 valid = true;
                 break;
             case 'tft':
                 valid = true;
                 break;
+            case 'flex5', 'flex':
+                valid = true;
+                break;
             case 'team5':
             case 'team3':
-            case 'flex5':
                 valid = false;
                 break
         }

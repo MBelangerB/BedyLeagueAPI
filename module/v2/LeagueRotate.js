@@ -21,6 +21,7 @@ module.exports = class LeagueRotate {
             queryString[key.toLowerCase()] = queryString[key];
         }
         this.region = queryString.region;
+        this.getJson = ((queryString.json === "1") || (queryString.json === true));
     }
 
     loadChampionInfo() {
@@ -78,20 +79,32 @@ module.exports = class LeagueRotate {
         if (data) {
             resultData = {
                 "freeChampionIds": data.freeChampionIds,
-                "freeChampion": []
+                "freeChampion": [],
+                "newPlayerChampionIds": data.freeChampionIdsForNewPlayers,
+                "newPlayerChampion": []
             }
             var champList = this.championList;
+
             var champArr = [];
+            var newChamp = [];
             resultData.freeChampionIds.forEach(function (championId) {
                 var champion = champList.find(e => e.id === championId.toString());
                 champArr.push(champion);
+            });
+            resultData.newPlayerChampionIds.forEach(function (championId) {
+                var champion = champList.find(e => e.id === championId.toString());
+                newChamp.push(champion);
             });
             // Trie
             champArr.sort(function (a, b) {
                 return a.championName.localeCompare(b.championName);
             });
+            newChamp.sort(function (a, b) {
+                return a.championName.localeCompare(b.championName);
+            });
             // Set Array
             resultData.freeChampion = champArr;
+            resultData.newPlayerChampion = newChamp;
         }
         return resultData;
     }
@@ -142,41 +155,34 @@ module.exports = class LeagueRotate {
     getReturnValue() {
         var returnValue = '';
 
-        this.rotateData.freeChampion.forEach(function (champ) {
-            if (returnValue.length > 0) { returnValue += " | " }
-            returnValue += champ.getChampionName;
-        });
+        if (this.getJson) {
+            returnValue = {
+                "free": [],
+                "rookie": []
+            }
 
-        returnValue = returnValue.trimEnd();
+            this.rotateData.freeChampion.forEach(function (champ) {
+                returnValue.free.push(champ);
+            });
+            this.rotateData.newPlayerChampion.forEach(function (champ) {
+                returnValue.rookie.push(champ);
+            });
 
-        return returnValue.trim();
+            return returnValue;
+            
+        } else {
+
+            this.rotateData.freeChampion.forEach(function (champ) {
+                if (returnValue.length > 0) { returnValue += " | " }
+                returnValue += champ.getChampionName;
+            });
+
+            returnValue = returnValue.trimEnd();
+
+            return returnValue.trim();
+        }
     }
 
-    // Validation
-    /*
-    static validateQueryString(queryString) {
-      var err = [];
-      // Prepare Query
-      for (var key in queryString) {
-          queryString[key.toLowerCase()] = queryString[key];
-      }
 
-      // Pré validation
-      if (Object.keys(queryString).length === 0) {
-          err.push("Paramètres marquant / missing parameters (region)");
-      } else {
-          if (typeof queryString.region === "undefined" || queryString.region.trim().length === 0) {
-              err.push("Le paramètre 'region' est obligatoire.");
-          }
-      }
-
-      var result = {
-          isValid: (err.length === 0),
-          errors: err
-      }
-
-      return result;
-  }
-  */
 }
 

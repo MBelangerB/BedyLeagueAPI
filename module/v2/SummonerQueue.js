@@ -43,7 +43,7 @@ class SummonerQueue {
         }
 
         this.queueType = process.env.queueType.toLocaleLowerCase();
-        
+     
         if (typeof queryString["queueType"] !== "undefined" && staticFunction.isValidQueueType(queryString["queueType"])) {
             this.queueType = queryString["queueType"].toLocaleLowerCase();
         }

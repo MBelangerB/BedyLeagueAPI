@@ -66,7 +66,11 @@ const LeagueQueue = require('./LeagueQueue');
 
     static getMappingQueueTypeToLeagueQueue() {
 		return {
-			'solo5': 'RANKED_SOLO_5x5',
+            'solo5': 'RANKED_SOLO_5x5',
+            'solo': 'RANKED_SOLO_5x5',
+            'soloq': 'RANKED_SOLO_5x5',
+            'flex': 'RANKED_FLEX_SR',
+            'flex5': 'RANKED_FLEX_SR',
 			'tft': 'RANKED_TFT'
 		};
     }

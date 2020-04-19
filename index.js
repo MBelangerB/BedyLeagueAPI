@@ -30,7 +30,6 @@ var Logging = require('./module/logging');
 */
 var jsonConfig = require('./class/jsonConfig');
 var staticFunction = require('./static/staticFunction');
-// var clientInfo = require('./config/client.json');
 require('./static/Prototype.js');
 
 /*
@@ -192,7 +191,12 @@ app.get('/v2/rotate', async function (req, res) {
         Logging.writeLog('/v2/rotate', `Before getReturnValue`, 'LeagueRotate', true);
         var response = legData.getReturnValue();
         Logging.writeLog('/v2/rotate', `Before getReturnValue`, 'LeagueRotate', false);
-        res.send(response);
+        if (legData.getJson) {
+            res.json(response);
+        } else {
+            res.send(response);
+        }
+       
 
     } catch (ex) {
         console.error(ex);
@@ -280,7 +284,7 @@ app.get('/v2/lastgame', async function (req, res) {
 app.get('/v2/currentChampion', async function (req, res) {
     // en DEV
     try {
-        Logging.writeLog('/v2/currentChampion', `Execute GetcurrentChampion with data ${JSON.stringify(req.query)}`,
+        Logging.writeLog('/v2/currentChampion', `Execute GetCurrentChampion with data ${JSON.stringify(req.query)}`,
             'validateSummonerAndRegion', true);
 
         // Valider les paramètres
@@ -325,29 +329,41 @@ app.get('/insertNewUser', async function (req, res) {
         Logging.writeLog('/insertNewUser', `Execute insertNewUser with data ${JSON.stringify(req.query)}`,
             'insertNewUser', true);
 
-        var query = {}; // = req.query;
         // Prepare Query
+        var query = {}; 
         for (var key in req.query) {
             query[key.toLowerCase()] = req.query[key];
         }
 
+        // Obtient le path du JSON
         var fpath = path.join(__dirname + '/config/client.json')
         var config = new jsonConfig(fpath);
 
+        // Charge le data
         var row;
         var data;
         await config.loadData().then(function (dta) {
             data = dta;
         });
 
-        await config.addNewClient(query.summonername, query.region, query.twitchname, query.userid) .then(function (usr) {
-            console.log(`Ajouts d'un nouvel utiisateur ${usr}`);
+        var info = {
+            "summonername": query.summonername,
+            "region": query.region,
+            "twitch": query.twitchname,
+            "userId": query.userid,
+            "queue": query.queue
+        }
+
+        // Ajouter l'usager
+        await config.addNewClient(query.summonername, query.region, query.twitchname, query.queue, query.userid) .then(function (usr) {
+            console.log(`Ajouts d'un nouvel utilisateur : '${usr}'`);
             row = usr;
         });
         Logging.writeLog('/insertNewUser', ``, 'insertNewUser', false);
 
         if (row && typeof row.err !== "undefined") {
             res.send(row.err);
+
         } else if (row) {
             config.saveFile();
             res.send(`${row.userId} : L'usager '${query.summonername} (${query.region})' a été effectué avec succès.`)
@@ -355,6 +371,7 @@ app.get('/insertNewUser', async function (req, res) {
         } else {
             res.send("Une erreur s'est produites.");
         }
+
     } catch (ex) {
         console.error(ex);
         res.send(ex);
@@ -382,15 +399,13 @@ app.get('/setSummoner', async function (req, res) {
         config.saveFile();
 
         Logging.writeLog('/setSummoner', ``, 'setSummoner', false);
-        res.send(`La MAJ de '${query.summonername}' a été effectué avec succès.`);
-
+        res.send(`${query.userId} : La mise-à-jour de l'usager '${query.summonername} (${query.region}) [${query.queue}]' a été effectué avec succès.`)
 
     } catch (ex) {
         console.error(ex);
         res.send(ex);
     }
 });
-
 app.get('/setRegion', async function (req, res) {
     try {
         Logging.writeLog('/setRegion', `Execute setRegion with data ${JSON.stringify(req.query)}`,
@@ -409,13 +424,66 @@ app.get('/setRegion', async function (req, res) {
         config.saveFile();
 
         Logging.writeLog('/setRegion', ``, 'setRegion', false);
+        res.send(`${query.userId} : La mise-à-jour de l'usager '${query.summonername} (${query.region}) [${query.queue}]' a été effectué avec succès.`)
 
-        res.send(`La MAJ de '${query.summonername}' a été effectué avec succès.`);
     } catch (ex) {
         console.error(ex);
         res.send(ex);
     }
 });
+app.get('/setQueue', async function (req, res) {
+    try {
+        Logging.writeLog('/setQueue', `Execute setQueue with data ${JSON.stringify(req.query)}`,
+            'setQueue', true);
+        var query = {}; // = req.query;
+        // Prepare Query
+        for (var key in req.query) {
+            query[key.toLowerCase()] = req.query[key];
+        }
+
+        var fpath = path.join(__dirname + '/config/client.json')
+        var config = new jsonConfig(fpath);
+        await config.loadData().then(function (sumData) {
+            config.replaceRegionName(query.userid, query.queue);
+        });
+        config.saveFile();
+
+        Logging.writeLog('/setQueue', ``, 'setQueue', false);
+        res.send(`${query.userId} : La mise-à-jour de l'usager '${query.summonername} (${query.region}) [${query.queue}]' a été effectué avec succès.`)
+
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
+    }
+});
+app.get('/updateConfig', async function (req, res) {
+    try {
+        Logging.writeLog('/updateConfig', `Execute updateConfig with data ${JSON.stringify(req.query)}`,
+            'updateConfig', true);
+
+        var query = {}; // = req.query;
+        // Prepare Query
+        for (var key in req.query) {
+            query[key.toLowerCase()] = req.query[key];
+        }
+
+        var fpath = path.join(__dirname + '/config/client.json')
+        var config = new jsonConfig(fpath);
+        await config.loadData().then(function (sumData) {
+            config.updateSummonerInfo(query.userid, query.summonername, query.region, query.queue);
+            console.log('Update Complete')
+        });
+        config.saveFile();
+
+        Logging.writeLog('/updateConfig', ``, 'updateConfig', false);
+        res.send(`${query.userId} : La mise-à-jour de l'usager '${query.summonername} (${query.region}) [${query.queue}]' a été effectué avec succès.`)
+
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
+    }
+});
+
 
 app.get('/getAllConfig', async function (req, res) {
     try {
@@ -435,7 +503,6 @@ app.get('/getAllConfig', async function (req, res) {
         res.send(ex);
     }
 });
-
 
 
 /* Démarrage du serveur */

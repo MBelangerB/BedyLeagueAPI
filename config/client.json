@@ -1,3 +1,11 @@
 {
-  "configuration": []
+  "configuration": [
+    {
+      "twitchName": "Bohe",
+      "userId": "B13Z45CX11",
+      "summonerName": "Bohe",
+      "queue": "solo5",
+      "region": "NA1"
+    }
+  ]
 }
