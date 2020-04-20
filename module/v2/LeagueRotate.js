@@ -174,7 +174,7 @@ module.exports = class LeagueRotate {
 
             this.rotateData.freeChampion.forEach(function (champ) {
                 if (returnValue.length > 0) { returnValue += " | " }
-                returnValue += champ.getChampionName;
+                returnValue += champ.getChampionName();
             });
 
             returnValue = returnValue.trimEnd();
