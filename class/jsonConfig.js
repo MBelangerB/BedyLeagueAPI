@@ -18,7 +18,7 @@ class jsonConfig {
             var fName = this.fileName;
             if (!fs.existsSync(this.fileName)) {
                 await this.createClientFile().then(function () {
-                    console.log(`Le fichier '${fName}' a été créer avec succès.`);
+                    console.log(`Le fichier '${fName}' a été crée avec succès.`);
                 });
             }
 
@@ -134,7 +134,7 @@ class jsonConfig {
                 "userId": userId,
                 "summonerName": summonerName,
                 "region": region,
-                "queue": queue
+                "queue": (queue || "solo5")
             }
 
             this.data.configuration.push(row);

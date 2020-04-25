@@ -351,7 +351,7 @@ app.get('/insertNewUser', async function (req, res) {
             "region": query.region,
             "twitch": query.twitchname,
             "userId": query.userid,
-            "queue": query.queue
+            "queue": (query.queue || "solo5")
         }
 
         // Ajouter l'usager

@@ -7,6 +7,7 @@ class staticFunction {
         // Prepare Query
         for (var key in queryString) {
             queryString[key.toLowerCase()] = queryString[key];
+            // queryString[key.toLowerCase()] = encodeURI(queryString[key]);    
         }
 
         // Pré-validation
