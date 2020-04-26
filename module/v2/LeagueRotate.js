@@ -29,9 +29,10 @@ module.exports = class LeagueRotate {
         for (var myKey in champions.data) {
             var champName = champions.data[myKey].name;
             var chamId = champions.data[myKey].key;
+            var searchName =  champions.data[myKey].id;
 
             var rotChamp = new champInfo();
-            rotChamp.init(chamId, champName);
+            rotChamp.init(chamId, champName, searchName);
 
             champArr.push(rotChamp);
         }
