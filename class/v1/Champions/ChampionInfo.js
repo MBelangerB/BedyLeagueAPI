@@ -4,13 +4,20 @@ module.exports = class ChampionInfo {
         this.searchName = '';
         this.championName = '';
         this.championIcon = '';
+        this.fullImageName = '';
     }
 
     init(id, name, search) {
         this.championName = name;
         this.id = id;
         this.searchName = search;
-        this.championIcon = `http://ddragon.leagueoflegends.com/cdn/10.8.1/img/champion/${this.getChampionName()}.png`;
+        this.championIcon = `http://ddragon.leagueoflegends.com/cdn/10.8.1/img/champion/${this.searchName}.png`;
+    }
+
+    setFullImageName(imageName) {
+        this.fullImageName = imageName;
+        this.championIcon = `http://ddragon.leagueoflegends.com/cdn/10.8.1/img/champion/${imageName}`;
+
     }
 
     getId() {

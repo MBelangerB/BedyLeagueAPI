@@ -5,6 +5,7 @@ const LeagueQueue = require('./LeagueQueue');
         this.name = '';
         this.id = '';
         this.accountId = '';
+        this.profileIconId = 0;
         this.summonerLevel = 0;
         this.region = '*';
 
@@ -19,6 +20,7 @@ const LeagueQueue = require('./LeagueQueue');
     init(jsonData) {
         this.id = jsonData.id;
         this.accountId = jsonData.accountId;
+        this.profileIconId = jsonData.profileIconId;
         this.summonerLevel = jsonData.summonerLevel;
     }
 

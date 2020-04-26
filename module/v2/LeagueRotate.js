@@ -14,14 +14,14 @@ var leagueRotateCache = new CacheService(ttLeagueRotate); // Create a new cache 
 module.exports = class LeagueRotate {
 
     constructor(queryString) {
-        this.loadChampionInfo();
-
         // Prepare Query
         for (var key in queryString) {
             queryString[key.toLowerCase()] = queryString[key];
         }
         this.region = queryString.region;
         this.getJson = ((queryString.json === "1") || (queryString.json === true));
+
+        this.loadChampionInfo();
     }
 
     loadChampionInfo() {
@@ -33,6 +33,12 @@ module.exports = class LeagueRotate {
 
             var rotChamp = new champInfo();
             rotChamp.init(chamId, champName, searchName);
+
+            
+            if (this.getJson) {
+                var imgInfo = champions.data[myKey].image;
+                rotChamp.setFullImageName(imgInfo.full);
+            }
 
             champArr.push(rotChamp);
         }

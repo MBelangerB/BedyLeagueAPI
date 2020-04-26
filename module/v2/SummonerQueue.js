@@ -4,6 +4,9 @@ const CacheService = require('../Cache.Service');
 
 var SummonerDTO = require('../../class/v2/SummonerDTO');
 var staticFunction = require('../../static/staticFunction');
+
+var profileIconDta = require('../../static/fr_fr/profileicon.json');
+
 /*
     Cache configuration
 */
@@ -25,6 +28,8 @@ class SummonerQueue {
         this.summonerName = queryString.summonername;
         this.region = queryString.region;
 
+        this.getJson = ((queryString.json === "1") || (queryString.json === true));
+
         // Paramètre facultatif
         this.showLp = (process.env.showLP.toLocaleLowerCase() === "true");
         if (typeof queryString["lp"] !== "undefined") {
@@ -43,14 +48,14 @@ class SummonerQueue {
         }
 
         this.queueType = process.env.queueType.toLocaleLowerCase();
-     
+
         if (typeof queryString["queueType"] !== "undefined" && staticFunction.isValidQueueType(queryString["queueType"])) {
             this.queueType = queryString["queueType"].toLocaleLowerCase();
         }
         if (typeof this.queueType === "undefined" || staticFunction.isValidQueueType(this.queueType) === false) {
             this.queueType = "solo5"
         }
-        
+
     }
 
     //#region "CacheKey"
@@ -102,7 +107,7 @@ class SummonerQueue {
         if (this.queueType === "tft") {
             leagueUrl = info.routes.v2.league.getTFTLeagueEntriesForSummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerId);
         }
-        
+
         await requestManager.ExecuteRequest(leagueUrl).then(function (res) {
             if (res.length === 0) {
                 // UseCase : Pas de données de league donc pas de classement
@@ -234,27 +239,75 @@ class SummonerQueue {
 
         try {
             var mappingQueue = SummonerDTO.getMappingQueueTypeToLeagueQueue();
-            var league = this.SummonerDTO.Queues.find(league => league.queueType === mappingQueue[type]);
+            var queueEntrier= Object.entries(mappingQueue);
 
-            if (league) {
-                var rankTiers = league.getTiersRank();
-                var leaguePt = '';
-                var winRate = '';
-                var series = league.getSeries(this.series);
-
-                if (this.showLp || this.showLp === "true") {
-                    leaguePt = league.getLeaguePoint();
+            if (this.getJson) {
+                var summoner = this.SummonerDTO;
+                
+                // Convertir le JSON en Array
+                var iconEntries = Object.entries(profileIconDta.data);
+                // Recherche la correspondance
+                var fullIconDta = iconEntries.find(f => f[1].id === summoner.profileIconId);
+                var iconUrl = '';
+                if (fullIconDta) {
+                    var fullIconId = fullIconDta[1].image.full;
+                    iconUrl = `http://ddragon.leagueoflegends.com/cdn/10.8.1/img/profileicon/${fullIconId}`;
                 }
 
-                if (this.showWinRate || this.showWinRate === "true") {
-                    winRate = ` - ${league.getRatio()} % (${league.wins}W/${league.losses}L)`;
+                // Préparerle retour
+                var data = {
+                    "summoner": {
+                        "name": this.summonerName,
+                        "profileIcon": summoner.profileIconId,
+                        "profileIconUrl": iconUrl,
+                        "level": summoner.summonerLevel
+                    },
+                    "region": this.region,
+                    "queue": []
                 }
 
 
-                if (this.fullString || this.fullString === "true") {
-                    returnValue = `${this.summonerName} est actuellement ${rankTiers}${leaguePt}${series}${winRate}`;
-                } else {
-                    returnValue = `${rankTiers}${leaguePt}${series}${winRate}`
+                this.SummonerDTO.Queues.forEach(n => {
+                    var tier = {
+                        "RiotQueueType": n.queueType,
+                        "QueueType": Object.entries(mappingQueue).find(q => q[1] === n.queueType)[0], // queueEntrier.find(q => q[1] === n.queueType),
+                        "tiers": n.tier,
+                        "rank": n.rank,
+                        "series": n.getSeries(this.series),
+                        "LP": n.getLeaguePoint(),
+                        "stats": {
+                            "ratio": n.getRatio(),
+                            "W": n.wins,
+                            "L": n.losses
+                        }
+                    }
+                    data.queue.push(tier);
+                });
+
+                return data;
+            } else {
+                var league = this.SummonerDTO.Queues.find(league => league.queueType === mappingQueue[type]);
+
+                if (league) {
+                    var rankTiers = league.getTiersRank();
+                    var leaguePt = '';
+                    var winRate = '';
+                    var series = league.getSeries(this.series);
+
+                    if (this.showLp || this.showLp === "true") {
+                        leaguePt = league.getLeaguePoint();
+                    }
+
+                    if (this.showWinRate || this.showWinRate === "true") {
+                        winRate = ` - ${league.getRatio()} % (${league.wins}W/${league.losses}L)`;
+                    }
+
+
+                    if (this.fullString || this.fullString === "true") {
+                        returnValue = `${this.summonerName} est actuellement ${rankTiers}${leaguePt}${series}${winRate}`;
+                    } else {
+                        returnValue = `${rankTiers}${leaguePt}${series}${winRate}`
+                    }
                 }
             }
         } catch (ex) {

@@ -159,7 +159,11 @@ app.get('/v2/rank', async function (req, res) {
         Logging.writeLog('/v2/rank', `Before getReturnValue`, 'SummonerQueue', true);
         var response = locSummoner.getReturnValue(locSummoner.queueType);
         Logging.writeLog('/v2/rank', ``, 'SummonerQueue', false);
-        res.send(response);
+        if (response.getJson) {
+            res.json(response);
+        } else {
+            res.send(response);
+        }
 
     } catch (ex) {
         console.error(ex);
