@@ -130,7 +130,7 @@ app.get('/topMasteries', async function (req, res) {
 
 
 
-// Version 2
+// Version 2 (with json)
 app.get('/v2/rank', async function (req, res) {
     try {
         Logging.writeLog('/v2/rank', `Execute GetRank with data ${JSON.stringify(req.query)}`,
@@ -207,6 +207,7 @@ app.get('/v2/rotate', async function (req, res) {
         res.send(ex);
     }
 });
+// Version 2
 app.get('/v2/livegame', async function (req, res) {
     try {
         Logging.writeLog('/v2/livegame', `Execute livegame with data ${JSON.stringify(req.query)}`,
