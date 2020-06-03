@@ -11,9 +11,7 @@ const url = require('url');
 */
 var app = express();
 
-/*
-    Load Config
-*/
+/*    Initialize Modules   */
 dotenv.config();
 
 /*
@@ -511,8 +509,8 @@ app.get('/getAllConfig', async function (req, res) {
 
 
 /* Démarrage du serveur */
-app.listen(process.env.PORT, function () {
-    var port = process.env.PORT;
+app.listen(process.env.PORT || 3000, function () {
+    var port = process.env.PORT || 3000;
     Logging = new Logging(process.env);
 
     //  clientInfo.configuration;

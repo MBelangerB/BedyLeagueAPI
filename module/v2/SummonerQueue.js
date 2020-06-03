@@ -71,6 +71,9 @@ class SummonerQueue {
     async querySummonerInfo(requestManager, result) {
         var data;
         var SummonerUrl = info.routes.v2.summoner.getBySummonerName.replace('{region}', this.region).replace('{summonerName}', this.summonerName);
+        if (this.queueType === "tft") {
+            SummonerUrl = info.routes.v2.summoner.getTFTBySummonerName.replace('{region}', this.region).replace('{summonerName}', this.summonerName);
+        }
 
         // Le SummonerInfo n'est pas présent dans la cache
         await requestManager.ExecuteRequest(SummonerUrl).then(function (res) {

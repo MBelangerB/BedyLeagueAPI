@@ -4,7 +4,8 @@
     "routes": {
         "v2": {
             "summoner": {
-                "getBySummonerName": "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}"         
+                "getBySummonerName": "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}",
+                "getTFTBySummonerName": "https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{summonerName}"
             },
            "masteries": {
                 "getChampionMasteriesBySummoner": "https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{encryptedSummonerId}",         
