@@ -154,9 +154,9 @@ app.get('/v2/rank', async function (req, res) {
         }
         Logging.writeLog('/v2/rank', ``, 'SummonerQueue', false);
 
-        Logging.writeLog('/v2/rank', `Before getReturnValue`, 'SummonerQueue', true);
+        Logging.writeLog('/v2/rank', `Before getReturnValue`, 'SummonerQueueReturn', true);
         var response = locSummoner.getReturnValue(locSummoner.queueType);
-        Logging.writeLog('/v2/rank', ``, 'SummonerQueue', false);
+        Logging.writeLog('/v2/rank', ``, 'SummonerQueueReturn', false);
         if (response.getJson) {
             res.json(response);
         } else {
