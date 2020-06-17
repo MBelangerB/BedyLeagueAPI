@@ -6,6 +6,14 @@ const express = require('express');
 const dotenv = require('dotenv');
 const url = require('url');
 
+/*  
+    HTML Parser
+*/
+/*
+const jsdom = require("jsdom");
+const { JSDOM } = jsdom;
+*/
+
 /*
     Init Module
 */
@@ -22,6 +30,11 @@ const LeagueRotate = require('./module/v2/LeagueRotate');
 const LeagueChampionMasteries = require('./module/v2/LeagueChampionMasteries');
 const LeagueActiveGame = require('./module/v2/LeagueLiveGame');
 var Logging = require('./module/logging');
+
+/*
+    OW Module
+*/
+const OverwatchProfilStats = require('./module/ow/OverwatchProfilStats');
 
 /*
     Init custom class
@@ -198,7 +211,7 @@ app.get('/v2/rotate', async function (req, res) {
         } else {
             res.send(response);
         }
-       
+
 
     } catch (ex) {
         console.error(ex);
@@ -333,7 +346,7 @@ app.get('/insertNewUser', async function (req, res) {
             'insertNewUser', true);
 
         // Prepare Query
-        var query = {}; 
+        var query = {};
         for (var key in req.query) {
             query[key.toLowerCase()] = req.query[key];
         }
@@ -358,7 +371,7 @@ app.get('/insertNewUser', async function (req, res) {
         }
 
         // Ajouter l'usager
-        await config.addNewClient(query.summonername, query.region, query.twitchname, query.queue, query.userid) .then(function (usr) {
+        await config.addNewClient(query.summonername, query.region, query.twitchname, query.queue, query.userid).then(function (usr) {
             console.log(`Ajouts d'un nouvel utilisateur : '${usr}'`);
             row = usr;
         });
@@ -380,8 +393,6 @@ app.get('/insertNewUser', async function (req, res) {
         res.send(ex);
     }
 });
-
-
 app.get('/setSummoner', async function (req, res) {
     try {
         Logging.writeLog('/setSummoner', `Execute setSummoner with data ${JSON.stringify(req.query)}`,
@@ -486,8 +497,6 @@ app.get('/updateConfig', async function (req, res) {
         res.send(ex);
     }
 });
-
-
 app.get('/getAllConfig', async function (req, res) {
     try {
         Logging.writeLog('/getAllConfig', `Execute getAllConfig`, 'getAllConfig', true);
@@ -507,6 +516,70 @@ app.get('/getAllConfig', async function (req, res) {
     }
 });
 
+/*
+    Overwatch
+    Parametre
+        Platform
+        bnetTag
+        server      [us]
+*/
+app.get('/ow/rank', async function (req, res) {
+    try {
+        Logging.writeLog('/ow/rank', `Execute GetRank with data ${JSON.stringify(req.query)}`,
+            'validateSummonerAndRegion', true);
+
+        // Valider les paramètres
+        var validation = staticFunction.validateOverwatchParameters(req.query);
+        if (validation && validation.isValid === false) {
+            res.send(validation.errors)
+            Logging.writeLog('/ow/rank', ``, 'validateSummonerAndRegion', false);
+            return;
+        }
+        Logging.writeLog('/ow/rank', ``, 'validateSummonerAndRegion', false);
+
+        // Obtenir les informations sur l'invocateur
+        Logging.writeLog('/ow/rank', `Before init getProfileStats`, 'getProfileStats', true);
+        var profileStats = new OverwatchProfilStats(req.query, validation);
+        var result = await profileStats.getProfileStats();
+        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
+            res.send(result.err.statusMessage);
+            return;
+        }
+        Logging.writeLog('/ow/rank', ``, 'getProfileStats', false);
+
+
+        Logging.writeLog('/ow/rank', `Before getReturnValue`, 'profileStatsReturn', true);
+        var response = profileStats.getReturnValue();
+        Logging.writeLog('/ow/rank', ``, 'profileStatsReturn', false);
+        if (response.getJson) {
+            res.json(response);
+        } else {
+            res.send(response);
+        }
+
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
+    }
+    // let url = `https://playoverwatch.com/fr-fr/career/pc/Bohe-11734#competitive`;
+    // https://www.npmjs.com/package/jsdom
+    /*
+    const mainDOM = new JSDOM(``, {
+        url: url,
+        referrer: url,
+        contentType: "text/html",
+        includeNodeLocations: true,
+        storageQuota: 10000000
+      });
+    const document = mainDOM.window.document;
+    const bodyEl = document.body; // implicitly created
+    const pEl = document.querySelector("div#masthead");
+    const testMaster = bodyEl.getElementsByClassName("masthead");
+
+        console.log(mainDOM.window);
+    */
+
+});
 
 /* Démarrage du serveur */
 app.listen(process.env.PORT || 3000, function () {

@@ -1,6 +1,10 @@
 var jsonConfig = require('../class/jsonConfig');
+var routeInfo = require('./info.json');
 
 class staticFunction {
+    /*
+        League of Legend
+    */
     static validateSummonerAndRegion(queryString, configPath) {
         var err = [];
 
@@ -19,14 +23,14 @@ class staticFunction {
             if (typeof queryString.userId !== "undefined" && queryString.userId.trim().length !== 0) {
                 var config = new jsonConfig(configPath);
                 this.configDta = [];
-                config.loadDataNoSync(); 
+                config.loadDataNoSync();
                 this.configDta = config.data;
 
 
                 // Si on passe un userID alors on doit obtenir les info par CLIENT.JSON
                 var id = queryString.userId;
                 var userInfo = this.configDta.configuration.find(e => e.userId === id.toString());
-            
+
 
                 var region = userInfo.region;
                 var username = userInfo.summonerName;
@@ -74,7 +78,6 @@ class staticFunction {
 
         return result;
     }
-
     static validateRegion(queryString) {
         var err = [];
         // Prepare Query
@@ -103,7 +106,6 @@ class staticFunction {
 
         return result;
     }
-
     static isValidRegion(region) {
         var valid = false;
         switch (region) {
@@ -117,7 +119,6 @@ class staticFunction {
         }
         return valid;
     }
-
     static isValidQueueType(type) {
         var valid = false;
         switch (type) {
@@ -138,6 +139,55 @@ class staticFunction {
         return valid;
     }
 
+    /*
+        Overwatch
+    */
+    static validateOverwatchParameters(queryString) {
+        var err = [];
+
+        // Cast parameters to Lower
+        for (var key in queryString) {
+            queryString[key.toLowerCase()] = queryString[key];
+        }
+
+        // Pré-validation
+        if (Object.keys(queryString).length === 0) {
+            err.push("Paramètres marquant / missing parameters (platform, region, tag)");
+
+        } else {
+            let validPlatform = routeInfo.overwatch.platform;
+            let validRegion = routeInfo.overwatch.region;
+
+            if (typeof queryString.platform === "undefined" || queryString.platform.trim().length === 0) {
+                err.push("Le paramètre 'platform' est obligatoire.");
+            } else if (!validPlatform.includes(queryString.platform)) {
+                err.push("La paramètre 'platform' est invalide.");
+            } 
+
+            if (typeof queryString.region === "undefined" || queryString.region.trim().length === 0) {
+                err.push("Le paramètre 'region' est obligatoire.");
+            } else if (!validRegion.includes(queryString.region)) {
+                err.push("La paramètre 'region' est invalide.");
+            }
+            
+            if (typeof queryString.tag === "undefined" || queryString.tag.trim().length === 0) {
+                err.push("Le paramètre 'tag' est obligatoire.");
+            }
+        }
+
+        let baseUrl = routeInfo.overwatch.routes.profile;
+        baseUrl = baseUrl.replace("{platform}", queryString.platform)
+        baseUrl = baseUrl.replace("{region}", queryString.region)
+        baseUrl = baseUrl.replace("{profileName}", queryString.tag)
+
+        var result = {
+            isValid: (err.length === 0),
+            errors: err,
+            url: baseUrl
+        }
+
+        return result;
+    }
 }
 
 module.exports = staticFunction;

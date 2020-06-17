@@ -24,5 +24,15 @@
             },
             "getChampionRotate": "https://{region}.api.riotgames.com/lol/platform/v3/champion-rotations"       
         }
+    },
+    "overwatch": {
+        "platform": ["pc"],
+        "region": ["us"],
+        "language": ["en-us", "fr-fr"],
+        "type": ["#quickplay", "#competitive"],
+        "routes": {
+            "profile": "https://ow-api.com/v1/stats/{platform}/{region}/{profileName}/profile"
+        },
+        "website": "https://playoverwatch.com/{lang}/career/{platform}/{profileName}"
     }
 }
