@@ -1,4 +1,7 @@
 
+ /*
+    Information sur les parties de l'invocateur
+ */
  class ParticipantsGame {
     constructor() {
         this.teamId = 0;

@@ -1,3 +1,7 @@
+/*
+    Class pour contenir les information sur l'invocateur
+    V1 (a remplacer par V2)
+*/
 module.exports = class SummonerDTO {
     constructor(info) {
         this.name = '';

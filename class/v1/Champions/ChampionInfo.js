@@ -1,3 +1,7 @@
+/*
+    Class pour les information sur les champions de League of Legends
+    Utiliser pour les commandes Rotate / Masteries / LiveGame
+*/
 module.exports = class ChampionInfo {
     constructor() {
         this.id = '';

@@ -1,5 +1,6 @@
-// const RiotUrlApi = require('./League/RiotUrlApi');
-
+/*
+    Class pour contenir les inforamtions (rang) sur invocateur
+*/
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
     return target.replace(new RegExp(search, 'g'), replacement);

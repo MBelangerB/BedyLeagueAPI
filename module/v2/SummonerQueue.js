@@ -6,6 +6,7 @@ var SummonerDTO = require('../../class/v2/SummonerDTO');
 var staticFunction = require('../../static/staticFunction');
 
 var profileIconDta = require('../../static/fr_fr/profileicon.json');
+var riotUserInfoDTO = require('../../class/riotUserInfoDTO');
 
 /*
     Cache configuration
@@ -18,15 +19,17 @@ var LeagueCache = new CacheService(ttLeagueInfo); // Create a new cache service 
 
 class SummonerQueue {
     constructor(queryString) {
-        // Prepare Query
         /*
-        for (var key in queryString) {
-            queryString[key.toLowerCase()] = queryString[key];
-        }
+        var regionData = this.getMappingRegionToLeagueQueue();
+        var calledRegion = regionData[queryString.region];
         */
+
+
         // Paramètre obligatoire
         this.summonerName = queryString.summonername;
-        this.region = queryString.region;
+        this.region = queryString.region; // calledRegion;
+        this.getAll = (queryString.all || "0");
+        this.summonerId = queryString.summonerId;
 
         this.getJson = ((queryString.json === "1") || (queryString.json === true));
 
@@ -67,12 +70,27 @@ class SummonerQueue {
     }
     //#endregion
 
+    //#region "Casting"
+    getMappingRegionToLeagueQueue() {
+        return {
+            'EUW': 'EUW1',
+            'EUW1': 'EUW1',
+            'NA': 'NA1',
+            'NA1': 'NA1'
+        };
+    }
+    //#endregion
+
     // Step 1 : Execution de la Query qui obtient les informations sur l'invocateur
     async querySummonerInfo(requestManager, result) {
         var data;
-        var SummonerUrl = info.routes.v2.summoner.getBySummonerName.replace('{region}', this.region).replace('{summonerName}', this.summonerName);
+
+        var regionData = this.getMappingRegionToLeagueQueue();
+        var calledRegion = regionData[this.region];
+
+        var SummonerUrl = info.routes.v2.summoner.getBySummonerName.replace('{region}', calledRegion).replace('{summonerName}', this.summonerName);
         if (this.queueType === "tft") {
-            SummonerUrl = info.routes.v2.summoner.getTFTBySummonerName.replace('{region}', this.region).replace('{summonerName}', this.summonerName);
+            SummonerUrl = info.routes.v2.summoner.getTFTBySummonerName.replace('{region}', calledRegion).replace('{summonerName}', this.summonerName);
         }
 
         // Le SummonerInfo n'est pas présent dans la cache
@@ -105,10 +123,14 @@ class SummonerQueue {
     // Step 2 : Execution de la Query qui obtient les information sur la league
     async queryLeagueInfo(requestManager, result, summonerId) {
         var data;
+
+        var regionData = this.getMappingRegionToLeagueQueue();
+        var calledRegion = regionData[this.region];
+
         // Obtenir l'information sur la queue        
-        var leagueUrl = info.routes.v2.league.getLeagueEntriesForSummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerId);
+        var leagueUrl = info.routes.v2.league.getLeagueEntriesForSummoner.replace('{region}', calledRegion).replace('{encryptedSummonerId}', summonerId);
         if (this.queueType === "tft") {
-            leagueUrl = info.routes.v2.league.getTFTLeagueEntriesForSummoner.replace('{region}', this.region).replace('{encryptedSummonerId}', summonerId);
+            leagueUrl = info.routes.v2.league.getTFTLeagueEntriesForSummoner.replace('{region}', calledRegion).replace('{encryptedSummonerId}', summonerId);
         }
 
         await requestManager.ExecuteRequest(leagueUrl).then(function (res) {
@@ -137,8 +159,8 @@ class SummonerQueue {
         return data;
     }
 
-    // Requête principale
-    async getSummonerInfo() {
+    // Requête secondaire (InsertUser)
+    async getLeagueSummoner() {
         var result = {
             "code": 0,
             "err": {}
@@ -161,6 +183,70 @@ class SummonerQueue {
                     return sumData;
                 }
             });
+
+            if (SummonerData || typeof SummonerData !== "undefined") {
+                // TODO: Gérer le cas ou pas de data mais ERR
+                summonerInfo.init(SummonerData);
+
+                // Préparation du Data
+                var riotUser = new riotUserInfoDTO();
+                riotUser.initDTO(SummonerData, this.region);
+
+                // On traite le Resut
+                if (riotUser) {
+                    // Aucune erreur
+                    this.userInfo = riotUser;
+                    result.code = 200;
+                    result.data = riotUser;
+                } else {
+                    result.code = 404;
+                }
+                //  RiotUserInfoDTO
+            } else {
+                result.err = {
+                    statusCode: '400',
+                    statusMessage: "Erreur! Aucun résultat n'as été trouvé."
+                }
+            }
+
+        } catch (ex) {
+            result.code = -1;
+            console.error(ex);
+        }
+        return result;
+    }
+
+    // Requête principale (/RANK)
+    async getSummonerInfo() {
+        var result = {
+            "code": 0,
+            "err": {}
+        };
+        var summonerInfo = new SummonerDTO(this);
+        var requestManager = new RequestManager(this);
+        var me = this;
+
+        try {
+            var key = this.getSummonerCacheKey();
+            if (this.summonerId && this.summonerId.length > 0) {
+                SummonerData = {
+                    "id": this.summonerId
+                }
+            } else {
+
+                var SummonerData = await summonerCache.getAsyncB(key).then(function (sumData) {
+                    if (typeof sumData === "undefined") {
+                        // Le data n'est pas présent on doit l'obtenir
+                        var data = me.querySummonerInfo(requestManager, result);
+                        // On associe le SummonerInfo dans la cache
+                        summonerCache.setCacheValue(key, data);
+                        return data;
+                    } else {
+                        // L'information est présente dans la cache
+                        return sumData;
+                    }
+                });
+            }
 
 
             if (SummonerData || typeof SummonerData !== "undefined") {
@@ -242,11 +328,11 @@ class SummonerQueue {
 
         try {
             var mappingQueue = SummonerDTO.getMappingQueueTypeToLeagueQueue();
-            var queueEntrier= Object.entries(mappingQueue);
+            //   var queueEntrier = Object.entries(mappingQueue);
 
             if (this.getJson) {
                 var summoner = this.SummonerDTO;
-                
+
                 // Convertir le JSON en Array
                 var iconEntries = Object.entries(profileIconDta.data);
                 // Recherche la correspondance
@@ -289,27 +375,95 @@ class SummonerQueue {
 
                 return data;
             } else {
-                var league = this.SummonerDTO.Queues.find(league => league.queueType === mappingQueue[type]);
 
-                if (league) {
-                    var rankTiers = league.getTiersRank();
-                    var leaguePt = '';
-                    var winRate = '';
-                    var series = league.getSeries(this.series);
+                if (this.getAll && this.getAll === "1") {
+                    var leagueSoloQ = this.SummonerDTO.Queues.find(league => league.queueType === mappingQueue["solo"]);
+                    var leagueFlex = this.SummonerDTO.Queues.find(league => league.queueType === mappingQueue["flex"]);
+                    var multiElo = false;
 
-                    if (this.showLp || this.showLp === "true") {
-                        leaguePt = league.getLeaguePoint();
+                    if (leagueSoloQ) {
+                        var rankTiers = leagueSoloQ.getTiersRank();
+                        var leaguePt = '';
+                        var winRate = '';
+                        var series = leagueSoloQ.getSeries(this.series);
+
+                        if (this.showLp || this.showLp === "true") {
+                            leaguePt = leagueSoloQ.getLeaguePoint();
+                        }
+
+                        if (this.showWinRate || this.showWinRate === "true") {
+                            winRate = ` - ${leagueSoloQ.getRatio()} % (${leagueSoloQ.wins}W/${leagueSoloQ.losses}L)`;
+                        }
+
+                        if (this.fullString || this.fullString === "true") {
+                            let CapSummonerName = `${this.summonerName}`;
+                            CapSummonerName = CapSummonerName.charAt(0).toUpperCase() + CapSummonerName.slice(1);
+
+                            returnValue = `${CapSummonerName} est actuellement ${rankTiers}${leaguePt}${series}${winRate} (SoloQ)`;
+                        } else {
+                            returnValue = `${rankTiers}${leaguePt}${series}${winRate} (SoloQ)`
+                        }
+                        multiElo = true;
+                    }
+                    if (leagueFlex) {
+                        if (multiElo) {
+                            returnValue += ` / `;
+                        }
+                        var rankTiers = leagueFlex.getTiersRank();
+                        var leaguePt = '';
+                        var winRate = '';
+                        var series = leagueFlex.getSeries(this.series);
+
+                        if (this.showLp || this.showLp === "true") {
+                            leaguePt = leagueFlex.getLeaguePoint();
+                        }
+
+                        if (this.showWinRate || this.showWinRate === "true") {
+                            winRate = ` - ${leagueFlex.getRatio()} % (${leagueFlex.wins}W/${leagueFlex.losses}L)`;
+                        }
+
+                        if (multiElo) {
+                            returnValue += `${rankTiers}${leaguePt}${series}${winRate} (Flex)`
+                        } else {
+
+                            if (this.fullString || this.fullString === "true") {
+                                let CapSummonerName = `${this.summonerName}`;
+                                CapSummonerName = CapSummonerName.charAt(0).toUpperCase() + CapSummonerName.slice(1);
+
+                                returnValue += `${CapSummonerName} est actuellement ${rankTiers}${leaguePt}${series}${winRate} (Flex)`;
+                            } else {
+                                returnValue += `${rankTiers}${leaguePt}${series}${winRate} (Flex)`
+                            }
+                        }
                     }
 
-                    if (this.showWinRate || this.showWinRate === "true") {
-                        winRate = ` - ${league.getRatio()} % (${league.wins}W/${league.losses}L)`;
-                    }
+
+                } else {
+                    var league = this.SummonerDTO.Queues.find(league => league.queueType === mappingQueue[type]);
+
+                    if (league) {
+                        var rankTiers = league.getTiersRank();
+                        var leaguePt = '';
+                        var winRate = '';
+                        var series = league.getSeries(this.series);
+
+                        if (this.showLp || this.showLp === "true") {
+                            leaguePt = league.getLeaguePoint();
+                        }
+
+                        if (this.showWinRate || this.showWinRate === "true") {
+                            winRate = ` - ${league.getRatio()} % (${league.wins}W/${league.losses}L)`;
+                        }
 
 
-                    if (this.fullString || this.fullString === "true") {
-                        returnValue = `${this.summonerName} est actuellement ${rankTiers}${leaguePt}${series}${winRate}`;
-                    } else {
-                        returnValue = `${rankTiers}${leaguePt}${series}${winRate}`
+                        if (this.fullString || this.fullString === "true") {
+                            let CapSummonerName = `${this.summonerName}`;
+                            CapSummonerName = CapSummonerName.charAt(0).toUpperCase() + CapSummonerName.slice(1);
+
+                            returnValue = `${CapSummonerName} est actuellement ${rankTiers}${leaguePt}${series}${winRate}`;
+                        } else {
+                            returnValue = `${rankTiers}${leaguePt}${series}${winRate}`
+                        }
                     }
                 }
             }

@@ -1,5 +1,6 @@
 var jsonConfig = require('../class/jsonConfig');
 var routeInfo = require('./info.json');
+var riotUserInfo = require('../webModule/riotUserInfo')
 
 class staticFunction {
     /*
@@ -11,7 +12,6 @@ class staticFunction {
         // Prepare Query
         for (var key in queryString) {
             queryString[key.toLowerCase()] = queryString[key];
-            // queryString[key.toLowerCase()] = encodeURI(queryString[key]);    
         }
 
         // Pré-validation
@@ -21,24 +21,60 @@ class staticFunction {
         } else {
 
             if (typeof queryString.userId !== "undefined" && queryString.userId.trim().length !== 0) {
+                let data;
+                let DTO;
+
+                riotUserInfo.loadOrCreateFile().then(function (f) {
+                    data = riotUserInfo.findCmdById(queryString.userId);
+                    if (data) {
+                        DTO = data;
+
+                        var region = data.region;
+                        var username = data.summonerName;
+                        var summonerId = data.summonerId;
+
+                        queryString.summonername = username;
+                        queryString.region = region;
+                        queryString.summonerId = summonerId;
+                    } else {
+                        err.push("Le paramètre 'userId' est invalide.");
+                    }
+                });
+
+                queryString.DTO = DTO;
+
+                /*
                 var config = new jsonConfig(configPath);
                 this.configDta = [];
                 config.loadDataNoSync();
                 this.configDta = config.data;
+                */
 
+                /*
+                if (data) {
+                    var region = data.region;
+                    var username = data.summonerName;
+                    var summonerId = data.summonerId;
+    
+                    queryString.summonername = username;
+                    queryString.region = region;
+                    queryString.summonerId = summonerId;
+                }
+                */
 
                 // Si on passe un userID alors on doit obtenir les info par CLIENT.JSON
-                var id = queryString.userId;
-                var userInfo = this.configDta.configuration.find(e => e.userId === id.toString());
+                // var id = queryString.userId;
+                // var userInfo = this.configDta.configuration.find(e => e.userId === id.toString());
 
+                /*
+            var region = userInfo.region;
+            var username = userInfo.summonerName;
+            var queue = userInfo.queue;
 
-                var region = userInfo.region;
-                var username = userInfo.summonerName;
-                var queue = userInfo.queue;
-
-                queryString.summonername = username;
-                queryString.region = region;
-                queryString.queueType = queue;
+            queryString.summonername = username;
+            queryString.region = region;
+            queryString.queueType = queue;
+            */
 
             } else {
                 if (typeof queryString.summonername === "undefined" || queryString.summonername.trim().length === 0) {
@@ -76,7 +112,7 @@ class staticFunction {
             errors: err
         }
 
-        return result;
+        return await result;
     }
     static validateRegion(queryString) {
         var err = [];
@@ -97,6 +133,10 @@ class staticFunction {
         // VALIDER SI LA REGION EST VALIDE
         if (!staticFunction.isValidRegion(queryString.region)) {
             err.push("La paramètre 'region' est invalide.");
+        } else {
+            var regionData = this.getMappingRegionToLeagueQueue();
+            var calledRegion = regionData[this.region];
+            queryString.region = calledRegion;
         }
 
         var result = {
@@ -109,7 +149,9 @@ class staticFunction {
     static isValidRegion(region) {
         var valid = false;
         switch (region) {
+            case 'NA':
             case 'NA1':
+            case 'EUW':
             case 'EUW1':
                 valid = true;
                 break;
@@ -119,16 +161,27 @@ class staticFunction {
         }
         return valid;
     }
+    static getMappingRegionToLeagueQueue() {
+        return {
+            'EUW': 'EUW1',
+            'EUW1': 'EUW1',
+            'NA': 'NA1',
+            'NA1': 'NA1'
+        };
+    }
     static isValidQueueType(type) {
         var valid = false;
         switch (type) {
-            case 'solo5', 'solo', 'soloq':
+            case 'solo5':
+            case 'solo':
+            case 'soloq':
                 valid = true;
                 break;
             case 'tft':
-                valid = true;
+                valid = false;
                 break;
-            case 'flex5', 'flex':
+            case 'flex5':
+            case 'flex':
                 valid = true;
                 break;
             case 'team5':
@@ -162,14 +215,14 @@ class staticFunction {
                 err.push("Le paramètre 'platform' est obligatoire.");
             } else if (!validPlatform.includes(queryString.platform)) {
                 err.push("La paramètre 'platform' est invalide.");
-            } 
+            }
 
             if (typeof queryString.region === "undefined" || queryString.region.trim().length === 0) {
                 err.push("Le paramètre 'region' est obligatoire.");
             } else if (!validRegion.includes(queryString.region)) {
                 err.push("La paramètre 'region' est invalide.");
             }
-            
+
             if (typeof queryString.tag === "undefined" || queryString.tag.trim().length === 0) {
                 err.push("Le paramètre 'tag' est obligatoire.");
             }

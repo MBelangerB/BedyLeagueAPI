@@ -40,6 +40,7 @@ const OverwatchProfilStats = require('./module/ow/OverwatchProfilStats');
     Init custom class
 */
 var jsonConfig = require('./class/jsonConfig');
+var riotUserInfo = require('./webModule/riotUserInfo')
 var staticFunction = require('./static/staticFunction');
 require('./static/Prototype.js');
 
@@ -144,33 +145,32 @@ app.get('/topMasteries', async function (req, res) {
 // Version 2 (with json)
 app.get('/v2/rank', async function (req, res) {
     try {
-        Logging.writeLog('/v2/rank', `Execute GetRank with data ${JSON.stringify(req.query)}`,
+       const { query } = req;
+
+        Logging.writeLog('/v2/rank', `Execute GetRank with data ${JSON.stringify(query)}`,
             'validateSummonerAndRegion', true);
 
         // Valider les paramètres
-        var fpath = path.join(__dirname + '/config/client.json')
-        var validation = staticFunction.validateSummonerAndRegion(req.query, fpath);
+        var fpath = path.join(__dirname + '/data/client.json')
+        var validation = await staticFunction.validateSummonerAndRegion(query, fpath);
         if (validation && validation.isValid === false) {
             res.send(validation.errors)
             Logging.writeLog('/v2/rank', ``, 'validateSummonerAndRegion', false);
             return;
         }
-        Logging.writeLog('/v2/rank', ``, 'validateSummonerAndRegion', false);
 
         // Obtenir les informations sur l'invocateur
-        Logging.writeLog('/v2/rank', `Before init SummonerQueue`, 'SummonerQueue', true);
-        var locSummoner = new SummonerQueue(req.query);
+        var locSummoner = new SummonerQueue(query);
         var result = await locSummoner.getSummonerInfo();
         if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
             res.send(result.err.statusMessage);
+            Logging.writeLog('/v2/rank', ``, 'validateSummonerAndRegion', false);
             return;
         }
-        Logging.writeLog('/v2/rank', ``, 'SummonerQueue', false);
-
-        Logging.writeLog('/v2/rank', `Before getReturnValue`, 'SummonerQueueReturn', true);
         var response = locSummoner.getReturnValue(locSummoner.queueType);
-        Logging.writeLog('/v2/rank', ``, 'SummonerQueueReturn', false);
-        if (response.getJson) {
+
+        Logging.writeLog('/v2/rank', ``, 'validateSummonerAndRegion', false);
+        if (locSummoner.getJson) {
             res.json(response);
         } else {
             res.send(response);
@@ -342,9 +342,39 @@ app.get('/v2/currentChampion', async function (req, res) {
 */
 app.get('/insertNewUser', async function (req, res) {
     try {
-        Logging.writeLog('/insertNewUser', `Execute insertNewUser with data ${JSON.stringify(req.query)}`,
-            'insertNewUser', true);
+        const { headers, method, url, body, query } = req;
+      
+        Logging.writeLog('/insertNewUser', `Execute insertNewUser with data ${JSON.stringify(body)}`,
+            'insertNewUser', true);    
 
+        // Valider les paramètres
+        var fpath = path.join(__dirname + '/data/client.json')
+        var validation = staticFunction.validateSummonerAndRegion(body, fpath);
+        if (validation && validation.isValid === false) {
+            res.send(validation.errors)
+            Logging.writeLog('/insertNewUser', ``, 'insertNewUser', false);
+            return;
+        }
+
+        // Obtenir les informations sur l'invocateur
+        var locSummoner = new SummonerQueue(body);
+        var result = await locSummoner.getLeagueSummoner();
+        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
+            res.send(result.err.statusMessage);
+            Logging.writeLog('/insertNewUser', ``, 'insertNewUser', false);
+            return;
+        }
+        Logging.writeLog('/insertNewUser', ``, 'insertNewUser', false);
+
+        await riotUserInfo.loadOrCreateFile();
+        var insertResult = await riotUserInfo.addUser(locSummoner.userInfo, true);
+
+        if (insertResult && locSummoner.userInfo) {
+            res.send(`${locSummoner.userInfo.id} : L'usager '${locSummoner.userInfo.summonerName} (${locSummoner.userInfo.region})' a été ajouté avec succès.`);
+        } else {
+            res.send("Une erreur s'est produite.");
+        }
+        /*
         // Prepare Query
         var query = {};
         for (var key in req.query) {
@@ -387,12 +417,14 @@ app.get('/insertNewUser', async function (req, res) {
         } else {
             res.send("Une erreur s'est produites.");
         }
+        */
 
     } catch (ex) {
         console.error(ex);
         res.send(ex);
     }
 });
+/*
 app.get('/setSummoner', async function (req, res) {
     try {
         Logging.writeLog('/setSummoner', `Execute setSummoner with data ${JSON.stringify(req.query)}`,
@@ -497,6 +529,7 @@ app.get('/updateConfig', async function (req, res) {
         res.send(ex);
     }
 });
+*/
 app.get('/getAllConfig', async function (req, res) {
     try {
         Logging.writeLog('/getAllConfig', `Execute getAllConfig`, 'getAllConfig', true);

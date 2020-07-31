@@ -33,6 +33,11 @@ if (!String.prototype.cleanString) {
     }
 }
 
+String.prototype.capitalize = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1)
+  }
+  
+
 // String.cleanString("'machaine")
 if (!String.cleanString) {
     String.cleanString = function (message) {

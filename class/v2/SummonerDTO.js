@@ -1,5 +1,8 @@
 const LeagueQueue = require('./LeagueQueue');
-
+/*
+    Class pour contenir les information sur l'invocateur
+    V2
+*/
  class SummonerDTO {
     constructor(info) {
         this.name = '';
@@ -74,6 +77,14 @@ const LeagueQueue = require('./LeagueQueue');
             'flex': 'RANKED_FLEX_SR',
             'flex5': 'RANKED_FLEX_SR',
 			'tft': 'RANKED_TFT'
+		};
+    }
+    static getMappingRegionToLeagueQueue() {
+		return {
+            'EUW': 'EUW1',
+            'EUW1': 'EUW1',
+            'NA': 'NA1',
+            'NA1': 'NA1'
 		};
     }
 

@@ -3,6 +3,8 @@
 *.txt
 *.http
 
+# Json Data
+/data/*.json
 
 # Dependency directories
 /node_modules/
