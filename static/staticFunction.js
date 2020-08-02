@@ -6,7 +6,7 @@ class staticFunction {
     /*
         League of Legend
     */
-    static validateSummonerAndRegion(queryString, configPath) {
+    static validateSummonerAndRegion(queryString) {
         var err = [];
 
         // Prepare Query
@@ -43,39 +43,6 @@ class staticFunction {
 
                 queryString.DTO = DTO;
 
-                /*
-                var config = new jsonConfig(configPath);
-                this.configDta = [];
-                config.loadDataNoSync();
-                this.configDta = config.data;
-                */
-
-                /*
-                if (data) {
-                    var region = data.region;
-                    var username = data.summonerName;
-                    var summonerId = data.summonerId;
-    
-                    queryString.summonername = username;
-                    queryString.region = region;
-                    queryString.summonerId = summonerId;
-                }
-                */
-
-                // Si on passe un userID alors on doit obtenir les info par CLIENT.JSON
-                // var id = queryString.userId;
-                // var userInfo = this.configDta.configuration.find(e => e.userId === id.toString());
-
-                /*
-            var region = userInfo.region;
-            var username = userInfo.summonerName;
-            var queue = userInfo.queue;
-
-            queryString.summonername = username;
-            queryString.region = region;
-            queryString.queueType = queue;
-            */
-
             } else {
                 if (typeof queryString.summonername === "undefined" || queryString.summonername.trim().length === 0) {
                     err.push("Le paramètre 'summonerName' est obligatoire.");
@@ -105,6 +72,10 @@ class staticFunction {
         // VALIDER SI LA REGION EST VALIDE
         if (!staticFunction.isValidRegion(queryString.region)) {
             err.push("La paramètre 'region' est invalide.");
+        } else {
+            var regionData = this.getMappingRegionToLeagueQueue();
+            var calledRegion = regionData[queryString.region];
+            queryString.region = calledRegion;
         }
 
         var result = {
@@ -112,8 +83,9 @@ class staticFunction {
             errors: err
         }
 
-        return await result;
+        return result;
     }
+
     static validateRegion(queryString) {
         var err = [];
         // Prepare Query
@@ -135,7 +107,7 @@ class staticFunction {
             err.push("La paramètre 'region' est invalide.");
         } else {
             var regionData = this.getMappingRegionToLeagueQueue();
-            var calledRegion = regionData[this.region];
+            var calledRegion = regionData[queryString.region];
             queryString.region = calledRegion;
         }
 

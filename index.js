@@ -187,7 +187,7 @@ app.get('/v2/rotate', async function (req, res) {
             'GetRotate', true);
 
         // Valider les paramètres
-        var isValid = staticFunction.validateRegion(req.query);
+        var isValid = await staticFunction.validateRegion(req.query);
         if (!isValid.isValid) {
             res.json(isValid.errors)
             return;
@@ -226,7 +226,7 @@ app.get('/v2/livegame', async function (req, res) {
 
         // Valider les paramètres
         var fpath = path.join(__dirname + '/config/client.json')
-        var validation = staticFunction.validateSummonerAndRegion(req.query, fpath);
+        var validation = await staticFunction.validateSummonerAndRegion(req.query, fpath);
         if (validation && validation.isValid === false) {
             res.send(validation.errors)
             Logging.writeLog('/v2/livegame', ``, 'validateSummonerAndRegion', false);
@@ -292,6 +292,7 @@ app.get('/v2/topMasteries', async function (req, res) {
         res.send(ex);
     }
 });
+
 
 // Stats 10 dernières games
 app.get('/v2/lastgame', async function (req, res) {
