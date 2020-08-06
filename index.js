@@ -5,6 +5,8 @@ const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
 const url = require('url');
+const moment = require("moment");
+const morgan = require('morgan')
 
 /*  
     HTML Parser
@@ -52,11 +54,40 @@ app.use(express.json());       // to support JSON-encoded bodies
 app.use(express.urlencoded({     // to support URL-encoded bodies
     extended: true
 }));
+
 app.use('/web', express.static(__dirname + '/web'));
+
+/*
+// since logger only returns a UTC version of date, I'm defining my own date format - using an internal module from console-stamp
+express.logger.format('mydate', function() {
+
+    var currentDateTime = moment().format("YYYY-MM-DD HH:mm:ss:SSS");
+    return `${currentDateTime}`;
+  //  var df = require('console-stamp/node_modules/dateformat');
+  //  return df(new Date(), 'HH:MM:ss.l');
+});
+app.use(express.logger('[:mydate] :method :url :status :res[content-length] - :remote-addr - :response-time ms'));
+*/
+
+ 
+app.use(morgan(function (tokens, req, res) {
+    if (res.statusCode === 302) { return null; }
+
+    var currentDateTime = moment().format("YYYY-MM-DD HH:mm:ss:SSS");
+    return [
+      `[${currentDateTime}] : `,
+      tokens.method(req, res),
+      tokens.url(req, res),
+      tokens.status(req, res),
+      tokens['response-time'](req, res), 'ms'
+    ].join(' ')
+  }))  
 
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/web/index.html'));
 });
+
+
 
 /*
     League API
@@ -147,15 +178,17 @@ app.get('/v2/rank', async function (req, res) {
     try {
        const { query } = req;
 
+       /*
         Logging.writeLog('/v2/rank', `Execute GetRank with data ${JSON.stringify(query)}`,
             'validateSummonerAndRegion', true);
+        */
 
         // Valider les paramètres
         var fpath = path.join(__dirname + '/data/client.json')
         var validation = await staticFunction.validateSummonerAndRegion(query, fpath);
         if (validation && validation.isValid === false) {
             res.send(validation.errors)
-            Logging.writeLog('/v2/rank', ``, 'validateSummonerAndRegion', false);
+          //  Logging.writeLog('/v2/rank', ``, 'validateSummonerAndRegion', false);
             return;
         }
 
@@ -164,12 +197,12 @@ app.get('/v2/rank', async function (req, res) {
         var result = await locSummoner.getSummonerInfo();
         if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
             res.send(result.err.statusMessage);
-            Logging.writeLog('/v2/rank', ``, 'validateSummonerAndRegion', false);
+           // Logging.writeLog('/v2/rank', ``, 'validateSummonerAndRegion', false);
             return;
         }
         var response = locSummoner.getReturnValue(locSummoner.queueType);
 
-        Logging.writeLog('/v2/rank', ``, 'validateSummonerAndRegion', false);
+     //   Logging.writeLog('/v2/rank', ``, 'validateSummonerAndRegion', false);
         if (locSummoner.getJson) {
             res.json(response);
         } else {
@@ -183,9 +216,10 @@ app.get('/v2/rank', async function (req, res) {
 });
 app.get('/v2/rotate', async function (req, res) {
     try {
+        /*
         Logging.writeLog('/v2/rotate', `Execute GetRotate`,
             'GetRotate', true);
-
+        */
         // Valider les paramètres
         var isValid = await staticFunction.validateRegion(req.query);
         if (!isValid.isValid) {
@@ -200,12 +234,12 @@ app.get('/v2/rotate', async function (req, res) {
             res.send(result.err.statusMessage);
             return;
         }
-        Logging.writeLog('/v2/rotate', ``, 'GetRotate', false);
+    //    Logging.writeLog('/v2/rotate', ``, 'GetRotate', false);
 
 
-        Logging.writeLog('/v2/rotate', `Before getReturnValue`, 'LeagueRotate', true);
+      //  Logging.writeLog('/v2/rotate', `Before getReturnValue`, 'LeagueRotate', true);
         var response = legData.getReturnValue();
-        Logging.writeLog('/v2/rotate', `Before getReturnValue`, 'LeagueRotate', false);
+    //   Logging.writeLog('/v2/rotate', `Before getReturnValue`, 'LeagueRotate', false);
         if (legData.getJson) {
             res.json(response);
         } else {
@@ -221,21 +255,21 @@ app.get('/v2/rotate', async function (req, res) {
 // Version 2
 app.get('/v2/livegame', async function (req, res) {
     try {
-        Logging.writeLog('/v2/livegame', `Execute livegame with data ${JSON.stringify(req.query)}`,
-            'validateSummonerAndRegion', true);
+    /*    Logging.writeLog('/v2/livegame', `Execute livegame with data ${JSON.stringify(req.query)}`,
+            'validateSummonerAndRegion', true);*/
 
         // Valider les paramètres
         var fpath = path.join(__dirname + '/config/client.json')
         var validation = await staticFunction.validateSummonerAndRegion(req.query, fpath);
         if (validation && validation.isValid === false) {
             res.send(validation.errors)
-            Logging.writeLog('/v2/livegame', ``, 'validateSummonerAndRegion', false);
+        //    Logging.writeLog('/v2/livegame', ``, 'validateSummonerAndRegion', false);
             return;
         }
-        Logging.writeLog('/v2/livegame', ``, 'validateSummonerAndRegion', false);
+     //   Logging.writeLog('/v2/livegame', ``, 'validateSummonerAndRegion', false);
 
         // Obtenir les informations sur l'invocateur
-        Logging.writeLog('/v2/livegame', `Before init LeagueActiveGame`, 'LeagueActiveGame', true);
+  //      Logging.writeLog('/v2/livegame', `Before init LeagueActiveGame`, 'LeagueActiveGame', true);
 
         var activeGame = new LeagueActiveGame(req.query);
         var result = await activeGame.getLiveGame();
@@ -244,11 +278,11 @@ app.get('/v2/livegame', async function (req, res) {
             return;
         }
 
-        Logging.writeLog('/v2/livegame', ``, 'LeagueActiveGame', false);
+   //     Logging.writeLog('/v2/livegame', ``, 'LeagueActiveGame', false);
 
-        Logging.writeLog('/v2/livegame', `Before getReturnValue`, 'getActionGameDetails', true);
+    //    Logging.writeLog('/v2/livegame', `Before getReturnValue`, 'getActionGameDetails', true);
         var response = activeGame.getActionGameDetails();
-        Logging.writeLog('/v2/livegame', ``, 'getActionGameDetails', false);
+     //   Logging.writeLog('/v2/livegame', ``, 'getActionGameDetails', false);
         res.send(response);
 
     } catch (ex) {
@@ -259,32 +293,32 @@ app.get('/v2/livegame', async function (req, res) {
 // Top stats masteries
 app.get('/v2/topMasteries', async function (req, res) {
     try {
-        Logging.writeLog('/v2/topMasteries', `Execute GetTopMasteries with data ${JSON.stringify(req.query)}`,
-            'validateSummonerAndRegion', true);
+   /*     Logging.writeLog('/v2/topMasteries', `Execute GetTopMasteries with data ${JSON.stringify(req.query)}`,
+            'validateSummonerAndRegion', true);*/
 
         // Valider les paramètres
         var fpath = path.join(__dirname + '/config/client.json')
         var validation = staticFunction.validateSummonerAndRegion(req.query, fpath);
         if (validation && validation.isValid === false) {
             res.send(validation.errors)
-            Logging.writeLog('/v2/topMasteries', ``, 'validateSummonerAndRegion', false);
+    //       Logging.writeLog('/v2/topMasteries', ``, 'validateSummonerAndRegion', false);
             return;
         }
-        Logging.writeLog('/v2/topMasteries', ``, 'validateSummonerAndRegion', false);
+ //       Logging.writeLog('/v2/topMasteries', ``, 'validateSummonerAndRegion', false);
 
         // Obtenir les informations sur l'invocateur
-        Logging.writeLog('/v2/topMasteries', `Before init LeagueChampionMasteries`, 'LeagueChampionMasteries', true);
+  //      Logging.writeLog('/v2/topMasteries', `Before init LeagueChampionMasteries`, 'LeagueChampionMasteries', true);
         var champMasteries = new LeagueChampionMasteries(req.query);
         var result = await champMasteries.getChampionsMasteries();
         if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
             res.send(result.err.statusMessage);
             return;
         }
-        Logging.writeLog('/v2/topMasteries', ``, 'LeagueChampionMasteries', false);
+   //     Logging.writeLog('/v2/topMasteries', ``, 'LeagueChampionMasteries', false);
 
-        Logging.writeLog('/v2/topMasteries', `Before getReturnValue`, 'LeagueChampionMasteries', true);
+  //      Logging.writeLog('/v2/topMasteries', `Before getReturnValue`, 'LeagueChampionMasteries', true);
         var response = champMasteries.getReturnValue(champMasteries.queueType);
-        Logging.writeLog('/v2/topMasteries', ``, 'LeagueChampionMasteries', false);
+    //    Logging.writeLog('/v2/topMasteries', ``, 'LeagueChampionMasteries', false);
         res.send(response);
 
     } catch (ex) {

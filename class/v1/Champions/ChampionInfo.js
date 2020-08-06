@@ -1,6 +1,10 @@
 /*
     Class pour les information sur les champions de League of Legends
     Utiliser pour les commandes Rotate / Masteries / LiveGame
+
+    https://developer.riotgames.com/docs/lol#data-dragon_champions
+    http://ddragon.leagueoflegends.com/cdn/10.16.1/data/fr_FR/champion.json
+    http://ddragon.leagueoflegends.com/cdn/10.16.1/data/fr_US/champion.json
 */
 module.exports = class ChampionInfo {
     constructor() {
