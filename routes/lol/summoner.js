@@ -7,6 +7,27 @@ const staticFunction = require('../../static/staticFunction');
 const LeagueChampionMasteries = require('../../module/v2/LeagueChampionMasteries');
 const LeagueActiveGame = require('../../module/v2/LeagueLiveGame');
 
+const morgan = require('morgan');
+const moment = require("moment");
+
+// Logger
+router.use(morgan(function (tokens, req, res) {
+    if (res.statusCode === 302) { return null; }
+
+    var currentDateTime = moment().format("YYYY-MM-DD HH:mm:ss:SSS");
+
+    return [
+        `[${currentDateTime}] : `,
+        `${req.protocol} - `, 
+        tokens.method(req, res),
+        tokens.url(req, res),
+        tokens.status(req, res),
+        tokens['response-time'](req, res), 'ms'
+    ].join(' ');
+}))
+
+
+
 // Version 2
 router.get('/v2/livegame', async function (req, res) {
     try {

@@ -6,6 +6,27 @@ const router = express.Router();
 const OverwatchProfilStats = require('../../module/ow/OverwatchProfilStats');
 const staticFunction = require('../../static/staticFunction');
 
+const morgan = require('morgan');
+const moment = require("moment");
+
+// Logger
+router.use(morgan(function (tokens, req, res) {
+    if (res.statusCode === 302) { return null; }
+
+    var currentDateTime = moment().format("YYYY-MM-DD HH:mm:ss:SSS");
+
+    return [
+        `[${currentDateTime}] : `,
+        `${req.protocol} - `, 
+        tokens.method(req, res),
+        tokens.url(req, res),
+        tokens.status(req, res),
+        tokens['response-time'](req, res), 'ms'
+    ].join(' ');
+}))
+
+
+
 /*
  Mon API : region=us&tag=Bohe-11734&platform=pc
 */

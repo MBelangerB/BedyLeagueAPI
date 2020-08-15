@@ -6,6 +6,26 @@ const router = express.Router();
 const staticFunction = require('../../static/staticFunction');
 const LeagueRotate = require('../../module/v2/LeagueRotate');
 
+const morgan = require('morgan');
+const moment = require("moment");
+
+// Logger
+router.use(morgan(function (tokens, req, res) {
+    if (res.statusCode === 302) { return null; }
+
+    var currentDateTime = moment().format("YYYY-MM-DD HH:mm:ss:SSS");
+
+    return [
+        `[${currentDateTime}] : `,
+        `${req.protocol} - `, 
+        tokens.method(req, res),
+        tokens.url(req, res),
+        tokens.status(req, res),
+        tokens['response-time'](req, res), 'ms'
+    ].join(' ');
+}))
+
+
 router.get('/v2/rotate', async function (req, res) {
     try {
         // Valider les paramètres

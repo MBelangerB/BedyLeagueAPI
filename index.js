@@ -7,6 +7,7 @@ const dotenv = require('dotenv');
 const url = require('url');
 const moment = require("moment");
 const morgan = require('morgan');
+
 // Secure
 const https = require('https');
 const http = require('http');
@@ -15,7 +16,6 @@ const fs = require('fs');
 
 /*    Initialize Modules   */
 var app = express();
-
 dotenv.config();
 
 /*
@@ -34,6 +34,7 @@ require('./static/Prototype.js');
 app.use(require('./routes/api/config'));
 
 app.use(require('./routes/ow/rank'));
+
 app.use(require('./routes/lol/rank'));
 app.use(require('./routes/lol/summoner'));
 app.use(require('./routes/lol/league'));
@@ -62,7 +63,8 @@ app.use(morgan(function (tokens, req, res) {
         tokens.status(req, res),
         tokens['response-time'](req, res), 'ms'
     ].join(' ')
-}))
+}));
+
 
 // Default webpage
 app.use(express.static(__dirname + "/web/"));

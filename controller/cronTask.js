@@ -1,7 +1,6 @@
 'use strict';
 
 const infoJson = require('../static/info.json');
-// const bedyAPIConfig = require('../config/bedyapi.json');
 
 const path = require('path');
 const fs = require('fs');

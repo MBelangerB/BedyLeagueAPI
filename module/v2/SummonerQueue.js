@@ -27,7 +27,7 @@ class SummonerQueue {
 
         // Paramètre obligatoire
         this.summonerName = queryString.summonername;
-        this.region = queryString.region; // calledRegion;
+        this.region = queryString.region;
         this.getAll = (queryString.all || "0");
         this.summonerId = queryString.summonerId;
 
@@ -328,17 +328,18 @@ class SummonerQueue {
 
         try {
             var mappingQueue = SummonerDTO.getMappingQueueTypeToLeagueQueue();
-            //   var queueEntrier = Object.entries(mappingQueue);
 
             if (this.getJson) {
                 var summoner = this.SummonerDTO;
 
                 // Convertir le JSON en Array
                 var iconEntries = Object.entries(profileIconDta.data);
+
                 // Recherche la correspondance
                 var fullIconDta = iconEntries.find(f => f[1].id === summoner.profileIconId);
                 var iconUrl = '';
                 if (fullIconDta) {
+                    // TODO: Remlacer version
                     var fullIconId = fullIconDta[1].image.full;
                     iconUrl = `http://ddragon.leagueoflegends.com/cdn/10.8.1/img/profileicon/${fullIconId}`;
                 }
