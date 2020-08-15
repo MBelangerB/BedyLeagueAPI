@@ -10,9 +10,16 @@
 /node_modules/
 /jspm_packages/
 
+# Dragon Data
+/static/en-us/*.json
+/static/fr_fr/*.json
+/dragon/*
+
 # Disabled JSON (config)
 /config/*.json
-/config/clientA.json
+
+# Disable SSL
+/ssl/*
 
 # Optional npm cache directory
 .npm

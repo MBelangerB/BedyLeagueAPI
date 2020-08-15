@@ -6,10 +6,15 @@ class RequestManager {
         this.summonerName = data.summonerName;
         this.region = data.region;
 
+        let riotToken = `${process.env.lolKey}`;
+        if (data.queueType === "tft") {
+            riotToken = `${process.env.tftKey}`;
+        }
+
         this.header = {
             "Origin": null,
             "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
-            "X-Riot-Token": `${process.env.apiKey}`,
+            "X-Riot-Token": `${riotToken}`,
             "Accept-Language": "fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0"
         }

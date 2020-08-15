@@ -1,5 +1,5 @@
 var info = require('../../static/info.json');
-var champions = require('../../static/fr_fr/champion.json');
+var champions = require('../../dragon/fr_fr/champion.json');
 
 var champInfo = require(`../../class/v1/Champions/ChampionInfo`);
 var RequestManager = require(`./RequestManager`);

@@ -5,7 +5,7 @@ const CacheService = require('../Cache.Service');
 var SummonerDTO = require('../../class/v2/SummonerDTO');
 var staticFunction = require('../../static/staticFunction');
 
-var profileIconDta = require('../../static/fr_fr/profileicon.json');
+var profileIconDta = require('../../dragon/fr_fr/profileicon.json');
 var riotUserInfoDTO = require('../../class/riotUserInfoDTO');
 
 /*

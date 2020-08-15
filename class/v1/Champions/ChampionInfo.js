@@ -19,11 +19,13 @@ module.exports = class ChampionInfo {
         this.championName = name;
         this.id = id;
         this.searchName = search;
+        // TODO: Obtenir l'information VERSION présente dans le fichier de config pour remplacer 10.8.1
         this.championIcon = `http://ddragon.leagueoflegends.com/cdn/10.8.1/img/champion/${this.searchName}.png`;
     }
 
     setFullImageName(imageName) {
         this.fullImageName = imageName;
+        // TODO: Obtenir l'information VERSION présente dans le fichier de config pour remplacer 10.8.1
         this.championIcon = `http://ddragon.leagueoflegends.com/cdn/10.8.1/img/champion/${imageName}`;
 
     }

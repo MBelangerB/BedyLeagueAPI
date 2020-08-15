@@ -2,6 +2,8 @@ var jsonConfig = require('../class/jsonConfig');
 var routeInfo = require('./info.json');
 var riotUserInfo = require('../webModule/riotUserInfo')
 
+const path = require('path');
+
 class staticFunction {
     /*
         League of Legend
@@ -150,7 +152,7 @@ class staticFunction {
                 valid = true;
                 break;
             case 'tft':
-                valid = false;
+                valid = true;
                 break;
             case 'flex5':
             case 'flex':
@@ -213,6 +215,20 @@ class staticFunction {
 
         return result;
     }
+
+    /*
+        File
+    */  
+   static getRootPath() {
+       // Il semblerait que ça ne fonctionne pas avec PM2
+       try {
+        return path.dirname(require.main.filename);
+       } catch (ex) {
+           console.error(`An error occured in StaticFunction.getRootPath`);
+           console.error(ex);
+       }
+       
+   }
 }
 
 module.exports = staticFunction;

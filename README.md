@@ -8,7 +8,6 @@ Cette API servira de PONT de communication entre les ChatBot *(NightBot, StreamL
 | /rotate  | Permet d'obtenir la rotation actuel  | 
 | /livegame  | Permet d'obtenir les informations sur les invocateurs/champion de la partie actuel | 
 | /topMasteries  | Permet d'obtenir les 5 champions avec le plus de points de maitrises |
-| /insertNewUser  | Permet d'ajouter les informations sur un invocateur pour obtenir un ID |
 
 # Utilisation des commandes
 ## Rank
@@ -23,8 +22,7 @@ Cette commande permet d'obtenir le rang de l'invocateur.
 |WinRate|Non|Afficher le % victoires|0 ou 1||
 |lp|Non|Afficher ou non les  LP|0 ou 1|/rank?region=NA1&summonerName=Bedy90?**lp=0**|
 |series|Non|Caractères de remplacer pour les Wins/Losses/Not Play||/rank?region=NA1&summonerName=Bedy90?series=abc|
-|queueType|Non|Définir la queue pour laquel on désire obtenir le rang|(solo5, tft)|/rank?region=NA1&summonerName=Bedy90?**queueType=tft**|
-|userId|Non|ID de l'utilisateur obtenu par insertNewUser||/rank?**userId=AaAa0ab0**|
+|queueType|Non|Définir la queue pour laquel on désire obtenir le rang|(solo, flex, tft)|/rank?region=NA1&summonerName=Bedy90?**queueType=tft**|
 
 ## Rotate
 Cette commande permet d'obtenir la rotation actuel.
@@ -55,18 +53,4 @@ Permet d'obtenir les 5 champions avec le plus de points de maitrises
 | summonerName| Oui | Le nom de l'invocateur|| /rank?region=NA1&**summonerName=Bedy90**
 |||||
 |nb|Non|Nombre de données a afficher (5 par défaut)|||
-
-
-## insertNewUser
-Cette commande permet de génerer un ID qui est associé a un invocateur. Pour obtenir plus facilement les informations sur l'invocateur.
-
-### Paramètres
-| Paramètres| Obligatoire|Description|Valeur disponible| Exemple
-|--|--|--|--|--|
-| region | Oui|Le serveur|NA1, EUW1|/rank?**region=NA1**
-| summonerName| Oui | Le nom de l'invocateur|| /rank?region=NA1&**summonerName=Bedy90**
-| twitchName| Non | Le nom de la chaine twitch|| /rank?region=NA1&summonerName=Bedy90&**twitchName=Elmat90**
-
-
-
 

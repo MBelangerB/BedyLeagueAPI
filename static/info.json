@@ -25,6 +25,14 @@
             "getChampionRotate": "https://{region}.api.riotgames.com/lol/platform/v3/champion-rotations"       
         }
     },
+    "dragon": {
+        "version": "https://ddragon.leagueoflegends.com/api/versions.json",
+        "queues": "http://static.developer.riotgames.com/docs/lol/queues.json",
+        "seasons": "http://static.developer.riotgames.com/docs/lol/seasons.json",
+        "champions": "http://ddragon.leagueoflegends.com/cdn/{version}/data/{lang}/champion.json",
+        "profileIcons": "http://ddragon.leagueoflegends.com/cdn/{version}/data/{lang}/profileicon.json",
+        "summonerSpells": "http://ddragon.leagueoflegends.com/cdn/{version}/data/{lang}/summoner.json"
+    },
     "overwatch": {
         "platform": ["pc"],
         "region": ["us"],
