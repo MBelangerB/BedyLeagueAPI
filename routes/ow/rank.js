@@ -20,7 +20,7 @@ router.use(morgan(function (tokens, req, res) {
     var currentDateTime = moment().format("YYYY-MM-DD HH:mm:ss:SSS");
 
     return [
-        `D[${currentDateTime}] : `,
+        `[${currentDateTime}] : `,
         `${req.protocol} - `, 
         tokens.method(req, res),
         tokens.url(req, res),

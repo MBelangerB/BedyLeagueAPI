@@ -32,7 +32,7 @@ require('./static/Prototype.js');
     Loading ROUTE
 */
 app.use(require('./routes/api/config'));
-// app.use(require('./routes/api/obs'));
+app.use(require('./routes/api/obs'));
 
 app.use(require('./routes/ow/rank'));
 
@@ -50,7 +50,15 @@ app.use(express.urlencoded({     // to support URL-encoded bodies
     extended: true
 }));
 
+
 app.use('/web', express.static(__dirname + '/web'));
+app.use('/static', express.static(__dirname + '/static'));
+
+
+/*
+app.set('/views', path.join(__dirname + '/web/template'));
+app.set('view engine', 'hbs');
+*/
 
 // Logger
 app.use(morgan(function (tokens, req, res) {
@@ -70,6 +78,9 @@ app.use(morgan(function (tokens, req, res) {
 
 // Default webpage
 app.use(express.static(__dirname + "/web/"));
+// app.use(express.static(__dirname + "/static/images/ranked-emblems"));
+app.use(express.static("/static"));
+
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/web/index.html'));
 });

@@ -121,7 +121,7 @@ class SummonerQueue {
         return data;
     }
     // Step 2 : Execution de la Query qui obtient les information sur la league
-    async queryLeagueInfo(requestManager, result, summonerId) {
+    async queryLeagueInfo(requestManager, result, summonerId) { 
         var data;
 
         var regionData = this.getMappingRegionToLeagueQueue();
@@ -141,7 +141,7 @@ class SummonerQueue {
                     statusMessage: "Unranked"
                 }
             } else {
-                data = res;
+                data = res;               
             }
         }, function (error) {
             if (typeof error.message === "undefined") {
@@ -159,7 +159,8 @@ class SummonerQueue {
         return data;
     }
 
-    // Requête secondaire (InsertUser)
+
+    // Requête secondaire (InsertUser) (Plus utilisé)
     async getLeagueSummoner() {
         var result = {
             "code": 0,
@@ -171,10 +172,10 @@ class SummonerQueue {
 
         try {
             var key = this.getSummonerCacheKey();
-            var SummonerData = await summonerCache.getAsyncB(key).then(function (sumData) {
+            var SummonerData = await summonerCache.getAsyncB(key).then(async function (sumData) {
                 if (typeof sumData === "undefined") {
                     // Le data n'est pas présent on doit l'obtenir
-                    var data = me.querySummonerInfo(requestManager, result);
+                    var data = await me.querySummonerInfo(requestManager, result);
                     // On associe le SummonerInfo dans la cache
                     summonerCache.setCacheValue(key, data);
                     return data;
@@ -234,10 +235,10 @@ class SummonerQueue {
                 }
             } else {
 
-                var SummonerData = await summonerCache.getAsyncB(key).then(function (sumData) {
+                var SummonerData = await summonerCache.getAsyncB(key).then(async function (sumData) {
                     if (typeof sumData === "undefined") {
                         // Le data n'est pas présent on doit l'obtenir
-                        var data = me.querySummonerInfo(requestManager, result);
+                        var data = await me.querySummonerInfo(requestManager, result);
                         // On associe le SummonerInfo dans la cache
                         summonerCache.setCacheValue(key, data);
                         return data;
@@ -255,10 +256,11 @@ class SummonerQueue {
 
                 key = this.getLeagueCacheKey();
 
-                var leagueData = await LeagueCache.getAsyncB(key).then(function (sumData) {
+                var leagueData = await LeagueCache.getAsyncB(key).then(async function (sumData) {
                     if (typeof sumData === "undefined") {
                         // Le data n'est pas présent on doit l'obtenir
-                        var data = me.queryLeagueInfo(requestManager, result, summonerInfo.getId);
+                        var data = await me.queryLeagueInfo(requestManager, result, summonerInfo.getId);
+
                         // On associe le SummonerInfo dans la cache
                         LeagueCache.setCacheValue(key, data);
                         return data;
@@ -268,6 +270,7 @@ class SummonerQueue {
                     }
                 });
 
+                
                 if (leagueData || typeof leagueData !== "undefined") {
                     // On initialise les queues dans SUmmonerInfo
                     summonerInfo.initQueue(leagueData);
