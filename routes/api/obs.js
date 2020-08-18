@@ -52,7 +52,7 @@ router.get('/obs/rank', async function (req, res) {
         const { query, protocol } = req;
 
         if (query && typeof query.passwd === "undefined" || query.passwd !== 't0t0S@b') {
-            res.send('N/A');
+            res.status(404).send(`Désoler, ceci n'est pas disponible`);
         }
         query.json = true;
 
@@ -160,14 +160,10 @@ router.get('/obs/rank', async function (req, res) {
 
         } catch (ex) {
             console.error(ex);
-            res.send('Une erreur est survenu.')
         }
-
-
-
+        
     } catch (ex) {
         console.error(ex);
-        res.send(ex);
     }
 });
 
