@@ -50,11 +50,12 @@ router.use(morgan(function (tokens, req, res) {
 router.get('/obs/rank', async function (req, res) {
     try {
         const { query, protocol } = req;
+        query.json = true;
 
         if (query && typeof query.passwd === "undefined" || query.passwd !== 't0t0S@b') {
             res.status(404).send(`Désoler, ceci n'est pas disponible`);
+            return;
         }
-        query.json = true;
 
         var validation = await staticFunction.validateSummonerAndRegion(query);
         if (validation && validation.isValid === false) {
@@ -78,8 +79,8 @@ router.get('/obs/rank', async function (req, res) {
 
             var result = jsonData.queue.find(f => f.QueueType === locSummoner.queueType);
             var imgName;
-           // var folder = path.join(__dirname, '../..', '/static/images/ranked-emblems');
-           var folder = `${fullUrl}/static/images/ranked-emblems` ; // path.join(fullUrl, '/static/images/ranked-emblems');
+            // var folder = path.join(__dirname, '../..', '/static/images/ranked-emblems');
+            var folder = `${fullUrl}/static/images/ranked-emblems`; // path.join(fullUrl, '/static/images/ranked-emblems');
             switch (result.tiers.toUpperCase()) {
                 case 'IRON':
                     imgName = `/Emblem_Iron.png`
@@ -143,7 +144,7 @@ router.get('/obs/rank', async function (req, res) {
                         showWR: locSummoner.showWinRate
                     },
                     image: {
-                        src: `${folder}/${imgName}`, // path.join(folder, imgName),
+                        src: `${folder}/${imgName}`,
                         alt: `${result.tiers} ${result.rank}`
                     },
                     colorRank: result.tiers.toLowerCase()
@@ -161,7 +162,7 @@ router.get('/obs/rank', async function (req, res) {
         } catch (ex) {
             console.error(ex);
         }
-        
+
     } catch (ex) {
         console.error(ex);
     }
