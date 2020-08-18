@@ -32,12 +32,14 @@ require('./static/Prototype.js');
     Loading ROUTE
 */
 app.use(require('./routes/api/config'));
+// app.use(require('./routes/api/obs'));
 
 app.use(require('./routes/ow/rank'));
 
 app.use(require('./routes/lol/rank'));
 app.use(require('./routes/lol/summoner'));
 app.use(require('./routes/lol/league'));
+
 
 /*
     Affectation APP
@@ -52,12 +54,12 @@ app.use('/web', express.static(__dirname + '/web'));
 
 // Logger
 app.use(morgan(function (tokens, req, res) {
-    if (res.statusCode === 302) { return null; }
+//    if (res.statusCode === 302) { return null; }
 
     var currentDateTime = moment().format("YYYY-MM-DD HH:mm:ss:SSS");
     return [
         `[${currentDateTime}] : `,
-        `${req.protocol} - `, 
+        `${req.protocol} - `,
         tokens.method(req, res),
         tokens.url(req, res),
         tokens.status(req, res),
@@ -84,7 +86,7 @@ app.get('/', function (req, res) {
         lp              : (facultatif) Afficher les LP
         short           : (facultatif) Si possible, afficher le rang raccourcit. (Plat au lieu Platinium)
         series          : (facultatif) Remplacer les symboles Win/Loose/Pending pour les séries
-        queueType           : (facultatif) Permet de spécifier le type de queue qu'on désire valider.
+        queueType       : (facultatif) Permet de spécifier le type de queue qu'on désire valider.
 
 */
 app.get('/rank', async function (req, res) {
@@ -145,21 +147,26 @@ app.get('/updateDragon', async function (req, res) {
     try {
         var ds = new dragonUpdate();
 
+        var strArray = [];
+
         await ds.initFolder().then(async init => {
-            console.log(`initFolder : ${init}`);
+ 
             await ds.loadAPIConfigFile().then(async loading => {
-                console.log(`Loading REsult : ${loading}`);
+                strArray.push(`Version actuel : ${JSON.stringify(loading)}`);
+
                 await ds.downloadVersionFile().then(async updateVersion => {
-                    console.log(`update version : ${updateVersion}`);
+                    strArray.push(`Mise-à-jour de la version : ${updateVersion}`);
+
                     if (updateVersion) {
                         await ds.downloadFileData().then(result => {
-                            console.log(`Download State: ${result}`)
+                            strArray.push(`Download State: ${result}`);
                         });
                     }
 
                 });
             });
         });
+        console.log(strArray.join(" - "));
 
         res.send('La mise-à-jour des fichiers est terminée.');
     } catch (ex) {
@@ -172,23 +179,28 @@ app.get('/updateDragon', async function (req, res) {
 
 if (process.env.NODE_ENV && process.env.NODE_ENV === 'development') {
     /* Démarrage du serveur */
-    http.createServer(app).listen(process.env.PORT || 3000, function () {
-        var port = process.env.PORT || 3000;
+    var srvHttp = http.createServer(app).listen(process.env.PORT || 3000, function () {
+        //   var port = process.env.PORT || 3000;
+        var host = srvHttp.address().address;
+        var port = srvHttp.address().port;
+
         Logging = new Logging(process.env);
 
-        console.log(`Démarrage du serveur HTTP le '${new Date().toString()}' sur le port ${port}`)
+        console.log(`Démarrage du serveur HTTP le '${new Date().toString()}' sur: '${host}' Server : '${port}'`);
     });
 } else {
-    https.createServer({
+    var srvHttps = https.createServer({
         key: fs.readFileSync('ssl/server.key'),
         cert: fs.readFileSync('ssl/server.cert')
-    }, app)
-    .listen(process.env.PORT_HTTPS || 3000, function () {
-        var port = process.env.PORT_HTTPS || 3000;
-        if (!Logging) { Logging = new Logging(process.env); }
+    }, app).listen(process.env.PORT_HTTPS || 3000, function () {
+            //   var port = process.env.PORT || 3000;
+            var host = srvHttps.address().address;
+            var port = srvHttps.address().port;
 
-        console.log(`Démarrage du serveur HTTPS le '${new Date().toString()}' sur le port ${port}`)
-    })
+            if (!Logging) { Logging = new Logging(process.env); }
+
+            console.log(`Démarrage du serveur HTTPS le '${new Date().toString()}' sur: '${host}' Server : '${port}'`);
+        })
 }
 
 app.on('close', function () {

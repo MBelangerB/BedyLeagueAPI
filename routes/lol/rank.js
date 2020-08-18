@@ -11,8 +11,16 @@ const moment = require("moment");
 
 // Logger
 router.use(morgan(function (tokens, req, res) {
-    if (res.statusCode === 302) { return null; }
-
+  //  if (res.statusCode === 302) { return null; }
+  let autorized = ['/v2/rank'];
+  if (typeof req.route === "undefined" || autorized.includes(req.route.path.toLowerCase()) === false) { 
+      return null;
+  }
+/*
+    if (req.route.path.toLowerCase().includes("/v2/rank") === false) { 
+        return null;
+    }
+*/
     var currentDateTime = moment().format("YYYY-MM-DD HH:mm:ss:SSS");
 
     return [
@@ -24,8 +32,6 @@ router.use(morgan(function (tokens, req, res) {
         tokens['response-time'](req, res), 'ms'
     ].join(' ');
 }))
-
-
 
 
 router.get('/v2/rank', async function (req, res) {

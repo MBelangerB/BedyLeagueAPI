@@ -12,7 +12,12 @@ const moment = require("moment");
 
 // Logger
 router.use(morgan(function (tokens, req, res) {
-    if (res.statusCode === 302) { return null; }
+  //  if (res.statusCode === 302) { return null; }
+    let autorized = ['/v2/livegame', '/v2/topmasteries'];
+
+    if (typeof req.route === "undefined" || autorized.includes(req.route.path.toLowerCase()) === false) { 
+        return null;
+    }
 
     var currentDateTime = moment().format("YYYY-MM-DD HH:mm:ss:SSS");
 
@@ -25,7 +30,6 @@ router.use(morgan(function (tokens, req, res) {
         tokens['response-time'](req, res), 'ms'
     ].join(' ');
 }))
-
 
 
 // Version 2

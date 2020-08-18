@@ -86,9 +86,9 @@ class dragonUpdate {
                 if (folder) {
                     if (!fs.existsSync(folder)) {
                         await fs.mkdirSync(folder);
-                        console.log(`Le répertoire '${folder}' a été crée avec succès.`);
+                        console.log(`  Le répertoire '${folder}' a été crée avec succès.`);
                     } else {
-                        console.log(`Le répertoire ${folder} existe déjà.`)
+                        console.log(`  Le répertoire ${folder} existe déjà.`)
                     }
                     resolve(true);
                 }
@@ -112,7 +112,7 @@ class dragonUpdate {
                     data = res;
 
                     latestVersion = data[0];
-                    console.log(`Latest : ${data[0]}`);
+                    console.log(`  Latest : ${data[0]}`);
 
                     requestComplete = true;
 
@@ -131,7 +131,7 @@ class dragonUpdate {
                         await this.updateAPIConfig();
                         await this.loadAPIConfigFile();
                     } else {
-                        console.log('Les fichiers sont à jours');
+                        console.log('  Les fichiers sont à jours');
                     }
                 }
 
@@ -243,7 +243,7 @@ class dragonUpdate {
         return new Promise(async resolve => {
             if (fs.existsSync(this.getConfigFullPath())) {
                 await writeFile(this.getConfigFullPath(), this.castDataToJSON({ "dragonVersion": this.currentVersion }));
-                console.log('Mise-à-jour de BedyConfig')
+                console.log('  Mise-à-jour de BedyConfig')
             }
             resolve(true);
         });

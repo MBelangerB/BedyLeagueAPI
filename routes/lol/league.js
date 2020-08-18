@@ -11,7 +11,10 @@ const moment = require("moment");
 
 // Logger
 router.use(morgan(function (tokens, req, res) {
-    if (res.statusCode === 302) { return null; }
+ //   if (res.statusCode === 302) { return null; }
+    if (typeof req.route === "undefined" || req.route.path.toLowerCase().includes("/v2/rotate") === false) { 
+        return null;
+    }
 
     var currentDateTime = moment().format("YYYY-MM-DD HH:mm:ss:SSS");
 
@@ -24,7 +27,6 @@ router.use(morgan(function (tokens, req, res) {
         tokens['response-time'](req, res), 'ms'
     ].join(' ');
 }))
-
 
 router.get('/v2/rotate', async function (req, res) {
     try {
