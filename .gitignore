@@ -15,6 +15,9 @@
 /static/fr_fr/*.json
 /dragon/*
 
+# Public (autorize)
+!/web/*.txt
+
 # Disabled JSON (config)
 /config/*.json
 
