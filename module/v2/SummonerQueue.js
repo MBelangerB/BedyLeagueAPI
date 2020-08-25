@@ -311,22 +311,53 @@ class SummonerQueue {
         return ` (${this.leaguePoints} LP)`;
     }
 
-    getSeries(charSerie) {
+    getSeries(charSerie, extendsSerie = false) {
         if (this.series.enabled) {
             var cWin = charSerie[0]; // W
             var cLoose = charSerie[1]; // L
             var cPending = charSerie[2]; // N
 
-            var series = ` [${this.series.progress}]`;
-            series = series.replaceAll('L', cLoose).replaceAll('W', cWin).replaceAll('N', cPending);
-            return series;
+            if (extendsSerie) {
+                var series = `${this.series.progress}`;
+                var result = [];
+                for (var i = 0; i < series.length; i++) {
+                    var char = series.charAt(i);
+                    var color = "green";
+                    switch(char.toUpperCase()) {
+                        case 'W':
+                            color = "green";
+                            char = cWin;
+                            break;
+                        case 'L':
+                            color = "red";
+                            char = cLoose;
+                            break;
+                        case "N":
+                            color = "gray"
+                            char = cPending;
+                            break;
+                    }
+                    result.push({
+                        'value': char,
+                        'color': color
+                    })
+                  }
+
+                return result;
+            } else {
+                var series = ` [${this.series.progress}]`;
+                series = series.replaceAll('L', cLoose).replaceAll('W', cWin).replaceAll('N', cPending);
+                return series;
+            }
+
+       
         } else {
             return '';
         }
     }
     //#endregion
 
-    getReturnValue(type) {
+    getReturnValue(type, extendsSeries = false) {
         var returnValue = '';
 
         try {
@@ -366,7 +397,7 @@ class SummonerQueue {
                         "QueueType": Object.entries(mappingQueue).find(q => q[1] === n.queueType)[0], // queueEntrier.find(q => q[1] === n.queueType),
                         "tiers": n.tier,
                         "rank": n.rank,
-                        "series": n.getSeries(this.series),
+                        "series": n.getSeries(this.series, extendsSeries),
                         "LP": n.getLeaguePoint(),
                         "stats": {
                             "ratio": n.getRatio(),
@@ -374,6 +405,7 @@ class SummonerQueue {
                             "L": n.losses
                         }
                     }
+
                     data.queue.push(tier);
                 });
 

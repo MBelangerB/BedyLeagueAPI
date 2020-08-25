@@ -70,7 +70,7 @@ router.get('/obs/rank', async function (req, res) {
             res.send(result.err.statusMessage);
             return;
         }
-        var response = locSummoner.getReturnValue(locSummoner.queueType);
+        var response = locSummoner.getReturnValue(locSummoner.queueType, true);
         var jsonData = response;
 
         try {
@@ -79,8 +79,8 @@ router.get('/obs/rank', async function (req, res) {
 
             var result = jsonData.queue.find(f => f.QueueType === locSummoner.queueType);
             var imgName;
-            // var folder = path.join(__dirname, '../..', '/static/images/ranked-emblems');
-            var folder = `${fullUrl}/static/images/ranked-emblems`; // path.join(fullUrl, '/static/images/ranked-emblems');
+
+            var folder = `${fullUrl}/static/images/ranked-emblems`; 
             switch (result.tiers.toUpperCase()) {
                 case 'IRON':
                     imgName = `/Emblem_Iron.png`
@@ -147,6 +147,7 @@ router.get('/obs/rank', async function (req, res) {
                         src: `${folder}/${imgName}`,
                         alt: `${result.tiers} ${result.rank}`
                     },
+                    series: result.series,
                     colorRank: result.tiers.toLowerCase()
                 }
 

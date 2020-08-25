@@ -46,7 +46,7 @@ class LeagueQueue {
         return ` (${this.leaguePoints} LP)`;
     }
 
-    getSeries(charSerie) {
+    getSeries(charSerie, extendsSerie = false) {
         //TODO: A TESTER car ça BUG
         // series.replaceAll is not a function
         if (this.series.enabled) {
@@ -54,9 +54,38 @@ class LeagueQueue {
             var cLoose = charSerie[1]; // L
             var cPending = charSerie[2]; // N
 
-            var series = ` [${this.series.progress}]`;
-            series = series.replaceAll('L', cLoose).replaceAll('W', cWin).replaceAll('N', cPending);
-            return series;
+            if (extendsSerie) {
+                var series = `${this.series.progress}`;
+                var result = [];
+                for (var i = 0; i < series.length; i++) {
+                    var char = series.charAt(i);
+                    var color = "green";
+                    switch(char.toUpperCase()) {
+                        case 'W':
+                            color = "green";
+                            char = cWin;
+                            break;
+                        case 'L':
+                            color = "red";
+                            char = cLoose;
+                            break;
+                        case "N":
+                            color = "gray"
+                            char = cPending;
+                            break;
+                    }
+                    result.push({
+                        'value': char,
+                        'color': color
+                    })
+                  }
+
+                return result;
+            } else {
+                var series = ` [${this.series.progress}]`;
+                series = series.replaceAll('L', cLoose).replaceAll('W', cWin).replaceAll('N', cPending);
+                return series;
+            }
         } else {
             return '';
         }

@@ -55,15 +55,9 @@ app.use('/web', express.static(__dirname + '/web'));
 app.use('/static', express.static(__dirname + '/static'));
 
 
-/*
-app.set('/views', path.join(__dirname + '/web/template'));
-app.set('view engine', 'hbs');
-*/
 
 // Logger
 app.use(morgan(function (tokens, req, res) {
-//    if (res.statusCode === 302) { return null; }
-
     var currentDateTime = moment().format("YYYY-MM-DD HH:mm:ss:SSS");
     return [
         `[${currentDateTime}] : `,

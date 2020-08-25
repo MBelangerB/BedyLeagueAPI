@@ -6,6 +6,9 @@
 # Json Data
 /data/*.json
 
+# Vs Code
+/.vscode
+
 # Dependency directories
 /node_modules/
 /jspm_packages/

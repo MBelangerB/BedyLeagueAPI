@@ -7,13 +7,13 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <title>BedyAPI - LoL Rank {{summonerName}}</title>
+    <title>BedyAPI - {{summonerName}}</title>
   </head>
   <body>
   
   <style>
 	/* body { background-color: black; margin: 0px auto; overflow: hidden; color: white; } */
-    body { overflow: hidden; color: white; }
+    body { overflow: hidden; color: white; background-color: rgba(0,0,0,0); }
 
 	#userInfo #series .green {
 		color: green;
@@ -132,15 +132,20 @@
 					<div id="queue" class="col-3 left noPad">
 						{{queueType}}
 					</div>
-                    <!--
+
 					<div id="series" class="col-7 left">
+                        {{#each series}}
+                            <span class="{{color}}">{{value}}</span>
+                        {{/each}}
+                        <!--
 						<span class="green">✓</span>
 						<span class="red">X</span>
 						<span class="green">✓</span>
 						<span class="gray">-</span>
 						<span class="gray">-</span>
+                        -->
 					</div>
-                    -->
+                    
 				</div>
 				
 								

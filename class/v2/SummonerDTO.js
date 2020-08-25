@@ -3,7 +3,7 @@ const LeagueQueue = require('./LeagueQueue');
     Class pour contenir les information sur l'invocateur
     V2
 */
- class SummonerDTO {
+class SummonerDTO {
     constructor(info) {
         this.name = '';
         this.id = '';
@@ -29,36 +29,36 @@ const LeagueQueue = require('./LeagueQueue');
 
     initQueue(jsonData) {
         var obj = this;
-        jsonData.forEach(function(data) {
-            var queue = new LeagueQueue(data.queueType);
+        if (jsonData) {
+            jsonData.forEach(function (data) {
+                var queue = new LeagueQueue(data.queueType);
 
-            queue.hotStreak = data.hotStreak;
-            queue.veteran = data.veteran;
-            queue.inactive = data.inactive;
-            queue.freshBlood = data.freshBlood;
-    
-            queue.wins = data.wins;
-            queue.losses = data.losses;
-            queue.leaguePoints = data.leaguePoints;
-            queue.leagueId = data.leagueId;
-       
-            queue.rank = data.rank;
-            queue.tier = data.tier;
-    
-            if (typeof data.miniSeries !== "undefined") {
-                queue.series = {
-                    enabled: true,
-                    wins: data.miniSeries.wins,
-                    losses: data.miniSeries.losses,
-                    target: data.miniSeries.target,
-                    progress: data.miniSeries.progress
+                queue.hotStreak = data.hotStreak;
+                queue.veteran = data.veteran;
+                queue.inactive = data.inactive;
+                queue.freshBlood = data.freshBlood;
+
+                queue.wins = data.wins;
+                queue.losses = data.losses;
+                queue.leaguePoints = data.leaguePoints;
+                queue.leagueId = data.leagueId;
+
+                queue.rank = data.rank;
+                queue.tier = data.tier;
+
+                if (typeof data.miniSeries !== "undefined") {
+                    queue.series = {
+                        enabled: true,
+                        wins: data.miniSeries.wins,
+                        losses: data.miniSeries.losses,
+                        target: data.miniSeries.target,
+                        progress: data.miniSeries.progress
+                    }
                 }
-            }
 
-            obj.Queues.push(queue);
-        });
-      
-        
+                obj.Queues.push(queue);
+            });
+        }
     }
 
 
@@ -70,22 +70,22 @@ const LeagueQueue = require('./LeagueQueue');
     }
 
     static getMappingQueueTypeToLeagueQueue() {
-		return {
+        return {
             'solo5': 'RANKED_SOLO_5x5',
             'solo': 'RANKED_SOLO_5x5',
             'soloq': 'RANKED_SOLO_5x5',
             'flex': 'RANKED_FLEX_SR',
             'flex5': 'RANKED_FLEX_SR',
-			'tft': 'RANKED_TFT'
-		};
+            'tft': 'RANKED_TFT'
+        };
     }
     static getMappingRegionToLeagueQueue() {
-		return {
+        return {
             'EUW': 'EUW1',
             'EUW1': 'EUW1',
             'NA': 'NA1',
             'NA1': 'NA1'
-		};
+        };
     }
 
 }
