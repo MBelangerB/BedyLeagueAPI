@@ -29,7 +29,6 @@ class dragonUpdate {
 
     /* Mis en place des fonctions */
     constructor() {
-        //    this.loadAPIConfig();
     }
 
     async loadAPIConfigFile() {
@@ -60,7 +59,7 @@ class dragonUpdate {
         return new Promise(async (resolve, reject) => {
             try {
                 await this.createNewFolder(this.configPath);
-                // this.writeFile({"version": ""}, path.join(`${this.configPath}`, `${this.configFileName}`));
+
                 if (!fs.existsSync(this.getConfigFullPath())) {
                     await writeFile(this.getConfigFullPath(), this.castDataToJSON({ "dragonVersion": "1.0" }));
                 }
@@ -146,6 +145,7 @@ class dragonUpdate {
         let championsUrl = infoJson.dragon.champions.replace(`{version}`, this.currentVersion).replace(`{lang}`, 'fr_FR');
         let iconsUrl = infoJson.dragon.profileIcons.replace(`{version}`, this.currentVersion).replace(`{lang}`, 'fr_FR');
         let spellsUrl = infoJson.dragon.summonerSpells.replace(`{version}`, this.currentVersion).replace(`{lang}`, 'fr_FR');
+        let runesReforgedUrl = infoJson.dragon.runesReforged.replace(`{version}`, this.currentVersion).replace(`{lang}`, 'fr_FR');
 
         let fileName = '';
         let data;
@@ -176,8 +176,8 @@ class dragonUpdate {
             }, function (error) {
                 console.log(error);
                 data = null;
-            });   
-            
+            });
+
             await ext.ExecuteRequest(spellsUrl).then(async function (res) {
                 data = res;
                 if (data) {
@@ -189,8 +189,21 @@ class dragonUpdate {
             }, function (error) {
                 console.log(error);
                 data = null;
-            });   
-           
+            });
+
+            await ext.ExecuteRequest(runesReforgedUrl).then(async function (res) {
+                data = res;
+                if (data) {
+                    fileName = `/fr_fr/${basename(spellsUrl)}`;
+                    var filepath = ext.getDragonFullPath(fileName);
+                    data = ext.castDataToJSON(data);
+                    await writeFile(filepath, data);
+                }
+            }, function (error) {
+                console.log(error);
+                data = null;
+            });
+
             resolve(true);
         });
     }
@@ -226,18 +239,6 @@ class dragonUpdate {
 
     /*
         Write data to file
-    */
-    /*
-    async writeFile(data, filePath) {
-        try {
-            if (!data || !filePath) { return; }
-    
-            let jsonData = JSON.stringify(data, null, 2);
-            fs.writeFileSync(filePath, jsonData);
-        } catch (ex) {
-            console.error(ex);
-        }
-    }
     */
     async updateAPIConfig() {
         return new Promise(async resolve => {

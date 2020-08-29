@@ -195,8 +195,8 @@ if (process.env.NODE_ENV && process.env.NODE_ENV === 'development') {
     });
 } else {
     var srvHttps = https.createServer({
-        key: fs.readFileSync('ssl/server.key'),
-        cert: fs.readFileSync('ssl/server.cert')
+        key: fs.readFileSync(process.env.SSL_KEY_PATH),
+        cert: fs.readFileSync(process.env.SSL_CERT_PATH)
     }, app).listen(process.env.PORT_HTTPS || 3000, function () {
             //   var port = process.env.PORT || 3000;
             var host = srvHttps.address().address;

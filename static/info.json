@@ -31,7 +31,8 @@
         "seasons": "http://static.developer.riotgames.com/docs/lol/seasons.json",
         "champions": "http://ddragon.leagueoflegends.com/cdn/{version}/data/{lang}/champion.json",
         "profileIcons": "http://ddragon.leagueoflegends.com/cdn/{version}/data/{lang}/profileicon.json",
-        "summonerSpells": "http://ddragon.leagueoflegends.com/cdn/{version}/data/{lang}/summoner.json"
+        "summonerSpells": "http://ddragon.leagueoflegends.com/cdn/{version}/data/{lang}/summoner.json",
+        "runesReforged": "http://ddragon.leagueoflegends.com/cdn/{version}/data/{lang}/runesReforged.json"
     },
     "overwatch": {
         "platform": ["pc"],
