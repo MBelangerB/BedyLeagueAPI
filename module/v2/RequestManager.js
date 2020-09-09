@@ -12,14 +12,6 @@ class RequestManager {
             riotToken = `${process.env.tftKey}`;
         }
         this.auth_token = riotToken;
-
-        // this.header = {
-        //     "Origin": null,
-        //     "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
-        //     "X-Riot-Token": `${riotToken}`,
-        //     "Accept-Language": "fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3",
-        //     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0"
-        // }
     }
 
     /*
@@ -53,46 +45,10 @@ class RequestManager {
         });
 
 
-
-
-        var headerContent = this.header;
-        return new Promise(function (resolve, reject) {
-            var options = {
-                url: encodeURI(requestUrl),
-                headers: headerContent,
-                json: true
-            };
-
-            request.get(options, function (err, respo, data) {
-                if (err) {
-                    console.error(err);
-                    reject(err);
-
-                } else if (respo.statusCode === 200) {
-                    resolve(data);
-
-                } else if (respo.statusCode === 404) {
-                    reject(data)
-
-                } else {
-                    reject(respo);
-                }
-            });
-        });
+   
     }
 
     static async ExecuteCustomRequest(requestUrl, header) {
-        // if (typeof header === "undefined") {
-        //     header = {
-        //         "Origin": null,
-        //         "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
-        //         "Accept-Language": "fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3",
-        //         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0"
-        //     }
-        // }
-
-        // var token = this.auth_token;
-
         return new Promise(function (resolve, reject) {
   
             const instance = axios({
@@ -115,31 +71,6 @@ class RequestManager {
                 reject(error);
             });
         });
-
-
-        // return new Promise(function (resolve, reject) {
-        //     var options = {
-        //         url: encodeURI(requestUrl),
-        //         headers: header,
-        //         json: true
-        //     };
-
-        //     request.get(options, function (err, respo, data) {
-        //         if (err) {
-        //             console.error(err);
-        //             reject(err);
-
-        //         } else if (respo.statusCode === 200) {
-        //             resolve(data);
-
-        //         } else if (respo.statusCode === 404) {
-        //             reject(data)
-
-        //         } else {
-        //             reject(respo);
-        //         }
-        //     });
-        // });
     }
 };
 
