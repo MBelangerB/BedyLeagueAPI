@@ -4,7 +4,8 @@ const infoJson = require('../static/info.json');
 
 const path = require('path');
 const fs = require('fs');
-var request = require('request');
+// var request = require('request');
+var axios = require('axios'); 
 
 const util = require("util");
 const { basename } = require('path');
@@ -212,6 +213,29 @@ class dragonUpdate {
         Methode base pour executer Query
     */
     async ExecuteRequest(requestUrl) {
+        return new Promise(function (resolve, reject) {
+  
+            const instance = axios({
+                url: encodeURI(requestUrl),
+                method: 'get',
+                responseType: 'json',
+                transformResponse: [function (data) {
+                    // Do whatever you want to transform the data         
+                    return JSON.parse(data);
+                }],
+            }).then(response => {
+                if (response.status === 200 && response.statusText === 'OK') {
+                    resolve(response.data);
+
+                } else if (response.status === 404) {
+                    reject(response)
+                }
+            }).catch(error => {
+                console.error(error);
+                reject(error);
+            });
+        });
+
         return new Promise(function (resolve, reject) {
 
             var options = {
