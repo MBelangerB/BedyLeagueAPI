@@ -25,7 +25,7 @@ class RequestManager {
             const instance = axios({
                 url: encodeURI(requestUrl),
                 method: 'get',
-                headers: { 'X-Riot-Token': token },
+                headers: { 'X-Riot-Token': token, 'Origin': 'https://bedyapi.com' },
                 responseType: 'json',
                 transformResponse: [function (data) {
                     // Do whatever you want to transform the data         

@@ -1,0 +1,139 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var app = require('../app');
+var debug = require('debug')('bedyapi:server');
+var http = require('http');
+var https = require('https');
+var fs = require('fs');
+require('dotenv').config();
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+var credentials = normalizeCredential();
+app.set('credentials', credentials);
+
+/**
+ * Create HTTP server.
+ */
+var server;
+if (credentials && process.env.NODE_ENV !== "development") {
+  server = https.createServer(credentials, app);
+} else {
+  server = http.createServer(app);
+}
+
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.on('error', onError);
+server.on('listening', onListening);
+server.listen(port, onStart);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Normalement Credential
+ */
+function normalizeCredential() {
+  if (process.env.SSL_KEY_PATH && process.env.SSL_CERT_PATH) {
+    var cred = {
+      key: fs.readFileSync(process.env.SSL_KEY_PATH),
+      cert: fs.readFileSync(process.env.SSL_CERT_PATH)
+    }
+  
+    return cred;
+  }
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}
+
+
+/**
+ * Event listerner OnStart
+ */
+function onStart() {
+  var addr = server.address();
+
+  var host = addr.address;
+  var port = addr.port;
+
+  if (host === "::") { host= "localhost";}
+
+  var isHttps = (credentials && process.env.NODE_ENV !== "development");
+
+  if (isHttps) {
+    console.log(`Démarrage du serveur BedyAPI (HTTPS) le '${new Date().toString()}' sur: '${host}' Server : '${port}'`);
+  } else {
+    console.log(`Démarrage du serveur BedyAPI (HTTP) le '${new Date().toString()}' sur: '${host}' Server : '${port}'`);
+  }
+
+}
+

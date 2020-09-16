@@ -14,6 +14,7 @@
 /jspm_packages/
 
 # Dragon Data
+/static/dragon/
 /static/en-us/*.json
 /static/fr_fr/*.json
 /dragon/*
