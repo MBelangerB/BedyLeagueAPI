@@ -50,31 +50,10 @@ class RequestManager {
    
     }
 
-    // static async ExecuteCustomRequest(requestUrl, header) {
-    //     return new Promise(function (resolve, reject) {
-  
-    //         const instance = axios({
-    //             url: requestUrl,
-    //             method: 'get',
-    //             responseType: 'json',
-    //             transformResponse: [function (data) {
-    //                 // Do whatever you want to transform the data         
-    //                 return JSON.parse(data);
-    //             }],
-    //         }).then(response => {
-    //             if (response.status === 200 && response.statusText === 'OK') {
-    //                 resolve(response.data);
-
-    //             } else if (response.status === 404) {
-    //                 reject(response)
-    //             }
-    //         }).catch(error => {
-    //             console.error(error);
-    //             reject(error);
-    //         });
-    //     });
-    // }
-
+    /**
+     * Execute une requête AXIOS
+     * @param {string} requestUrl 
+     */
     static async ExecuteRequest(requestUrl) {
         return new Promise(function (resolve, reject) {
   

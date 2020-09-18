@@ -4,6 +4,24 @@
 
 // const path = require('path');
 
+'use strict';
+
+var staticFunction = staticFunction || { };
+
+staticFunction.request = {
+
+    lowerQueryString: function(parameters) {
+        let queryString = [];
+        for (var key in parameters) {
+            queryString[key.toLowerCase()] = parameters[key];
+        }
+        return queryString;
+    }
+}
+
+module.exports = staticFunction;
+
+
 // class staticFunction {
 //     /*
 //         League of Legend

@@ -4,10 +4,21 @@ var routeInfo = require('../static/info.json');
 
 var validator = validator || { };
 
+
 validator.ow = {
     errors: [],
 
-    completeValidation: function (queryString) {
+    validateQueryString: function (queryString) {
+        this.errors = [];
+        
+        if (this.requireArguments(queryString)) {
+            this.validatePlatform(queryString.platform);
+            this.validateRegion(queryString.region);
+            this.validateTag(queryString.tag);
+        }
+        return this.errors;
+    },
+    validateParams: function (queryString) {
         this.errors = [];
         
         if (this.requireArguments(queryString)) {
@@ -58,4 +69,12 @@ validator.ow = {
     }
 }
 
+validator.parameters = {
+
+    validateCulture: function(params) {
+        if (!params.lang) {
+            params.lang = "fr";
+        }
+    }
+}
 module.exports = validator;
