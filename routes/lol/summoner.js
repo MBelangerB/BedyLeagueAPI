@@ -1,0 +1,5 @@
+/*
+    GetSummonerInfo
+    GetTopMasteries
+    GEtLiveGame
+*/
