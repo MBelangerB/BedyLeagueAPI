@@ -7,12 +7,27 @@ require('../../util/validator');
 var routeInfo = require('../../static/info.json');
 const validator = require('../../util/validator');
 const staticFunc = require('../../util/staticFunction');
+const { param } = require('..');
 
 /*
     Mon API : region=us&tag=Bohe-11734&platform=pc
     let url = `https://playoverwatch.com/fr-fr/career/pc/Bohe-11734#competitive`;
     https://www.npmjs.com/package/jsdom
 */
+/**
+ * Permet d'obtenir le rang OW
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * QueryString :
+ * 
+ * 
+ * Paramètre optionel
+ *  showLevel   : Affiche le niveau du joueur
+ *  fullString  : Retourne une chaine complète (avec TAG du joueur)
+ *  json        : Retourne le résultat en JSON
+ */
 exports.rank = async function (req, res, next) {
     let { query, params } = req;
 
@@ -24,19 +39,24 @@ exports.rank = async function (req, res, next) {
     let queryString = staticFunc.request.lowerQueryString(query);
     console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
 
-    // Valider les QueryString ou Param en fonction de la route utilisé
-    var validationResult;
-    if (queryString && Object.keys(queryString).length > 0) {
-        validationResult = validator.ow.validateQueryString(queryString);
-        queryParameters = queryString;
-    } else {
-        validationResult = validator.ow.validateParams(params);
+    /*
+        On effectue initialement la validation des Params (region/platform/tag).
+        Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
+        en QueryString
+    */
+    var validationErrors = [];
+    if (params && Object.keys(params).length > 1) {
+        validationErrors = validator.ow.validateParams(params);
         queryParameters = params;
-    }
-    if (validationResult && validationResult.length > 0) {
-        res.send(validationResult)
+    } else {
+        validationErrors = validator.ow.validateQueryString(queryString);
+        queryParameters = queryString;   
+    }    
+    if (validationErrors && validationErrors.length > 0) {
+        res.send(validationErrors)
         return;
     }
+    validator.ow.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters);
 
     // Obtention des stats
     var profileStats = new OverwatchProfileController(queryParameters, generateUrl(queryParameters));
@@ -44,7 +64,7 @@ exports.rank = async function (req, res, next) {
     await profileStats.getProfileStats().then(result => {
         if (result.code === 200) {
             var response = profileStats.getReturnValue();
-            if (response.getJson && response.getJson == true) {
+            if (profileStats.getJson && profileStats.getJson == true) {
                 res.json(response);
             } else {
                 res.send(response);

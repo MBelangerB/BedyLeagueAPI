@@ -8,18 +8,18 @@ var ttStats = 60 * 3; // cache for 1 mn (60 sec * 1 min)
 var owCache = new CacheService(ttStats); // Create a new cache service instance
 
 class OverwatchProfilStatsController {
-    constructor(queryString, url) {
+    constructor(params, url) {
         // Paramètre obligatoire
-        this.platform = queryString.platform;
-        this.region = queryString.region;
-        this.tag = queryString.tag;
+        this.platform = params.platform;
+        this.region = params.region;
+        this.tag = params.tag;
         this.url = url;
 
-        this.getJson = ((queryString.json === "1") || (queryString.json === true));
+        this.getJson = ((params.json === 1) || (params.json === true));
 
         // Paramètre facultatif
-        this.showLevel = (queryString.showlevel === "1") || "false";
-        this.fullString = (queryString.fullstring === "1") || "false";
+        this.showLevel = (params.showlevel === 1) || false;
+        this.fullString = (params.fullstring === 1) || false;
     }
 
     //#region "CacheKey"
@@ -174,7 +174,7 @@ getReturnValue() {
             var winRate = ` ${rates} % (${wins}W/${loose})`;
             var rolePts = '';
 
-            if (this.showLevel && this.showLevel.toString() === "true") {
+            if (this.showLevel) {
                 level = ` (Level ${stats.level})`;
             }
             var tmpStats = stats.ratings;
@@ -193,7 +193,7 @@ getReturnValue() {
                 }
             });
 
-            if (this.fullString && this.fullString.toString() === "true") {
+            if (this.fullString) {
                 if (level && level.length > 0) {
                     returnValue = `${this.tag}${level}${rolePts}${winRate}`;
                 } else {

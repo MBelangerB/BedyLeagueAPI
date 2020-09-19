@@ -16,6 +16,14 @@ staticFunction.request = {
             queryString[key.toLowerCase()] = parameters[key];
         }
         return queryString;
+    },
+
+    jsonCopy(src) {
+        return JSON.parse(JSON.stringify(src));
+    },
+
+    clone(src) {
+        return Object.assign({}, src);
     }
 }
 
