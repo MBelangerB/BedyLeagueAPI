@@ -57,15 +57,15 @@ async getProfileStats() {
         "code": 0,
         "err": {}
     };
-    var me = this;
+    var self = this;
     return new Promise(async function (resolve, reject) {
         try {
-            var key = me.getStatsCacheKey();
+            var key = self.getStatsCacheKey();
 
             await owCache.getAsyncB(key).then(async function (resultData) {
                 // Vérifie si les données sont déjà en cache, si OUI on utilise la cache
                 if (typeof resultData === "undefined") {
-                    var data = await me.queryOverwatchStats(RequestManager, result);
+                    var data = await self.queryOverwatchStats(RequestManager, result);
                     if (data) {
                         owCache.setCacheValue(key, data);
                         return data;
@@ -81,7 +81,7 @@ async getProfileStats() {
                 // On traite le Resut
                 if (resultQry && typeof resultQry.err === "undefined") {
                     // Aucune erreur
-                    me.OverwatchStats = resultQry;
+                    self.OverwatchStats = resultQry;
                     result.code = 200;
 
                 } else if (resultQry && typeof resultQry.err != "undefined" && resultQry.err.statusCode === "200-1") {
@@ -105,7 +105,6 @@ async getProfileStats() {
             reject(result);
             return;
         }
-
     });
 }
 

@@ -42,5 +42,5 @@ module.exports = class ChampionInfo {
     getChampionIcon() {
         return this.championIcon;
     }
-
+ 
 }

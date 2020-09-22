@@ -3,35 +3,55 @@ var axios = require('axios');
 
 class RequestManager {
 
-    constructor(data) {
-        /*
-        this.summonerName = data.summonerName;
-        this.region = data.region;
+    static TokenType = {
+        TFT: 'TFT',
+        LOL: 'LOL'
+    }
 
-        let riotToken = `${process.env.lolKey}`;
-        if (data.queueType === "tft") {
-            riotToken = `${process.env.tftKey}`;
+    constructor(data) {
+    }
+
+    static getToken(tokenType) {
+        var token;
+        switch (tokenType) {
+            case this.TokenType.TFT:
+                token = `${process.env.tftKey}`;
+                break;
+ 
+            case this.TokenType.LOL:
+                token = `${process.env.lolKey}`;
+                break;
+
+            default:
+                token = ``;
+                break;
         }
-        this.auth_token = riotToken;
-        */
+        return token;
     }
 
     /*
         Methode base pour executer Query
     */
-    async ExecuteRequest(requestUrl) {
-        var token = this.auth_token;
-
+    static async ExecuteTokenRequest(requestUrl, tokenType) {
+        var self = this;
+        var authToken = this.getToken(tokenType);
         return new Promise(function (resolve, reject) {
-  
+
             const instance = axios({
                 url: encodeURI(requestUrl),
                 method: 'get',
-                headers: { 'X-Riot-Token': token, 'Origin': 'https://bedyapi.com' },
+                headers: { 'X-Riot-Token': authToken, 'Origin': 'https://bedyapi.com' },
                 responseType: 'json',
                 transformResponse: [function (data) {
-                    // Do whatever you want to transform the data         
-                    return JSON.parse(data);
+                    try {
+                        if (data && data.isJSON()) {
+                            // Do whatever you want to transform the data         
+                            return JSON.parse(data);
+                        }
+                    } catch (ex) {
+                        return data;
+                    }
+                    return data;
                 }],
             }).then(response => {
                 if (response.status === 200 && response.statusText === 'OK') {
@@ -41,13 +61,14 @@ class RequestManager {
                     reject(response)
                 }
             }).catch(error => {
-                console.error(error);
-                reject(error);
+                if (error.response.status === 404) {
+                    reject(error.response);
+                } else {
+                    console.error(`An error occured in (static) RequestManager.ExecuteRequest(url, token).\n ${error}`);
+                    reject(error);
+                }
             });
         });
-
-
-   
     }
 
     /**
@@ -56,7 +77,7 @@ class RequestManager {
      */
     static async ExecuteRequest(requestUrl) {
         return new Promise(function (resolve, reject) {
-  
+
             const instance = axios({
                 url: encodeURI(requestUrl),
                 method: 'get',
@@ -66,11 +87,11 @@ class RequestManager {
                         if (data && data.isJSON()) {
                             // Do whatever you want to transform the data         
                             return JSON.parse(data);
-                        }  
+                        }
                     } catch (ex) {
                         return data;
                     }
-                    return data;         
+                    return data;
                 }],
             }).then(response => {
                 if (response.status === 200 && response.statusText === 'OK') {
@@ -86,7 +107,7 @@ class RequestManager {
                 if (error.response.status === 404) {
                     reject(error.response);
                 } else {
-                    console.error(`An error occured in (static) RequestManager.ExecuteRequest.\n ${error}`);
+                    console.error(`An error occured in (static) RequestManager.ExecuteRequest(url).\n ${error}`);
                     reject(error);
                 }
             });

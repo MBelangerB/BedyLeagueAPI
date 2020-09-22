@@ -3,7 +3,6 @@
 const infoJson = require('../static/info.json');
 const path = require('path');
 const fs = require('fs');
-// var request = require('request');
 var axios = require('axios'); 
 
 const util = require("util");
@@ -221,36 +220,6 @@ class dragonUpdate {
                 console.log(error);
                 data = null;
             });
-
-            /*
-                Static file (noLang)
-            */
-           /*
-            await ext.ExecuteRequest(queueUrl).then(async function (res) {
-                data = res;
-                if (data) {
-                    fileName = `/${basename(queueUrl)}`;
-                    var filepath = ext.getDragonFullPath(fileName);
-                    data = ext.castDataToJSON(data);
-                    await writeFile(filepath, data);
-                }
-            }, function (error) {
-                console.log(error);
-                data = null;
-            });
-            await ext.ExecuteRequest(seasonUrl).then(async function (res) {
-                data = res;
-                if (data) {
-                    fileName = `/${basename(seasonUrl)}`;
-                    var filepath = ext.getDragonFullPath(fileName);
-                    data = ext.castDataToJSON(data);
-                    await writeFile(filepath, data);
-                }
-            }, function (error) {
-                console.log(error);
-                data = null;
-            });
-            */
 
             resolve(true);
         });
