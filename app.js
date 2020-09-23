@@ -22,6 +22,16 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+/* SQL */
+// Database (Sequlize)
+const models = require('./db/models');
+//Sync Database
+models.sequelize.sync().then(function () {
+  console.log('Nice! Database looks fine')
+}).catch(function (err) {
+  console.log(err, "Something went wrong with the Database Update!")
+});
+
 /* Temp */
 const dragonLoading = require('./controller/dragonLoading');
 app.use(async function (req, res, next) {

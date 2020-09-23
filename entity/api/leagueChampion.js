@@ -59,6 +59,7 @@ module.exports = class ChampionInfo {
                 }
             }).catch(error => {
                 console.log(`A error occured during GetDragonVersion`);
+                console.error(error);
             });
 
             return `${ds.currentVersion}`;
