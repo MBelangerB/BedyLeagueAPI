@@ -34,7 +34,6 @@ module.exports = class ChampionRotations {
 
         // Le SummonerInfo n'est pas présent dans la cache
         data = await requestManager.ExecuteTokenRequest(url, requestManager.TokenType.LOL).then(function (rotationResult) {
-  //          data = res;
             return rotationResult;
         }, function (error) {
             if (error.response) {

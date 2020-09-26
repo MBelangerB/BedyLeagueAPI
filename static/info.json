@@ -11,14 +11,6 @@
         ],
         "routes": {
             "v2": {
-                "summoner": {
-                    "getBySummonerName": "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}",
-                    "getTFTBySummonerName": "https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{summonerName}"
-                },
-                "masteries": {
-                    "getChampionMasteriesBySummoner": "https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{encryptedSummonerId}",
-                    "getChampionMasteriesBySummonerAndChampionId": "https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{encryptedSummonerId}/by-champion/{championId}"
-                },
                 "league": {
                     "getLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/lol/league/v4/entries/by-summoner/{encryptedSummonerId}",
                     "getTFTLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{encryptedSummonerId}"
@@ -31,9 +23,27 @@
                     "getMatchlist": "https://{region}.api.riotgames.com/lol/match/v4/matchlists/by-account/{encryptedAccountId}?endIndex={end}&beginIndex={begin}"
                 }
             },
+            "championMastery": {
+                "v4": {
+                    "getChampionMasteriesBySummoner": "https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{encryptedSummonerId}",
+                    "getChampionMasteriesBySummonerAndChampionId": "https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{encryptedSummonerId}/by-champion/{championId}"
+                }
+            },
             "champion": {
                 "v3": {
                     "championRotation": "https://{region}.api.riotgames.com/lol/platform/v3/champion-rotations"
+                }
+            },
+            "summoner": {
+                "v4": {
+                    "getBySummonerName": "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}",
+                    "getByPuuid": "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
+                }
+            },
+            "tft-summoner": {
+                "v1": {
+                    "getBySummonerName": "https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{summonerName}",
+                    "getByPuuid": "https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-puuid/{puuid}"
                 }
             }
         }
@@ -74,6 +84,9 @@
         "website": "https://playoverwatch.com/{lang}/career/{platform}/{profileName}"
     },
     "api": {
-        "culture": ["fr", "en"]
+        "culture": [
+            "fr",
+            "en"
+        ]
     }
 }

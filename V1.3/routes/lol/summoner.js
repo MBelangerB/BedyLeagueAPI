@@ -75,7 +75,7 @@ router.get('/v2/topMasteries', async function (req, res) {
         }
         var response = champMasteries.getReturnValue(champMasteries.queueType);
         res.send(response);
-
+ 
     } catch (ex) {
         console.error(ex);
         res.send(ex);

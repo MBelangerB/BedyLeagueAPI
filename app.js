@@ -9,6 +9,7 @@ var indexRouter = require('./routes/index');
 var dragonsRouter = require('./routes/dragon');
 /* League of Legend Route */
 var leagueRouter = require('./routes/lol/league');
+var summonerRouter = require('./routes/lol/summoner');
 
 /* OW Route */
 var overwatchRouter = require('./routes/ow/rank');
@@ -22,17 +23,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-/* SQL */
-// Database (Sequlize)
-const models = require('./db/models');
-//Sync Database
-models.sequelize.sync().then(function () {
-  console.log('Nice! Database looks fine')
-}).catch(function (err) {
-  console.log(err, "Something went wrong with the Database Update!")
-});
 
-/* Temp */
+/* Dragon Load on start */
 const dragonLoading = require('./controller/dragonLoading');
 app.use(async function (req, res, next) {
     let dragLoad = new dragonLoading();
@@ -41,17 +33,20 @@ app.use(async function (req, res, next) {
             await dragLoad.convertToLeagueChampion('fr_fr');
         }
     });
-    // TODO: Au lieu de charger le data JSON (dragon) en mémoire. Effectuer toute suite la conversation en LeagueChampion et stocker en mémoire
     next();
 });
 
-// Load complet route
+// Load default route
 app.use('/', indexRouter);
 app.use('/dragon', dragonsRouter);
 
 // League route
 app.get('/:lang?/lol/rotate', leagueRouter.rotate);
 app.get('/:lang?/lol/rotate/:region', leagueRouter.rotate);
+app.get('/:lang?/lol/topMasteries', summonerRouter.topMasteries);
+app.get('/:lang?/lol/topMasteries/:region/:summonerName', summonerRouter.topMasteries);
+app.get('/:lang?/lol/summonerInfo', summonerRouter.summonerInfo);
+app.get('/:lang?/lol/summonerInfo/:region/:summonerName', summonerRouter.summonerInfo);
 
 // Overwatch Route
 app.get('/:lang?/ow/rank', overwatchRouter.rank);

@@ -87,14 +87,38 @@ validator.ow = {
 validator.lol = {
     errors: [],
 
-    validateParams: function (params) {
+    METHOD_ENUM: { ROTATE: 0, SUMMONER_INFO: 2, RANK: 3, MASTERIES: 4, LIVEGAME: 5 },
+
+    validateParams: function (params, method) {
         this.errors = [];
 
-        if (this.requireArguments(params)) {
-            this.validateRegion(params.region);
+        switch (method) {
+            case this.METHOD_ENUM.ROTATE:
+                if (this.requireArguments(params)) {
+                    this.validateRegion(params.region);
+                }
+                break;
+
+            case this.METHOD_ENUM.MASTERIES:
+            case this.METHOD_ENUM.SUMMONER_INFO:
+
+                if (this.requireArguments(params)) {
+                    this.validateRegion(params.region);
+                    this.validateSummonerName((params.summonerName || params.summonername));
+                }
+                break;
+
+            default:
+                // Ne rien faire
+                break;
         }
+
         return this.errors;
     },
+    /**
+     * Validation des paramètre pour la call Rotate
+     * @param {*} params 
+     */
     validateRotateParams: function (params) {
         this.errors = [];
         this.validateRegion(params.region);
@@ -102,39 +126,86 @@ validator.lol = {
     },
 
 
-    fixOptionalParams: function (optionalParams, queryParameters) {
+    fixOptionalParams: function (optionalParams, queryParameters, method) {
         // (json=X) -> Retour en JSON
         queryParameters.json = (queryParameters.json || 0);
         if (optionalParams && optionalParams.json && (optionalParams.json === "1" || optionalParams.json === 1)) {
             queryParameters.json = 1;
         } else {
-            queryParameters.lp = 0;
-            if (optionalParams && optionalParams.lp && (optionalParams.lp === "1" || optionalParams.lp === 1)) {
-                queryParameters.lp = 1;
+            switch (method) {
+                case this.METHOD_ENUM.MASTERIES:
+                    queryParameters.nb = 5;
+                    if (optionalParams && optionalParams.nb && optionalParams.nb > 0) {
+                        queryParameters.nb = optionalParams.nb;
+                    }
+                    break;
+
+                case this.METHOD_ENUM.SUMMONER_INFO:
+                    // Aucun paramètre facultatif
+                    break;
+
+                default:
+                    queryParameters.lp = 0;
+                    if (optionalParams && optionalParams.lp && (optionalParams.lp === "1" || optionalParams.lp === 1)) {
+                        queryParameters.lp = 1;
+                    }
+                    queryParameters.winrate = 0;
+                    if (optionalParams && optionalParams.winrate && (optionalParams.winrate === "1" || optionalParams.winrate === 1)) {
+                        queryParameters.winrate = 1;
+                    }
+                    queryParameters.queuetype = 0;
+                    if (optionalParams && optionalParams.queuetype && (optionalParams.queuetype === "1" || optionalParams.queuetype === 1)) {
+                        queryParameters.queuetype = 1;
+                    }
+                    // series
+                    queryParameters.fullstring = 0;
+                    if (optionalParams && optionalParams.fullstring && (optionalParams.fullstring === "1" || optionalParams.fullstring === 1)) {
+                        queryParameters.fullstring = 1;
+                    }
+                    break;
             }
-            queryParameters.winrate = 0;
-            if (optionalParams && optionalParams.winrate && (optionalParams.winrate === "1" || optionalParams.winrate === 1)) {
-                queryParameters.winrate = 1;
-            }
-            queryParameters.queuetype = 0;
-            if (optionalParams && optionalParams.queuetype && (optionalParams.queuetype === "1" || optionalParams.queuetype === 1)) {
-                queryParameters.queuetype = 1;
-            }
-            // series
-            queryParameters.fullstring = 0;
-            if (optionalParams && optionalParams.fullstring && (optionalParams.fullstring === "1" || optionalParams.fullstring === 1)) {
-                queryParameters.fullstring = 1;
-            }
+
+
         }
     },
 
     requireArguments: function (queryString) {
-        var greeting = i18n.__('Hello')
         if (Object.keys(queryString).length === 0) {
             this.errors.push("Paramètres marquant (region, summonerName) / missing parameters (region, summonerName)");
             return false;
         }
         return true;
+    },
+
+    validateSummonerName: function (summonerName) {
+        // Obtenir les region disponibles
+        // let validRegion = routeInfo.lol.region;
+
+        // Valider la présence de la region en parametre
+        if (typeof summonerName === "undefined" || summonerName.trim().length === 0) {
+            this.errors.push("Le paramètre 'summonerName' est obligatoire.");
+
+        } else if (!this.isValidSummonerName(summonerName)) {
+            this.errors.push("La paramètre 'summonerName' est invalide.");
+        }
+    },
+    isValidSummonerName: function (summonerName) {
+        // https://developer.riotgames.com/getting-started.html
+        //  Validating Calls (^[0-9\\p{L} _\\.]+$)
+        // https://stackoverflow.com/questions/20690499/concrete-javascript-regex-for-accented-characters-diacritics
+        // Pour pseudo avec caractère accentué
+        var valid = false;
+        if (typeof summonerName !== "undefined" && summonerName.trim().length >= 0) {
+
+            var arrUsernames = summonerName.trim().split(";");
+            arrUsernames.forEach(function myFunction(summonerName) {
+                var re = new RegExp('^[0-9\u00C0-\u024F _.\\w]+$', 'giu');
+                if (re.test(summonerName)) {
+                    valid = true;
+                }
+            });
+        }
+        return valid;
     },
 
     validateRegion: function (region) {
@@ -144,11 +215,10 @@ validator.lol = {
         // Valider la présence de la region en parametre
         if (typeof region === "undefined" || region.trim().length === 0) {
             this.errors.push("Le paramètre 'region' est obligatoire.");
-        } else if (!this.isValidRegion(region)) // {
+
+        } else if (!this.isValidRegion(region)) {
             this.errors.push("La paramètre 'region' est invalide.");
-        // } else if (!validRegion.includes(region)) {
-        //     this.errors.push("La paramètre 'region' est invalide.");
-        // }
+        }
     },
     isValidRegion: function (region) {
         var valid = false;
@@ -168,6 +238,10 @@ validator.lol = {
 }
 
 validator.parameters = {
+    /**
+     * Validate la culture pour la localization
+     * @param {string} params 
+     */
     validateCulture: function (params) {
         let culture = params.lang;
 

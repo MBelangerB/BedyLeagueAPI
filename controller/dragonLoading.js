@@ -1,6 +1,5 @@
 const path = require('path');
 var CacheService = require('../module/Cache.Service');
-var routeInfo = require('../static/info.json');
 
 var LeagueChampion = require(`../entity/api/leagueChampion`);
 const { JSONFileReader } = require('../util/fileReader');

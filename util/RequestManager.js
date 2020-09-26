@@ -40,7 +40,7 @@ class RequestManager {
             const instance = axios({
                 url: encodeURI(requestUrl),
                 method: 'get',
-                headers: { 'X-Riot-Token': authToken, 'Origin': 'https://bedyapi.com' },
+                headers: { 'X-Riot-Token': authToken}, // , 'Origin': 'https://bedyapi.com' },
                 responseType: 'json',
                 transformResponse: [function (data) {
                     try {

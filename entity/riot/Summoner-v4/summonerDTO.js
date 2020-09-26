@@ -35,7 +35,10 @@ var summonerDTO = class SummonerDTO {
     summonerLevel = 0;
 
 
-    constructor(jsonData) {
+    constructor() {
+    }
+
+    init(jsonData) {
         this.accountId = jsonData.accountId;
         this.id = jsonData.id;
         this.puuid = jsonData.puuid;
