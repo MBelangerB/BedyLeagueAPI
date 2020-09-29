@@ -22,7 +22,7 @@ module.exports = {
     SummonerInfo: class SummonerInfo {
         constructor(params) {
             // Paramètre obligatoire
-            this.summonerName = params.summonername;
+            this.summonerName = (params.summonername || params.summonerName);
             this.region = params.region;
             this.url = this.getUrlBySummonerName();
 
