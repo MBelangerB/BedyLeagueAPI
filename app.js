@@ -8,6 +8,7 @@ require('./util/Prototype');
 var indexRouter = require('./routes/index');
 var dragonsRouter = require('./routes/dragon');
 /* League of Legend Route */
+var rankRouter = require('./routes/lol/rank');
 var leagueRouter = require('./routes/lol/league');
 var summonerRouter = require('./routes/lol/summoner');
 
@@ -47,6 +48,9 @@ app.get('/:lang?/lol/topMasteries', summonerRouter.topMasteries);
 app.get('/:lang?/lol/topMasteries/:region/:summonerName', summonerRouter.topMasteries);
 app.get('/:lang?/lol/summonerInfo', summonerRouter.summonerInfo);
 app.get('/:lang?/lol/summonerInfo/:region/:summonerName', summonerRouter.summonerInfo);
+
+app.get('/:lang?/lol/rank', rankRouter.rank);
+app.get('/:lang?/lol/rank/:region/:summonerName', rankRouter.rank);
 
 // Overwatch Route
 app.get('/:lang?/ow/rank', overwatchRouter.rank);

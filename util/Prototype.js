@@ -26,6 +26,7 @@ if (!String.format) {
     };
 }
 
+// '{ "test": "test2"}'.isJSON()
 if (!String.prototype.isJSON) {
     String.prototype.isJSON = function () {
         try {

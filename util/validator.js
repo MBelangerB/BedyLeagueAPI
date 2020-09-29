@@ -101,12 +101,20 @@ validator.lol = {
 
             case this.METHOD_ENUM.MASTERIES:
             case this.METHOD_ENUM.SUMMONER_INFO:
-
                 if (this.requireArguments(params)) {
                     this.validateRegion(params.region);
                     this.validateSummonerName((params.summonerName || params.summonername));
                 }
                 break;
+
+            case this.METHOD_ENUM.RANK:
+
+                    if (this.requireArguments(params)) {
+                        this.validateRegion(params.region);
+                        this.validateSummonerName((params.summonerName || params.summonername));
+                        this.validateQueueType(params.queuetype);
+                    }
+                    break;
 
             default:
                 // Ne rien faire
@@ -117,6 +125,7 @@ validator.lol = {
     },
     /**
      * Validation des paramètre pour la call Rotate
+     * TODO: A remove
      * @param {*} params 
      */
     validateRotateParams: function (params) {
@@ -144,28 +153,38 @@ validator.lol = {
                     // Aucun paramètre facultatif
                     break;
 
-                default:
-                    queryParameters.lp = 0;
+                case this.METHOD_ENUM.RANK:
+                    queryParameters.lp = 1;
                     if (optionalParams && optionalParams.lp && (optionalParams.lp === "1" || optionalParams.lp === 1)) {
                         queryParameters.lp = 1;
                     }
-                    queryParameters.winrate = 0;
+                    queryParameters.type = 1;
+                    if (optionalParams && optionalParams.type && (optionalParams.type === "1" || optionalParams.type === 1)) {
+                        queryParameters.type = 1;
+                    }         
+                    queryParameters.winrate = 1;
                     if (optionalParams && optionalParams.winrate && (optionalParams.winrate === "1" || optionalParams.winrate === 1)) {
                         queryParameters.winrate = 1;
                     }
-                    queryParameters.queuetype = 0;
-                    if (optionalParams && optionalParams.queuetype && (optionalParams.queuetype === "1" || optionalParams.queuetype === 1)) {
-                        queryParameters.queuetype = 1;
+                    queryParameters.all = 0;
+                    if (optionalParams && optionalParams.all && (optionalParams.all === "1" || optionalParams.all === 1)) {
+                        queryParameters.all = 1;
+                    }
+                    queryParameters.queuetype = 'solo5';
+                    if (optionalParams && optionalParams.queuetype && this.isValidQueueType(optionalParams.queuetype)) {
+                        queryParameters.queuetype = optionalParams.queuetype;
                     }
                     // series
+                    queryParameters.series = '✓X-';
+                    if (optionalParams && optionalParams.series) {
+                        queryParameters.series = optionalParams.series;
+                    }
                     queryParameters.fullstring = 0;
                     if (optionalParams && optionalParams.fullstring && (optionalParams.fullstring === "1" || optionalParams.fullstring === 1)) {
                         queryParameters.fullstring = 1;
                     }
                     break;
             }
-
-
         }
     },
 
@@ -178,9 +197,6 @@ validator.lol = {
     },
 
     validateSummonerName: function (summonerName) {
-        // Obtenir les region disponibles
-        // let validRegion = routeInfo.lol.region;
-
         // Valider la présence de la region en parametre
         if (typeof summonerName === "undefined" || summonerName.trim().length === 0) {
             this.errors.push("Le paramètre 'summonerName' est obligatoire.");
@@ -209,9 +225,6 @@ validator.lol = {
     },
 
     validateRegion: function (region) {
-        // Obtenir les region disponibles
-        let validRegion = routeInfo.lol.region;
-
         // Valider la présence de la region en parametre
         if (typeof region === "undefined" || region.trim().length === 0) {
             this.errors.push("Le paramètre 'region' est obligatoire.");
@@ -230,6 +243,34 @@ validator.lol = {
                 valid = true;
                 break;
             default:
+                valid = false;
+                break
+        }
+        return valid;
+    },
+    validateQueueType: function (queueType) {
+        // Valider la présence de la region en parametre
+        if (typeof queueType !== "undefined" && queueType.trim().length > 0 && !this.isValidQueueType(queueType)) {
+            this.errors.push("La paramètre 'queueType' est invalide.");
+        }
+    },
+    isValidQueueType(queueType) {
+        var valid = false;
+        switch (queueType) {
+            case 'solo5':
+            case 'solo':
+            case 'soloq':
+                valid = true;
+                break;
+            case 'tft':
+                valid = true;
+                break;
+            case 'flex5':
+            case 'flex':
+                valid = true;
+                break;
+            case 'team5':
+            case 'team3':
                 valid = false;
                 break
         }

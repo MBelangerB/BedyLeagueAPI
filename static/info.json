@@ -12,7 +12,6 @@
         "routes": {
             "v2": {
                 "league": {
-                    "getLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/lol/league/v4/entries/by-summoner/{encryptedSummonerId}",
                     "getTFTLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{encryptedSummonerId}"
                 },
                 "liveGame": {
@@ -21,6 +20,11 @@
                 "matchHistory": {
                     "getMatchListByChampionAndQueue": "https://{region}.api.riotgames.com/lol/match/v4/matchlists/by-account/{encryptedAccountId}?champion={championId}&queue={queueId}&season={seasonId}",
                     "getMatchlist": "https://{region}.api.riotgames.com/lol/match/v4/matchlists/by-account/{encryptedAccountId}?endIndex={end}&beginIndex={begin}"
+                }
+            },
+            "league": {
+                "v4": {
+                    "getLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/lol/league/v4/entries/by-summoner/{encryptedSummonerId}"
                 }
             },
             "championMastery": {
