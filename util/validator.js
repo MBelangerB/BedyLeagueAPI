@@ -87,7 +87,8 @@ validator.ow = {
 validator.lol = {
     errors: [],
 
-    METHOD_ENUM: { ROTATE: 0, SUMMONER_INFO: 2, RANK: 3, MASTERIES: 4, LIVEGAME: 5 },
+    METHOD_ENUM: { ROTATE: 0, SUMMONER_INFO: 2, RANK: 3, MASTERIES: 4, LIVEGAME: 5, OVERLAY: 6 },
+    OVERLAY_MODE_ENUM: { MINIMALIST: 1, FULL: 2},
 
     validateParams: function (params, method) {
         this.errors = [];
@@ -108,13 +109,13 @@ validator.lol = {
                 break;
 
             case this.METHOD_ENUM.RANK:
-
-                    if (this.requireArguments(params)) {
-                        this.validateRegion(params.region);
-                        this.validateSummonerName((params.summonerName || params.summonername));
-                        this.validateQueueType(params.queuetype);
-                    }
-                    break;
+            case this.METHOD_ENUM.OVERLAY:
+                if (this.requireArguments(params)) {
+                    this.validateRegion(params.region);
+                    this.validateSummonerName((params.summonerName || params.summonername));
+                    this.validateQueueType(params.queuetype);
+                }
+                break;
 
             default:
                 // Ne rien faire
@@ -140,6 +141,12 @@ validator.lol = {
         queryParameters.json = (queryParameters.json || 0);
         if (optionalParams && optionalParams.json && (optionalParams.json === "1" || optionalParams.json === 1)) {
             queryParameters.json = 1;
+
+            queryParameters.series = '✓X-';
+            if (optionalParams && optionalParams.series) {
+                queryParameters.series = optionalParams.series;
+            }
+            
         } else {
             switch (method) {
                 case this.METHOD_ENUM.MASTERIES:
@@ -154,6 +161,7 @@ validator.lol = {
                     break;
 
                 case this.METHOD_ENUM.RANK:
+                case this.METHOD_ENUM.OVERLAY:
                     queryParameters.lp = 1;
                     if (optionalParams && optionalParams.lp && (optionalParams.lp === "1" || optionalParams.lp === 1)) {
                         queryParameters.lp = 1;
@@ -161,7 +169,7 @@ validator.lol = {
                     queryParameters.type = 1;
                     if (optionalParams && optionalParams.type && (optionalParams.type === "1" || optionalParams.type === 1)) {
                         queryParameters.type = 1;
-                    }         
+                    }
                     queryParameters.winrate = 1;
                     if (optionalParams && optionalParams.winrate && (optionalParams.winrate === "1" || optionalParams.winrate === 1)) {
                         queryParameters.winrate = 1;
@@ -183,6 +191,15 @@ validator.lol = {
                     if (optionalParams && optionalParams.fullstring && (optionalParams.fullstring === "1" || optionalParams.fullstring === 1)) {
                         queryParameters.fullstring = 1;
                     }
+
+                    // If Overlay = mode
+                    if (method === this.METHOD_ENUM.OVERLAY) {
+                        queryParameters.mode = 1;
+                        if (optionalParams && optionalParams.mode && Number.isInteger(parseInt(optionalParams.mode))) {
+                            queryParameters.mode = optionalParams.mode;
+                        }
+                    }
+
                     break;
             }
         }

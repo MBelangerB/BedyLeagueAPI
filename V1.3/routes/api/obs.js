@@ -80,7 +80,7 @@ router.get('/obs/rank', async function (req, res) {
             var result = jsonData.queue.find(f => f.QueueType === locSummoner.queueType);
             var imgName;
 
-            var folder = `${fullUrl}/static/images/ranked-emblems`; 
+            var folder = `${fullUrl}/static/images/emblems`; 
             switch (result.tiers.toUpperCase()) {
                 case 'IRON':
                     imgName = `/Emblem_Iron.png`

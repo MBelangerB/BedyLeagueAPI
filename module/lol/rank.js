@@ -2,6 +2,7 @@ var routeInfo = require('../../static/info.json');
 var RequestManager = require(`../../util/RequestManager`);
 
 const CacheService = require('../Cache.Service');
+const path = require('path');
 
 const LeagueEntryDTO = require('../../entity/riot/League-v4/leagueEntryDTO');
 
@@ -28,7 +29,7 @@ module.exports = class LeagueEntry {
         this.showLp = ((params.lp === 1) || (params.lp === true));
         this.fullString = ((params.fullstring === 1) || (params.fullstring === true));
         this.showWinRate = ((params.winrate === 1) || (params.winrate === true));
-        this.showType = ((params.type === 1) || (params.type === true)); 
+        this.showType = ((params.type === 1) || (params.type === true));
 
         this.series = params.series;
         this.queueType = params.queuetype;
@@ -165,7 +166,7 @@ module.exports = class LeagueEntry {
         };
     }
 
-    async getJsonData(entries, queue) {
+    async getJsonData(entries, isOverlay = false) {
         // Convertir le JSON en Array
         // var iconEntries = Object.entries(profileIconDta.data);
 
@@ -199,8 +200,8 @@ module.exports = class LeagueEntry {
                 "QueueType": Object.entries(mappingQueue).find(q => q[1] === n.queueType)[0], // queueEntrier.find(q => q[1] === n.queueType),
                 "tiers": n.tier,
                 "rank": n.rank,
-                "series": n.getSeries(this.series),
-                "LP": n.getLeaguePoint(),
+                "series": n.getSeries(this.series, isOverlay),
+                "LP": n.getLeaguePoint(true),
                 "stats": {
                     "ratio": n.getRatio(),
                     "W": n.wins,
@@ -215,7 +216,7 @@ module.exports = class LeagueEntry {
     }
 
     async getTextData(entries, queue, all, withName) {
-     //  var entries = this.leagueEntries;
+        //  var entries = this.leagueEntries;
         var mappingQueue = LeagueEntry.getMappingQueueTypeToLeagueQueue();
         var returnValue = '';
 
@@ -271,7 +272,7 @@ module.exports = class LeagueEntry {
         try {
             return new Promise(async function (resolve, reject) {
                 if (jsonReturn) {
-                    returnValue = (self.getJsonData(entries, queue));
+                    returnValue = (self.getJsonData(entries));
                 } else {
                     returnValue = (self.getTextData(entries, queue, getAll));
                 }
@@ -281,6 +282,121 @@ module.exports = class LeagueEntry {
             console.error(ex);
         }
     }
+
+    async getOverlayData(mode) {
+        var returnValue = {
+            mode: parseInt(mode),
+            summoner: {
+                name: "",
+                level: 0
+            },
+            queue: this.queueType,
+            stats: {
+                ratio: "",
+                wins: 0,
+                looses: 0,
+                series: {
+                    enabled: 0,
+                    result: ''
+                }
+            },      
+            rank: {
+                colorRank: "",
+                tier: "",
+                lp: 0,
+                rank: "",
+            },
+            image: {
+                src: "",
+                alt: ""
+            }
+        };
+
+        let entries = this.leagueEntries;
+        let queue = this.queueType;
+        let self = this;
+        let data;
+
+        try {
+            return new Promise(async function (resolve, reject) {
+                data = await self.getJsonData(entries, true);
+                let userQueue = data.queues.find(q => q.QueueType === queue);
+
+                returnValue.summoner.name = data.summoner.name;
+                returnValue.summoner.level = data.summoner.level;
+
+                returnValue.stats.ratio = userQueue.stats.ratio;
+                returnValue.stats.wins = userQueue.stats.W;
+                returnValue.stats.looses = userQueue.stats.L;
+
+                returnValue.stats.series.enabled = false;
+                if (userQueue.series) {
+                    returnValue.stats.series.enabled = true;
+                    returnValue.stats.series.result = userQueue.series;
+                }
+
+                returnValue.rank.tier = userQueue.tiers;
+                returnValue.rank.lp = userQueue.LP;
+                returnValue.rank.rank = userQueue.rank;
+                returnValue.rank.colorRank = userQueue.tiers.toLowerCase();
+
+                returnValue.image.alt = `${userQueue.tiers} ${userQueue.rank}`;
+                returnValue.image.src = `${LeagueEntry.getEmbles(userQueue.tiers)}`
+
+                console.log(returnValue);
+
+                resolve(returnValue)
+            });
+        } catch (ex) {
+            console.error(ex);
+        }
+    }
+
+    static getEmbles(tiers) {
+        var folder = `/emblems`;
+        var imgName;
+
+        switch (tiers.toUpperCase()) {
+            case 'IRON':
+                imgName = `/Emblem_Iron.png`
+                break;
+
+            case 'BRONZE':
+                imgName = `/Emblem_Bronze.png`
+                break;
+
+            case 'SILVER':
+                imgName = `/Emblem_Silver.png`
+                break;
+
+            case 'GOLD':
+                imgName = `/Emblem_Gold.png`
+                break;
+
+            case 'PLATINUM':
+                imgName = `/Emblem_Platinum.png`
+                break;
+
+            case 'DIAMOND':
+                imgName = `/Emblem_Diamond.png`
+                break;
+
+            case 'MASTER':
+                imgName = `/Emblem_Master.png`
+                break;
+
+            case 'GRANDMASTER':
+                imgName = `/Emblem_GrandMaster.png`
+                break;
+
+            case 'CHALLENGER':
+                imgName = `/Emblem_Challenger.png`
+                break;
+        }
+
+        return path.join(folder, imgName);
+    }
+
 
 
 }

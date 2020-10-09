@@ -93,8 +93,12 @@ var leagueEntryDTO = class LeagueEntryDTO {
         return `${this.tier} ${this.rank}`;
     }
 
-    getLeaguePoint() {
-        return ` (${this.leaguePoints} LP)`;
+    getLeaguePoint(showText = false) {
+        if (!showText) {
+            return ` (${this.leaguePoints} LP)`;
+        } else {
+            return parseInt(`${this.leaguePoints}`);
+        }
     }
 
     getGameType() {
@@ -114,39 +118,41 @@ var leagueEntryDTO = class LeagueEntryDTO {
         return type;
     }
 
-    getSeries(charSerie, extendsSerie = false) {
+    getSeries(charSerie, isOverlay = false) {
         if (this.miniSeries) {
             var cWin = charSerie[0]; // W
             var cLoose = charSerie[1]; // L
             var cPending = charSerie[2]; // N
 
-            if (extendsSerie) {
-                // var series = `${this.series.progress}`;
-                // var result = [];
-                // for (var i = 0; i < series.length; i++) {
-                //     var char = series.charAt(i);
-                //     var color = "green";
-                //     switch(char.toUpperCase()) {
-                //         case 'W':
-                //             color = "green";
-                //             char = cWin;
-                //             break;
-                //         case 'L':
-                //             color = "red";
-                //             char = cLoose;
-                //             break;
-                //         case "N":
-                //             color = "gray"
-                //             char = cPending;
-                //             break;
-                //     }
-                //     result.push({
-                //         'value': char,
-                //         'color': color
-                //     })
-                //   }
+            if (isOverlay) {
+                var series = `${this.miniSeries.progress}`;
+                var result = [];
 
-                // return result;
+                for (var i = 0; i < series.length; i++) {
+                    var char = series.charAt(i);
+                    var color = "green";
+                    switch(char.toUpperCase()) {
+                        case 'W':
+                            color = "green";
+                            char = cWin;
+                            break;
+                        case 'L':
+                            color = "red";
+                            char = cLoose;
+                            break;
+                        case "N":
+                            color = "gray"
+                            char = cPending;
+                            break;
+                    }
+
+                    result.push({
+                        'value': char,
+                        'color': color
+                    })
+                  }
+
+                return result;
             } else {
                 var series = ` [${this.miniSeries.progress}]`;
                 series = series.replaceAll('L', cLoose).replaceAll('W', cWin).replaceAll('N', cPending);
