@@ -76,6 +76,10 @@ app.get('/:lang?/api/rank/:region/:summonerName', overlayRouter.rank);
 app.get('/:lang?/ow/rank', overwatchRouter.rank);
 app.get('/:lang?/ow/rank/:region/:platform/:tag', overwatchRouter.rank);
 
+// Temporary redirection
+app.get('/rank', rankRouter.rank);
+app.get('/v2/rank', rankRouter.rank);
+
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
     next(createError(404));

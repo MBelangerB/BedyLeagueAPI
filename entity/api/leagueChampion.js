@@ -28,7 +28,7 @@ module.exports = class ChampionInfo {
             this.setFullImageName(imgInfo.full, version);
         }
     }
-
+  
     setFullImageName(imageName, version) {
         this.fullImageName = imageName;
     //    this.fullImageUrl = `http://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${imageName}`;
