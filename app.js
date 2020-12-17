@@ -69,8 +69,8 @@ app.get('/:lang?/lol/rank', rankRouter.rank);
 app.get('/:lang?/lol/rank/:region/:summonerName', rankRouter.rank);
 
 // Api Route
-app.get('/:lang?/api/rank', overlayRouter.rank);
-app.get('/:lang?/api/rank/:region/:summonerName', overlayRouter.rank);
+app.get('/:lang?/overlay/rank', overlayRouter.rank);
+app.get('/:lang?/overlay/rank/:region/:summonerName', overlayRouter.rank);
 
 // Overwatch Route
 app.get('/:lang?/ow/rank', overwatchRouter.rank);

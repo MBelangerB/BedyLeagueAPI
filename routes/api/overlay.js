@@ -69,7 +69,7 @@ exports.rank = async function (req, res, next) {
                     return resultData;
                 });
             }
-
+ 
         }).catch(error => {
             res.send(`${error.code} - ${error.err.statusMessage}`);
             return;

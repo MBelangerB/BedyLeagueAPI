@@ -45,6 +45,7 @@
         #api #userInfo {
             padding-top: 5px;
             padding-left: 20px;
+            align-self: center !important;
         }
 
         /*
@@ -107,6 +108,10 @@
             color: orange;
         }
 
+        #userInfo #queue {
+            text-shadow: rgba(0, 0, 0, 0.63) 0.0625rem 0.0625rem 0.03125rem;
+        }
+
         /* Align / Margin */
         #api #rankInfo .noPad {
             padding-left: 0;
@@ -118,6 +123,7 @@
             /* 160 */
         }
     </style>
+
     <div class="container" id="api">
 
         <div class="row" id="rankInfo">
@@ -146,19 +152,12 @@
                         {{#each data.stats.series.result}}
                         <span class="{{color}}">{{value}}</span>
                         {{/each}}
-                        <!--
-						<span class="green">✓</span>
-						<span class="red">X</span>
-						<span class="green">✓</span>
-						<span class="gray">-</span>
-						<span class="gray">-</span>
-                        -->
                     </div>
                     {{/if}}
                 </div>
 
                 <!-- no-gutters -->
-                <div class="row" id="stats">
+                <div class="row" id="stats" class="statsSize">
                     <div class="col-12 left noPad" id="winRate">
                         <span class="cyan">
                             {{data.stats.wins}}W / {{data.stats.looses}}L
