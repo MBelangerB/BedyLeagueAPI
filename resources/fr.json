@@ -1,0 +1,7 @@
+{
+"ow": {
+    "errMissingParameters": "Paramètres marquant (region, platform, tag)",
+    "errMandatoryParamters": "Le paramètre '{{name}}' est obligatoire.",
+    "errInvalidParamters": "La paramètre '{{name}}' est invalide."
+  }
+}

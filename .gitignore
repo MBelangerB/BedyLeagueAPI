@@ -10,7 +10,7 @@
 /.vscode
 
 # Old version
-/V1.3/
+# /V1.3/
 
 # Dependency directories
 /node_modules/
