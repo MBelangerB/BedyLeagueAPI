@@ -42,7 +42,7 @@ module.exports = class LeagueEntry {
     }
 
     getCacheKey() {
-        return `${this.summonerName}-${this.region}-${this.queueType}`
+        return `LeagueEntry-${this.summonerDTO.name}-${this.region}-${this.queueType}`
     }
     getUrlBySummonerName(encryptedSummonerId, region) {
         if (!encryptedSummonerId) { encryptedSummonerId = this.encryptedSummonerId; }
