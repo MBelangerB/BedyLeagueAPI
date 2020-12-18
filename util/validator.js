@@ -97,6 +97,8 @@ validator.lol = {
             case this.METHOD_ENUM.ROTATE:
                 if (this.requireArguments(params)) {
                     this.validateRegion(params.region);
+
+                    this.convertToRealRegion(params);
                 }
                 break;
 
@@ -105,6 +107,8 @@ validator.lol = {
                 if (this.requireArguments(params)) {
                     this.validateRegion(params.region);
                     this.validateSummonerName((params.summonerName || params.summonername));
+
+                    this.convertToRealRegion(params);
                 }
                 break;
 
@@ -114,6 +118,8 @@ validator.lol = {
                     this.validateRegion(params.region);
                     this.validateSummonerName((params.summonerName || params.summonername));
                     this.validateQueueType(params.queuetype);
+
+                    this.convertToRealRegion(params);
                 }
                 break;
 
@@ -132,8 +138,10 @@ validator.lol = {
     validateRotateParams: function (params) {
         this.errors = [];
         this.validateRegion(params.region);
+        this.convertToRealRegion(params);
         return this.errors;
     },
+
 
 
     fixOptionalParams: function (optionalParams, queryParameters, method) {
@@ -163,16 +171,16 @@ validator.lol = {
                 case this.METHOD_ENUM.RANK:
                 case this.METHOD_ENUM.OVERLAY:
                     queryParameters.lp = 1;
-                    if (optionalParams && optionalParams.lp && (optionalParams.lp === "1" || optionalParams.lp === 1)) {
-                        queryParameters.lp = 1;
+                    if (optionalParams && optionalParams.lp && (optionalParams.lp === "0" || optionalParams.lp === 0)) {
+                        queryParameters.lp = 0;
                     }
                     queryParameters.type = 1;
-                    if (optionalParams && optionalParams.type && (optionalParams.type === "1" || optionalParams.type === 1)) {
-                        queryParameters.type = 1;
+                    if (optionalParams && optionalParams.type && (optionalParams.type === "0" || optionalParams.type === 0)) {
+                        queryParameters.type = 0;
                     }
                     queryParameters.winrate = 1;
-                    if (optionalParams && optionalParams.winrate && (optionalParams.winrate === "1" || optionalParams.winrate === 1)) {
-                        queryParameters.winrate = 1;
+                    if (optionalParams && optionalParams.winrate && (optionalParams.winrate === "0" || optionalParams.winrate === 0)) {
+                        queryParameters.winrate = 0;
                     }
                     queryParameters.all = 0;
                     if (optionalParams && optionalParams.all && (optionalParams.all === "1" || optionalParams.all === 1)) {
@@ -264,6 +272,17 @@ validator.lol = {
                 break
         }
         return valid;
+    },
+    convertToRealRegion: function(params) {
+        var region = params.region;
+        var regionData =  {
+            'EUW': 'EUW1',
+            'EUW1': 'EUW1',
+            'NA': 'NA1',
+            'NA1': 'NA1'
+        };
+        params.region = regionData[region];
+        return regionData[region];
     },
     validateQueueType: function (queueType) {
         // Valider la présence de la region en parametre
