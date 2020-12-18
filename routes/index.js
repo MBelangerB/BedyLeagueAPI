@@ -18,9 +18,9 @@ router.get('/loltest', function(req, res, next) {
     loose: 72,
     rank: {
       colorRank: "gold",
-      tier: "III",
+      tier: "GOLD",
       lp: 39,
-      rank: "GOLD",
+      rank: "III",
     },
     image: {
       src: `${getEmbles('gold')}`,
