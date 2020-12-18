@@ -1,62 +1,76 @@
-'use strict';
+/*
+    Get Rotate
+*/
+var routeInfo = require('../../static/info.json');
+const validator = require('../../util/validator');
+const staticFunc = require('../../util/staticFunction');
 
-const express = require('express');
-const router = express.Router();
+/* Temp */
+const dragonLoading = require('../../controller/dragonLoading');
+const ChampionRotations = require('../../module/lol/league');
 
-const staticFunction = require('../../static/staticFunction');
-const LeagueRotate = require('../../module/v2/LeagueRotate');
-
-const morgan = require('morgan');
-const moment = require("moment");
-
-// Logger
-router.use(morgan(function (tokens, req, res) {
- //   if (res.statusCode === 302) { return null; }
-    if (typeof req.route === "undefined" || req.route.path.toLowerCase().includes("/v2/rotate") === false) { 
-        return null;
-    }
-
-    var currentDateTime = moment().format("YYYY-MM-DD HH:mm:ss:SSS");
-
-    return [
-        `[${currentDateTime}] : `,
-        `${req.protocol} - `, 
-        tokens.method(req, res),
-        tokens.url(req, res),
-        tokens.status(req, res),
-        tokens['response-time'](req, res), 'ms'
-    ].join(' ');
-}))
-
-router.get('/v2/rotate', async function (req, res) {
+/* GET home page. */
+exports.rotate = async function (req, res, next) {
     try {
-        // Valider les paramètres
-        var isValid = await staticFunction.validateRegion(req.query);
-        if (!isValid.isValid) {
-            res.json(isValid.errors)
-            return;
-        }
-        
-        var legData = new LeagueRotate(req.query);
-        var result = await legData.getLeagueRotate();
+        let { query, params } = req;
 
-        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
-            res.send(result.err.statusMessage);
-            return;
-        }
+        // Gestion de la culture
+        validator.parameters.validateCulture(params);
 
-        var response = legData.getReturnValue();
-        if (legData.getJson) {
-            res.json(response);
+        // Gestion des paramètres
+        let queryParameters;
+        let queryString = staticFunc.request.lowerQueryString(query);
+        console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
+
+        /*
+            On effectue initialement la validation des Params (region/platform/tag).
+            Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
+            en QueryString
+        */
+        var validationErrors = [];
+        if (params && Object.keys(params).length > 1) {
+            validationErrors = validator.lol.validateRotateParams(params);
+            queryParameters = params;
         } else {
-            res.send(response);
+            validationErrors = validator.lol.validateRotateParams(queryString);
+            queryParameters = queryString;
         }
+        if (validationErrors && validationErrors.length > 0) {
+            res.send(validationErrors)
+            return;
+        }
+        validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters);
 
+        var championRotate = new ChampionRotations(queryParameters, generateUrl(queryParameters));
+
+        await championRotate.getLeagueRotate().then(async function(result) {
+            if (result.code === 200) {
+                await championRotate.getReturnValue().then(result => {
+                    if (championRotate.getJson && championRotate.getJson == true) {
+                        res.json(result);
+                    } else {
+                        res.send(result);
+                    }    
+                });
+            }
+            return;
+
+        }).catch(error => {
+            res.send(`${error.code} - ${error.err.statusMessage}`);
+            return;
+        });
 
     } catch (ex) {
         console.error(ex);
         res.send(ex);
     }
-});
+};
 
-module.exports = router;
+
+function generateUrl(queryParameters) {
+    let baseUrl = routeInfo.lol.routes.champion.v3.championRotation;
+    baseUrl = baseUrl.replace("{region}", queryParameters.region)
+
+    return baseUrl;
+}
+

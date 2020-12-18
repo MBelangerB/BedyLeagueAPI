@@ -23,8 +23,7 @@ module.exports = class Cache {
     if (value) {
       return Promise.resolve(value);
     } else {
-      //  return Promise.reject("NoData");
-      return null;
+      return Promise.reject(null);
     }
   }
 
@@ -32,7 +31,7 @@ module.exports = class Cache {
     var lCache = this.cache;
     return new Promise(function (resolve, reject) {
       const value = lCache.get(key);
-      resolve(value);
+      resolve(value);     
     });
   }
 

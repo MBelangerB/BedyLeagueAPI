@@ -1,68 +1,84 @@
-'use strict';
-
-const express = require('express');
-const router = express.Router();
-
-const staticFunction = require('../../static/staticFunction');
-const SummonerQueue = require('../../module/v2/SummonerQueue');
-
-const morgan = require('morgan');
-const moment = require("moment");
-
-// Logger
-router.use(morgan(function (tokens, req, res) {
-  //  if (res.statusCode === 302) { return null; }
-  let autorized = ['/v2/rank'];
-  if (typeof req.route === "undefined" || autorized.includes(req.route.path.toLowerCase()) === false) { 
-      return null;
-  }
 /*
-    if (req.route.path.toLowerCase().includes("/v2/rank") === false) { 
-        return null;
-    }
+    Get Rnak
 */
-    var currentDateTime = moment().format("YYYY-MM-DD HH:mm:ss:SSS");
+const validator = require('../../util/validator');
+const staticFunc = require('../../util/staticFunction');
 
-    return [
-        `[${currentDateTime}] : `,
-        `${req.protocol} - `, 
-        tokens.method(req, res),
-        tokens.url(req, res),
-        tokens.status(req, res),
-        tokens['response-time'](req, res), 'ms'
-    ].join(' ');
-}))
+const { SummonerInfo } = require('../../module/lol/summoner');
+const LeagueEntry = require('../../module/lol/rank');
 
-
-router.get('/v2/rank', async function (req, res) {
+/* GET Rank. */
+exports.rank = async function (req, res, next) {
     try {
-        const { query } = req;
+        let { query, params } = req;
 
-        var validation = await staticFunction.validateSummonerAndRegion(query);
-        if (validation && validation.isValid === false) {
-            res.send(validation.errors)
-            return;
-        }
+        // Gestion de la culture
+        validator.parameters.validateCulture(params);
 
-        // Obtenir les informations sur l'invocateur
-        var locSummoner = new SummonerQueue(query);
-        var result = await locSummoner.getSummonerInfo();
-        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
-            res.send(result.err.statusMessage);
-            return;
-        }
-        var response = locSummoner.getReturnValue(locSummoner.queueType);
+        // Gestion des paramètres
+        let queryParameters;
+        let queryString = staticFunc.request.lowerQueryString(query);
+        console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
 
-        if (locSummoner.getJson) {
-            res.json(response);
+        /*
+            On effectue initialement la validation des Params (region/platform/tag).
+            Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
+            en QueryString
+        */
+        var validationErrors = [];
+        if (params && Object.keys(params).length > 1) {
+            validationErrors = validator.lol.validateParams(params, validator.lol.METHOD_ENUM.RANK);
+            queryParameters = params;
         } else {
-            res.send(response);
+            validationErrors = validator.lol.validateParams(queryString, validator.lol.METHOD_ENUM.RANK);
+            queryParameters = queryString;
         }
+        if (validationErrors && validationErrors.length > 0) {
+            res.send(validationErrors)
+            return;
+        }
+        validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters, validator.lol.METHOD_ENUM.RANK);
+
+        /*
+            Obtenir initiale le summoner pour avoir EncryptedAccountID
+        */
+        var summoner = new SummonerInfo(queryParameters);
+
+        await summoner.getSummonerInfo().then(async function (result) {
+            if (result.code !== 200) {
+                res.send(`An error occured during getSummonerInfo`)
+            } else {
+                return result.data;
+            }
+            return;
+
+        }).catch(error => {
+            res.send(`${error.code} - ${error.err.statusMessage}`);
+            return;
+        });
+        queryParameters.summoner = summoner.summonerInfo;
+
+        var leagueEntries = new LeagueEntry(queryParameters);
+        await leagueEntries.getLeagueRank().then(async function (result) {
+            if (result.code === 200) {
+                await leagueEntries.getReturnValue().then(result => {
+                    if (leagueEntries.getJson && leagueEntries.getJson == true) {
+                        res.json(result);
+                    } else {
+                        res.send(result);
+                    }
+                });
+            }
+            return;
+
+        }).catch(error => {
+            res.send(`${error.code} - ${error.err.statusMessage}`);
+            return;
+        });
+
 
     } catch (ex) {
         console.error(ex);
         res.send(ex);
     }
-});
-
-module.exports = router;
+};

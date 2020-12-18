@@ -9,11 +9,15 @@
 # Vs Code
 /.vscode
 
+# Old version
+# /V1.3/
+
 # Dependency directories
 /node_modules/
 /jspm_packages/
 
 # Dragon Data
+/static/dragon/
 /static/en-us/*.json
 /static/fr_fr/*.json
 /dragon/*

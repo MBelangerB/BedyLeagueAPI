@@ -1,123 +1,210 @@
-'use strict';
-
-const express = require('express');
-const router = express.Router();
-
-const staticFunction = require('../../static/staticFunction');
-const LeagueChampionMasteries = require('../../module/v2/LeagueChampionMasteries');
-const LeagueActiveGame = require('../../module/v2/LeagueLiveGame');
-
-const morgan = require('morgan');
-const moment = require("moment");
-
-// Logger
-router.use(morgan(function (tokens, req, res) {
-  //  if (res.statusCode === 302) { return null; }
-    let autorized = ['/v2/livegame', '/v2/topmasteries'];
-
-    if (typeof req.route === "undefined" || autorized.includes(req.route.path.toLowerCase()) === false) { 
-        return null;
-    }
-
-    var currentDateTime = moment().format("YYYY-MM-DD HH:mm:ss:SSS");
-
-    return [
-        `[${currentDateTime}] : `,
-        `${req.protocol} - `, 
-        tokens.method(req, res),
-        tokens.url(req, res),
-        tokens.status(req, res),
-        tokens['response-time'](req, res), 'ms'
-    ].join(' ');
-}))
+/*
+    GetSummonerInfo
+    GetTopMasteries
+    GEtLiveGame
+*/
 
 
-// Version 2
-router.get('/v2/livegame', async function (req, res) {
+// var routeInfo = require('../../static/info.json');
+const validator = require('../../util/validator');
+const staticFunc = require('../../util/staticFunction');
+
+const { SummonerInfo, SummonerMasteries } = require('../../module/lol/summoner');
+
+/* GET summonerInfo. */
+exports.summonerInfo = async function (req, res, next) {
     try {
-        // Valider les paramètres
-        var validation = await staticFunction.validateSummonerAndRegion(req.query);
-        if (validation && validation.isValid === false) {
-            res.send(validation.errors)
+        let { query, params } = req;
+
+        // Gestion de la culture
+        validator.parameters.validateCulture(params);
+
+        // Gestion des paramètres
+        let queryParameters;
+        let queryString = staticFunc.request.lowerQueryString(query);
+        console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
+
+        /*
+            On effectue initialement la validation des Params (region/platform/tag).
+            Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
+            en QueryString
+        */
+        var validationErrors = [];
+        if (params && Object.keys(params).length > 1) {
+            validationErrors = validator.lol.validateParams(params, validator.lol.METHOD_ENUM.SUMMONER_INFO);
+            queryParameters = params;
+        } else {
+            validationErrors = validator.lol.validateParams(queryString, validator.lol.METHOD_ENUM.SUMMONER_INFO);
+            queryParameters = queryString;
+        }
+        if (validationErrors && validationErrors.length > 0) {
+            res.send(validationErrors)
             return;
         }
+        validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters,  validator.lol.METHOD_ENUM.SUMMONER_INFO);
 
-        var activeGame = new LeagueActiveGame(req.query);
-        var result = await activeGame.getLiveGame();
-        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
-            res.send(result.err.statusMessage);
+        var summonerInfo = new SummonerInfo(queryParameters);
+
+        await summonerInfo.getSummonerInfo().then(async function(result) {
+            if (result.code === 200) {
+                await summonerInfo.getReturnValue().then(result => {
+                    if (summonerInfo.getJson && summonerInfo.getJson == true) {
+                        res.json(result);
+                    } else {
+                        res.send(result);
+                    }    
+                });
+            }
             return;
-        }
 
-        var response = activeGame.getActionGameDetails();
-        res.send(response);
+        }).catch(error => {
+            res.send(`${error.code} - ${error.err.statusMessage}`);
+            return;
+        });
 
     } catch (ex) {
         console.error(ex);
         res.send(ex);
     }
-});
-// Top stats masteries
-router.get('/v2/topMasteries', async function (req, res) {
+};
+
+exports.topMasteries = async function (req, res, next) {
     try {
-        // Valider les paramètres
-        var validation = staticFunction.validateSummonerAndRegion(req.query);
-        if (validation && validation.isValid === false) {
-            res.send(validation.errors)
+        let { query, params } = req;
+
+        // Gestion de la culture
+        validator.parameters.validateCulture(params);
+
+        // Gestion des paramètres
+        let queryParameters;
+        let queryString = staticFunc.request.lowerQueryString(query);
+        console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
+
+        /*
+            On effectue initialement la validation des Params (region/platform/tag).
+            Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
+            en QueryString
+        */
+        var validationErrors = [];
+        if (params && Object.keys(params).length > 1) {
+            validationErrors = validator.lol.validateParams(params, validator.lol.METHOD_ENUM.MASTERIES);
+            queryParameters = params;
+        } else {
+            validationErrors = validator.lol.validateParams(queryString, validator.lol.METHOD_ENUM.MASTERIES);
+            queryParameters = queryString;
+        }
+        if (validationErrors && validationErrors.length > 0) {
+            res.send(validationErrors)
             return;
         }
-        // Obtenir les informations sur l'invocateur
-        var champMasteries = new LeagueChampionMasteries(req.query);
-        var result = await champMasteries.getChampionsMasteries();
-        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
-            res.send(result.err.statusMessage);
+        validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters,  validator.lol.METHOD_ENUM.MASTERIES);
+
+        /*
+            Obtenir initiale le summoner pour avoir EncryptedAccountID
+        */
+       var summoner = new SummonerInfo(queryParameters);
+
+       await summoner.getSummonerInfo().then(async function(result) {
+           if (result.code !== 200) {
+               res.send(`An error occured during getSummonerInfo`)
+           } else {
+               return result.data;
+           }
+           return;
+
+       }).catch(error => {
+           res.send(`${error.code} - ${error.err.statusMessage}`);
+           return;
+       });
+       queryParameters.id = summoner.summonerInfo.id;
+
+       var masteries = new SummonerMasteries(queryParameters);
+
+        await masteries.getSummonerMasteries().then(async function(result) {
+            if (result.code === 200) {
+                await masteries.getReturnValue().then(result => {
+                    if (masteries.getJson && masteries.getJson == true) {
+                        res.json(result);
+                    } else {
+                        res.send(result);
+                    }    
+                });
+            }
             return;
-        }
-        var response = champMasteries.getReturnValue(champMasteries.queueType);
-        res.send(response);
+
+        }).catch(error => {
+            res.send(`${error.code} - ${error.err.statusMessage}`);
+            return;
+        });
+
 
     } catch (ex) {
         console.error(ex);
         res.send(ex);
     }
-});
+};
 
-router.get('/v2/currentChampion', async function (req, res) {
-    // Fonctionnalité en développement
-    // Permet d'obtenir les informations du joueur avec le personnage actuel
-    // Perso (Masteries Pts) - Sort invocateur - Win Rates ?
+exports.liveGame = async function (req, res, next) {
     try {
-        // Valider les paramètres
-        var validation = staticFunction.validateSummonerAndRegion(req.query);
-        if (validation && validation.isValid === false) {
-            res.json(validation.errors)
+        let { query, params } = req;
+
+        // Gestion de la culture
+        validator.parameters.validateCulture(params);
+
+        // Gestion des paramètres
+        let queryParameters;
+        let queryString = staticFunc.request.lowerQueryString(query);
+        console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
+
+        /*
+            On effectue initialement la validation des Params (region/platform/tag).
+            Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
+            en QueryString
+        */
+        var validationErrors = [];
+        if (params && Object.keys(params).length > 1) {
+            validationErrors = validator.lol.validateRotateParams(params);
+            queryParameters = params;
+        } else {
+            validationErrors = validator.lol.validateRotateParams(queryString);
+            queryParameters = queryString;
+        }
+        if (validationErrors && validationErrors.length > 0) {
+            res.send(validationErrors)
             return;
         }
+        validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters);
 
-        // Obtenir les informations sur l'invocateur
-        var activeGame = new LeagueActiveGame(req.query);
-        var result = await activeGame.getLiveGame();
-        if (typeof result.code !== 'undefined' && (result.code === 201 || result.code !== 200)) {
-            res.json(result.err.statusMessage);
-            return;
-        }
+        // var championRotate = new ChampionRotations(queryParameters, generateUrl(queryParameters));
 
-        var response = activeGame.getCurrentChampionData();
-        res.send(response);
+        // await championRotate.getLeagueRotate().then(async function(result) {
+        //     if (result.code === 200) {
+        //         await championRotate.getReturnValue().then(result => {
+        //             if (championRotate.getJson && championRotate.getJson == true) {
+        //                 res.json(result);
+        //             } else {
+        //                 res.send(result);
+        //             }    
+        //         });
+        //     }
+        //     return;
+
+        // }).catch(error => {
+        //     res.send(`${error.code} - ${error.err.statusMessage}`);
+        //     return;
+        // });
 
     } catch (ex) {
         console.error(ex);
         res.send(ex);
     }
-});
+};
 
 
+// function generateUrl(queryParameters) {
+//     let baseUrl = routeInfo.lol.routes.champion.v3.championRotation;
+//     baseUrl = baseUrl.replace("{region}", queryParameters.region)
 
-// Stats 10 dernières games
-router.get('/v2/lastgame', async function (req, res) {
+//     return baseUrl;
+// }
 
-});
-
-
-
-module.exports = router;
