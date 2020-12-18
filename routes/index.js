@@ -8,7 +8,7 @@ router.get('/', function(req, res, next) {
 });
 
 
-router.get('/ow', function(req, res, next) {
+router.get('/loltest', function(req, res, next) {
   var data = {
     mode: 1,
     summonerName: "Bohe",
