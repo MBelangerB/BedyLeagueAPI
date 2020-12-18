@@ -7,8 +7,10 @@
 var app = require('../app');
 var debug = require('debug')('bedyapi:server');
 var http = require('http');
+/*
 var https = require('https');
 var fs = require('fs');
+*/
 require('dotenv').config();
 
 /**
@@ -142,6 +144,6 @@ function onStart() {
     console.log(`Démarrage du serveur BedyAPI (HTTP) le '${new Date().toString()}' sur: '${host}' Server : '${port}'`);
   }
   */
- console.log(`Démarrage du serveur BedyAPI (HTTP) le '${new Date().toString()}' sur: '${host}' Server : '${port}'`);
+  console.log(`Démarrage du serveur BedyAPI (HTTP) le '${new Date().toString()}' sur: '${host}' Server : '${port}'`);
 }
 

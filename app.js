@@ -29,7 +29,8 @@ var overwatchRouter = require('./routes/ow/rank');
 var app = express();
 
 /* Middleware */
-app.use(logger('dev'));
+
+app.use(logger('[:date[iso]] :method :url :status :res[content-length] - :response-time ms')); /* TODO: Valider le type */
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
