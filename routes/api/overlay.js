@@ -65,7 +65,7 @@ exports.rank = async function (req, res, next) {
                     } else {
                         res.render('overlay/lol_mode2', { title: 'BedyAPI', data: resultData  });
                     }
-                  
+                   
                     return resultData;
                 });
             }

@@ -162,7 +162,9 @@ module.exports = class LeagueEntry {
             'EUW': 'EUW1',
             'EUW1': 'EUW1',
             'NA': 'NA1',
-            'NA1': 'NA1'
+            'NA1': 'NA1',
+            'EUNE': 'EUN1',
+            'EUN1': 'EUN1'
         };
     }
 

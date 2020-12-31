@@ -7,7 +7,8 @@
         ],
         "region": [
             "NA1",
-            "EUW1"
+            "EUW1",
+            "EUN1"
         ],
         "routes": {
             "v2": {

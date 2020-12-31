@@ -265,6 +265,8 @@ validator.lol = {
             case 'NA1':
             case 'EUW':
             case 'EUW1':
+            case 'EUN1':
+            case 'EUNE':
                 valid = true;
                 break;
             default:
@@ -279,7 +281,9 @@ validator.lol = {
             'EUW': 'EUW1',
             'EUW1': 'EUW1',
             'NA': 'NA1',
-            'NA1': 'NA1'
+            'NA1': 'NA1',
+            'EUNE': 'EUN1',
+            'EUN1': 'EUN1'
         };
         params.region = regionData[region];
         return regionData[region];
