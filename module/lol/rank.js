@@ -251,13 +251,23 @@ module.exports = class LeagueEntry {
                 }
 
                 if ((this.fullString && withName) || (this.fullString && (typeof withName !== "undefined" && withName))) {
-                    let CapSummonerName = `${league.summonerName}`;
+                    let CapSummonerName = `${this.summonerDTO.name}`;
                     CapSummonerName = CapSummonerName.charAt(0).toUpperCase() + CapSummonerName.slice(1);
 
                     returnValue = `${CapSummonerName} est actuellement ${rankTiers}${leaguePt}${series}${winRate}${gameType}`;
                 } else {
-                    returnValue = `${rankTiers}${leaguePt}${series}${winRate}${gameType}`
+                    returnValue = `${rankTiers}${leaguePt}${series}${winRate}${gameType}`;
                 }
+            }
+            else {
+                if ((this.fullString && withName) || (this.fullString && (typeof withName !== "undefined" && withName))) {
+                    let CapSummonerName = `${this.summonerDTO.name}`;
+                    CapSummonerName = CapSummonerName.charAt(0).toUpperCase() + CapSummonerName.slice(1);
+
+                    returnValue = `${CapSummonerName} est actuellement Unranked.`;
+                } else {
+                    returnValue = `unranked`;
+                }           
             }
         }
         return returnValue;
@@ -276,7 +286,7 @@ module.exports = class LeagueEntry {
                 if (jsonReturn) {
                     returnValue = (self.getJsonData(entries));
                 } else {
-                    returnValue = (self.getTextData(entries, queue, getAll));
+                    returnValue = (self.getTextData(entries, queue, getAll, true));
                 }
                 resolve(returnValue)
             });
