@@ -12,9 +12,6 @@
         ],
         "routes": {
             "v2": {
-                "league": {
-                    "getTFTLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{encryptedSummonerId}"
-                },
                 "liveGame": {
                     "getCurrentGameInfoBySummoner": "https://{region}.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/{encryptedSummonerId}"
                 },
@@ -45,10 +42,15 @@
                     "getByPuuid": "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
                 }
             },
-            "tft-summoner": {
+            "tft_summoner": {
                 "v1": {
                     "getBySummonerName": "https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{summonerName}",
                     "getByPuuid": "https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-puuid/{puuid}"
+                }
+            },
+            "tft_league": {
+                "v1": {
+                    "getTFTLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{encryptedSummonerId}"
                 }
             }
         }

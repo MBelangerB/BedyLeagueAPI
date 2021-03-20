@@ -127,6 +127,8 @@ class staticFunction {
             case 'NA1':
             case 'EUW':
             case 'EUW1':
+            case 'EUN1':
+            case 'EUNE':
                 valid = true;
                 break;
             default:
@@ -140,7 +142,9 @@ class staticFunction {
             'EUW': 'EUW1',
             'EUW1': 'EUW1',
             'NA': 'NA1',
-            'NA1': 'NA1'
+            'NA1': 'NA1',
+            'EUNE': 'EUN1',
+            'EUN1': 'EUN1'
         };
     }
     static isValidQueueType(type) {

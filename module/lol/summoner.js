@@ -24,20 +24,30 @@ module.exports = {
             // Paramètre obligatoire
             this.summonerName = (params.summonername || params.summonerName);
             this.region = params.region;
-            this.url = this.getUrlBySummonerName();
+            this.queueType = params.queuetype;
+           // this.url = this.getUrlBySummonerName();
+
+            this.gameType = RequestManager.TokenType.LOL;
+            if (this.queueType.toLowerCase() === "tft") {
+                this.gameType = RequestManager.TokenType.TFT;
+            }
 
             // Paramètre facultatif
             this.getJson = ((params.json === 1) || (params.json === true));
         }
 
         getCacheKey() {
-            return `SummonerInfo-${this.summonerName}-${this.region}`;
+            return `SummonerInfo-${this.summonerName}-${this.region}-${this.queueType}`;
         }
-        getUrlBySummonerName(summonerName, region) {
+        getUrlBySummonerName(summonerName, region, queueType) {
             if (!summonerName) { summonerName = this.summonerName; }
             if (!region) { region = this.region; }
+            if (!queueType) { queueType = this.queueType; }
 
             let baseUrl = routeInfo.lol.routes.summoner.v4.getBySummonerName;
+            if (queueType === "tft") {
+                baseUrl = routeInfo.lol.routes.tft_summoner.v1.getBySummonerName;
+            }
             baseUrl = baseUrl.replace("{summonerName}", summonerName);
             baseUrl = baseUrl.replace("{region}", region);
 
@@ -47,7 +57,7 @@ module.exports = {
         async _querySummonerInfo(requestManager, result) {
             try {
                 // Le SummonerInfo n'est pas présent dans la cache
-                var data = await requestManager.ExecuteTokenRequest(this.getUrlBySummonerName(), requestManager.TokenType.LOL).then(function (summonerDTO) {
+                var data = await requestManager.ExecuteTokenRequest(this.getUrlBySummonerName(), this.gameType).then(function (summonerDTO) {
                     return summonerDTO;
                 }, function (error) {
                     if (error.response) {
@@ -215,7 +225,7 @@ module.exports = {
 
             } catch (ex) {
                 console.error(ex);
-                res.send(ex);
+             //   res.send(ex);
             }
             return data;
         }

@@ -6,7 +6,7 @@ var dragonUpdate = require('../module/dragonUpdate')
 router.get('/', async function (req, res, next) {
     res.redirect('/dragon/version');
 });
-
+ 
 router.get('/version', async function (req, res, next) {
     try {
         var ds = new dragonUpdate();

@@ -1,5 +1,5 @@
 'use strict';
-
+ 
 const infoJson = require('../static/info.json');
 const path = require('path');
 const fs = require('fs');

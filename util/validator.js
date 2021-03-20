@@ -120,6 +120,7 @@ validator.lol = {
                     this.validateQueueType(params.queuetype);
 
                     this.convertToRealRegion(params);
+                    this.convertToRealQueueType(params);
                 }
                 break;
 
@@ -288,6 +289,7 @@ validator.lol = {
         params.region = regionData[region];
         return regionData[region];
     },
+
     validateQueueType: function (queueType) {
         // Valider la présence de la region en parametre
         if (typeof queueType !== "undefined" && queueType.trim().length > 0 && !this.isValidQueueType(queueType)) {
@@ -296,7 +298,7 @@ validator.lol = {
     },
     isValidQueueType(queueType) {
         var valid = false;
-        switch (queueType) {
+        switch (queueType.toLowerCase()) {
             case 'solo5':
             case 'solo':
             case 'soloq':
@@ -315,6 +317,24 @@ validator.lol = {
                 break
         }
         return valid;
+    },
+    convertToRealQueueType: function(params) {
+        var queueTypeInfo = params.queuetype;
+        var typeData =  {
+            'tft': 'tft',
+            'solo5': 'solo5',
+            'solo': 'solo5',
+            'soloq': 'solo5'
+        };
+
+        if (typeof queueTypeInfo !== "undefined" && queueTypeInfo.trim().length > 0) {
+            queueTypeInfo = queueTypeInfo.toLowerCase();
+        } else {
+            queueTypeInfo = "solo5";
+        }
+     
+        params.queuetype = typeData[queueTypeInfo];
+        return typeData[queueTypeInfo];
     }
 }
 

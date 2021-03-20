@@ -35,7 +35,7 @@ module.exports = class LeagueEntry {
         this.queueType = params.queuetype;
 
         this.gameType = RequestManager.TokenType.LOL;
-        if (this.queueType === "tft") {
+        if (this.queueType.toLowerCase() === "tft") {
             this.gameType = RequestManager.TokenType.TFT;
         }
 
@@ -44,11 +44,16 @@ module.exports = class LeagueEntry {
     getCacheKey() {
         return `LeagueEntry-${this.summonerDTO.name}-${this.region}-${this.queueType}`
     }
-    getUrlBySummonerName(encryptedSummonerId, region) {
+    getUrlBySummonerName(encryptedSummonerId, region, queueType) {
         if (!encryptedSummonerId) { encryptedSummonerId = this.encryptedSummonerId; }
         if (!region) { region = this.region; }
+        if (!queueType) { queueType = this.queueType; }
+
 
         let baseUrl = routeInfo.lol.routes.league.v4.getLeagueEntriesForSummoner;
+        if (queueType === "tft") {
+            baseUrl = routeInfo.lol.routes.tft_league.v1.getTFTLeagueEntriesForSummoner;
+        }
         baseUrl = baseUrl.replace("{encryptedSummonerId}", encryptedSummonerId);
         baseUrl = baseUrl.replace("{region}", region);
 
