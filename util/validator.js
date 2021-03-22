@@ -356,5 +356,49 @@ validator.parameters = {
     }
 }
 
+validator.api = {
+    errors: [],
+
+    validateRegister: function (queryString) {
+        this.errors = [];
+
+        if (this.requireArguments(queryString)) {
+            this.validateRequire(queryString.token || queryString.t);
+            this.validateUsername((queryString.username || queryString.u));
+        }
+        return this.errors;
+    }, 
+
+    validateAddSong: function (queryString) {
+        this.errors = [];
+
+        if (this.requireArguments(queryString)) {
+            this.validateRequire(queryString.token || queryString.t);
+        }
+        return this.errors;
+    }, 
+
+    requireArguments: function (queryString) {
+        if (Object.keys(queryString).length === 0) {
+            this.errors.push("Paramètres marquant (username, token) / missing parameters (username, token)");
+            return false;
+        }
+        return true;
+    },
+    validateRequire: function(token) {
+        if (typeof token === "undefined" || token.trim().length === 0) {
+            this.errors.push("Le paramètre 'token' est obligatoire.");
+        }
+    },
+    validateUsername: function (username) {
+        // Valider la présence de la region en parametre
+        if (typeof username === "undefined" || username.trim().length === 0) {
+            this.errors.push("Le paramètre 'username' est obligatoire.");
+
+        }
+    },
+
+
+}
 
 module.exports = validator;

@@ -21,6 +21,7 @@ var summonerRouter = require('./routes/lol/summoner');
 
 /* API Route */
 var overlayRouter = require('./routes/api/overlay');
+var extensionRouter = require('./routes/api/extension');
 
 /* OW Route */
 var overwatchRouter = require('./routes/ow/rank');
@@ -80,6 +81,13 @@ app.get('/:lang?/ow/rank/:region/:platform/:tag', overwatchRouter.rank);
 // Temporary redirection
 app.get('/rank', rankRouter.rank);
 app.get('/v2/rank', rankRouter.rank);
+
+// Navigator Extension
+app.post('/api/register', extensionRouter.registerAPI);
+app.post('/api/register/:username/:token', extensionRouter.registerAPI);
+app.put('/api/song/:token', extensionRouter.addSong);
+app.get('/api/song/:token', extensionRouter.getLastSong);
+app.delete('/api/song/:token', extensionRouter.clearPlaylist);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
