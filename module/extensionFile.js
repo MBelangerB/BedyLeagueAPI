@@ -23,6 +23,7 @@ class extensionFileData {
     constructor(username, token) {
         this.username = username;
         this.token = token;
+        this.createDate = new Date();
     }
 
     /**
@@ -67,7 +68,10 @@ class extensionFileData {
         return new Promise(async (resolve, reject) => {
             try {
                 if (!fs.existsSync(this.getExtensionFileFullPath(token))) {
-                    this.userData = {"username": this.username, "current": {}, "playlist": []};
+                    this.userData = {   "username": this.username,     
+                                        "createDate": this.createDate.toLocaleDateString("fr-CA"), 
+                                        "current": {}, 
+                                        "playlist": []};
                     
                     await writeFile(this.getExtensionFileFullPath(token), this.castDataToJSON(this.userData));
                 }

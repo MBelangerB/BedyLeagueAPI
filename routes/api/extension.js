@@ -16,20 +16,20 @@ exports.registerAPI = async function (req, res, next) {
     try {
         let { query, params } = req;
 
-        var access = headerAccess.authorized;
-        var authorized = false;
-         access.forEach(key => {
-            if (authorized) { return; }
+        // var access = headerAccess.authorized;
+        // var authorized = false;
+        //  access.forEach(key => {
+        //     if (authorized) { return; }
 
-            var result = req.rawHeaders.find(e => e.includes(key));
-            if (result && result.length > 0) {
-                authorized = true;
-            }     
-        });
-        if (!authorized) {
-            res.send(401);
-            return;
-        }
+        //     var result = req.rawHeaders.find(e => e.includes(key));
+        //     if (result && result.length > 0) {
+        //         authorized = true;
+        //     }     
+        // });
+        // if (!authorized) {
+        //     res.send(401);
+        //     return;
+        // }
 
         // Gestion des paramètres
         let queryParameters;
@@ -73,6 +73,8 @@ exports.registerAPI = async function (req, res, next) {
             res.send(error);
             return;
         });
+        // Pas de MAJ de username si même GUID
+        
 
         var returnValue = {
             "message": `L'inscription de l'usager ${queryParameters.username} a été validé.`,
@@ -101,20 +103,20 @@ exports.addSong = async function (req, res, next) {
         let { query, params, body } = req;
 
         // Validation
-        var access = headerAccess.authorized;
-        var authorized = false;
-         access.forEach(key => {
-            if (authorized) { return; }
+        // var access = headerAccess.authorized;
+        // var authorized = false;
+        //  access.forEach(key => {
+        //     if (authorized) { return; }
 
-            var result = req.rawHeaders.find(e => e.includes(key));
-            if (result && result.length > 0) {
-                authorized = true;
-            }     
-        });
-        if (!authorized) {
-            res.send(401);
-            return;
-        }
+        //     var result = req.rawHeaders.find(e => e.includes(key));
+        //     if (result && result.length > 0) {
+        //         authorized = true;
+        //     }     
+        // });
+        // if (!authorized) {
+        //     res.send(401);
+        //     return;
+        // }
 
         // Gestion des paramètres
         let queryParameters;
@@ -172,6 +174,8 @@ exports.addSong = async function (req, res, next) {
             if (resData.current && JSON.stringify(resData.current) !== '{}' && typeof resData.current.title !== "undefined") {
                 resData.playlist.push(resData.current);
             }
+            // TODO: Formatter URL pour retirer les Param inutile (list & index)
+            // "https://www.youtube.com/watch?v=n43SAJ361Y4&list=PL7NDfWdeJCVKZevVhSoD2IeSoNDDeFs8l&index=66"
             resData.current = {
                 title: newSong.title,
                 url: newSong.url
@@ -206,20 +210,20 @@ exports.clearPlaylist = async function (req, res, next) {
         let { query, params } = req;
 
         // Validation
-        var access = headerAccess.authorized;
-        var authorized = false;
-         access.forEach(key => {
-            if (authorized) { return; }
+        // var access = headerAccess.authorized;
+        // var authorized = false;
+        //  access.forEach(key => {
+        //     if (authorized) { return; }
 
-            var result = req.rawHeaders.find(e => e.includes(key));
-            if (result && result.length > 0) {
-                authorized = true;
-            }     
-        });
-        if (!authorized) {
-            res.send(401);
-            return;
-        }
+        //     var result = req.rawHeaders.find(e => e.includes(key));
+        //     if (result && result.length > 0) {
+        //         authorized = true;
+        //     }     
+        // });
+        // if (!authorized) {
+        //     res.send(401);
+        //     return;
+        // }
 
         // Gestion des paramètres
         let queryParameters;
