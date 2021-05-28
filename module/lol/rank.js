@@ -30,6 +30,7 @@ module.exports = class LeagueEntry {
         this.fullString = ((params.fullstring === 1) || (params.fullstring === true));
         this.showWinRate = ((params.winrate === 1) || (params.winrate === true));
         this.showType = ((params.type === 1) || (params.type === true));
+        this.fullqueue = ((params.fq === 1) || (params.fq === true));
 
         this.series = params.series;
         this.queueType = params.queuetype;
@@ -252,7 +253,11 @@ module.exports = class LeagueEntry {
                 }
 
                 if (this.showType) {
-                    gameType = ` (${league.getGameType()})`;
+                    if (this.fullqueue && league.getGameType() === "SoloQ") {
+                        gameType = ` (SoloQ/DuoQ)`;
+                    } else {
+                        gameType = ` (${league.getGameType()})`;
+                    }
                 }
 
                 if ((this.fullString && withName) || (this.fullString && (typeof withName !== "undefined" && withName))) {

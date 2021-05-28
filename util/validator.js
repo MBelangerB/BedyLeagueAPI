@@ -191,6 +191,10 @@ validator.lol = {
                     if (optionalParams && optionalParams.queuetype && this.isValidQueueType(optionalParams.queuetype)) {
                         queryParameters.queuetype = optionalParams.queuetype;
                     }
+                    queryParameters.fq = 1;
+                    if (optionalParams && optionalParams.fq && (optionalParams.fq === "0" || optionalParams.fq === 0)) {
+                        queryParameters.fq = 0;
+                    }
                     // series
                     queryParameters.series = '✓X-';
                     if (optionalParams && optionalParams.series) {

@@ -176,12 +176,18 @@ exports.addSong = async function (req, res, next) {
             }
             // TODO: Formatter URL pour retirer les Param inutile (list & index)
             // "https://www.youtube.com/watch?v=n43SAJ361Y4&list=PL7NDfWdeJCVKZevVhSoD2IeSoNDDeFs8l&index=66"
+            var currentdate = new Date();
+            var playDate = currentdate.toLocaleDateString("fr-CA");
+            var playTime = currentdate.toLocaleTimeString("fr-CA");
+
             resData.current = {
                 title: newSong.title,
-                url: newSong.url
+                url: newSong.url,
+                playtime: playDate.concat(" ", playTime)
             } 
 
-            extData.updateExtensionFile(queryParameters.token)
+            extData.updateExtensionFile(queryParameters.token);
+            
             // Retourner en JSON
             var result = {
                 "code": 200,
