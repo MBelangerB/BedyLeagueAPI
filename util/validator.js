@@ -245,7 +245,9 @@ validator.lol = {
 
             var arrUsernames = summonerName.trim().split(";");
             arrUsernames.forEach(function myFunction(summonerName) {
-                var re = new RegExp('^[0-9\u00C0-\u024F _.\\w]+$', 'giu');
+                // TODO: Size 3 a 16
+                // Caractère
+                var re = new RegExp('^[0-9\u00C0-\u024F _.α\\w]+$', 'giu');
                 if (re.test(summonerName)) {
                     valid = true;
                 }

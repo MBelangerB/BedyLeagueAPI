@@ -116,7 +116,7 @@ exports.addSong = async function (req, res, next) {
         // if (!authorized) {
         //     res.send(401);
         //     return;
-        // }
+        // } 
 
         // Gestion des paramètres
         let queryParameters;
@@ -201,7 +201,7 @@ exports.addSong = async function (req, res, next) {
     }
     catch (ex) {
         console.error(ex);
-        res.send(ex);
+        res.send('An error occured');
     }
 };
 
