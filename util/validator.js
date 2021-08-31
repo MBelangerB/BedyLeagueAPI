@@ -240,6 +240,7 @@ validator.lol = {
         //  Validating Calls (^[0-9\\p{L} _\\.]+$)
         // https://stackoverflow.com/questions/20690499/concrete-javascript-regex-for-accented-characters-diacritics
         // Pour pseudo avec caractère accentué
+        //  βlue Łagoon 
         var valid = false;
         if (typeof summonerName !== "undefined" && summonerName.trim().length >= 0) {
 
@@ -247,7 +248,7 @@ validator.lol = {
             arrUsernames.forEach(function myFunction(summonerName) {
                 // TODO: Size 3 a 16
                 // Caractère
-                var re = new RegExp('^[0-9\u00C0-\u024F _.α\\w]+$', 'giu');
+                var re = new RegExp('^[0-9\u00C0-\u024F _.αβŁ\\w]+$', 'giu');
                 if (re.test(summonerName)) {
                     valid = true;
                 }
