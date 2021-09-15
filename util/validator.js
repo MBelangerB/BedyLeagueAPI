@@ -248,10 +248,14 @@ validator.lol = {
             arrUsernames.forEach(function myFunction(summonerName) {
                 // TODO: Size 3 a 16
                 // Caractère
+                // MBB 2021-08-31 : Désactivation temporaire de la validation
+                /*
                 var re = new RegExp('^[0-9\u00C0-\u024F _.αβŁ\\w]+$', 'giu');
                 if (re.test(summonerName)) {
                     valid = true;
                 }
+                */
+               valid = true;
             });
         }
         return valid;
@@ -331,7 +335,9 @@ validator.lol = {
             'tft': 'tft',
             'solo5': 'solo5',
             'solo': 'solo5',
-            'soloq': 'solo5'
+            'soloq': 'solo5',
+            'flex': 'flex',
+            'flexq': 'flex'
         };
 
         if (typeof queueTypeInfo !== "undefined" && queueTypeInfo.trim().length > 0) {

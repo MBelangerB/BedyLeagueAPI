@@ -34,7 +34,11 @@ exports.rank = async function (req, res, next) {
             queryParameters = queryString;
         }
         if (validationErrors && validationErrors.length > 0) {
-            res.send(validationErrors)
+            console.error("Error in validationErrors")
+            console.error(validationErrors);
+            res.send(`'please try again'`);
+
+        //    res.send(validationErrors)
             return;
         }
         validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters, validator.lol.METHOD_ENUM.RANK);
@@ -46,14 +50,18 @@ exports.rank = async function (req, res, next) {
 
         await summoner.getSummonerInfo().then(async function (result) {
             if (result.code !== 200) {
-                res.send(`An error occured during getSummonerInfo`)
+                console.error(`Return code is invalid in getSummonerInfo`);
+                console.error(`${result.code} - ${result}`);
+                res.send(`'please try again'`);
             } else {
                 return result.data;
             }
             return;
 
         }).catch(error => {
-            res.send(`${error.code} - ${error.err.statusMessage}`);
+            console.error(`An error occured during getSummonerInfo`);
+            console.error(`${error.code} - ${error.err.statusMessage}`);
+            res.send(``);
             return;
         });
         queryParameters.summoner = summoner.summonerInfo;
@@ -72,13 +80,16 @@ exports.rank = async function (req, res, next) {
             return;
 
         }).catch(error => {
-            res.send(`${error.code} - ${error.err.statusMessage}`);
+            console.error(`An error occured during getLeagueRank`);
+            console.error(`${error.code} - ${error.err.statusMessage}`);
+            res.send(``);
             return;
         });
 
 
     } catch (ex) {
+        console.error("Error in GetRank")
         console.error(ex);
-        res.send(ex);
+        res.send(`'please try again'`);
     }
 };

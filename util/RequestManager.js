@@ -30,7 +30,8 @@ class RequestManager {
     }
 
     /*
-        Methode base pour executer Query
+        Methode base pour executer Query.
+
     */
     static async ExecuteTokenRequest(requestUrl, tokenType) {
         var self = this;
@@ -64,7 +65,7 @@ class RequestManager {
                 if (error.response.status === 404) {
                     reject(error.response);
                 } else {
-                    console.error(`An error occured in (static) RequestManager.ExecuteRequest(url, token).\n ${error}`);
+                    console.error(`An error occured in (base static) RequestManager.ExecuteRequest(url, token).\n ${error}`);
                     reject(error);
                 }
             });
@@ -107,7 +108,7 @@ class RequestManager {
                 if (error.response.status === 404) {
                     reject(error.response);
                 } else {
-                    console.error(`An error occured in (static) RequestManager.ExecuteRequest(url).\n ${error}`);
+                    console.error(`An error occured in (Axios static) RequestManager.ExecuteRequest(url).\n ${error}`);
                     reject(error);
                 }
             });
