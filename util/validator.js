@@ -288,7 +288,7 @@ validator.lol = {
         return valid;
     },
     convertToRealRegion: function(params) {
-        var region = params.region;
+        var region = params.region.toUpperCase();
         var regionData =  {
             'EUW': 'EUW1',
             'EUW1': 'EUW1',
