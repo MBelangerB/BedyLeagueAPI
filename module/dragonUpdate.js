@@ -25,9 +25,15 @@ class dragonUpdate {
 
     needUpdate = false;
 
+    log = {data:[]};
+
 
     /* Mis en place des fonctions */
     constructor() {
+    }
+
+    addLog(message) {
+        this.log.data.push(message);
     }
 
     /**
@@ -60,7 +66,7 @@ class dragonUpdate {
         return new Promise(async (resolve, reject) => {
             try {
                 await this.createNewFolder(this.configPath);
-
+                 //   console.info(this.log);
                 if (!fs.existsSync(this.getConfigFullPath())) {
                     await writeFile(this.getConfigFullPath(), this.castDataToJSON({ "dragonVersion": "1.0" }));
                 }
@@ -82,18 +88,22 @@ class dragonUpdate {
      *   Effectue la création des répertoires
      */
     async createNewFolder(folder) {
+        // var vm = this;
         return new Promise(async (resolve, reject) => {
             try {
                 if (folder) {
                     if (!fs.existsSync(folder)) {
                         await fs.mkdirSync(folder);
+
+                        // vm.addLog(`  Le répertoire '${folder}' a été crée avec succès.`);
                         console.log(`  Le répertoire '${folder}' a été crée avec succès.`);
                     } else {
+                        // vm.addLog(`  Le répertoire '${folder}' existe déjà.`);
                         console.log(`  Le répertoire '${folder}' existe déjà.`)
                     }
                     resolve(true);
                 } else {
-                    console.log(`  Erreur! Il est impossible d'effectuer la création du répertoire '${folder}'.`);
+                    console.warn(`  Erreur! Il est impossible d'effectuer la création du répertoire '${folder}'.`);
                     reject(false)
                 }
             } catch (ex) {
@@ -130,8 +140,12 @@ class dragonUpdate {
 
                 if (requestComplete) {
                     var filepath = this.getDragonFullPath(`/version.json`);
-                    await writeFile(filepath, data);
-
+                    if (typeof(data) !== "string") {
+                        await writeFile(filepath, JSON.stringify(data));
+                    } else {
+                        await writeFile(filepath, data);
+                    }
+                    
                     this.needUpdate = (this.currentVersion < latestVersion);
                     if (this.needUpdate) {
                         this.currentVersion = latestVersion;

@@ -122,7 +122,7 @@ class staticFunction {
     }
     static isValidRegion(region) {
         var valid = false;
-        switch (region) {
+        switch (region.toUpperCase()) {
             case 'NA':
             case 'NA1':
             case 'EUW':
