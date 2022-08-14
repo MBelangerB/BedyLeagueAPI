@@ -1,0 +1,62 @@
+<h1>{{title}}</h1>
+<p>Welcome to {{title}}</p>
+
+
+
+	<form>
+		<!--  class="row g-3" -->
+		<div class="container">
+			<div class="row g-3 align-items-center">
+				<div class="input-group mb-3">
+					<button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+						aria-expanded="false">Select a region</button>
+					<ul class="dropdown-menu">
+						<li><a class="dropdown-item" href="#">NA</a></li>
+						<li><a class="dropdown-item" href="#">EUW</a></li>
+						<li><a class="dropdown-item" href="#">EUNE</a></li>
+					</ul>
+					<input type="text" class="form-control" aria-label="Enter your summonername"
+						placeholder="Enter your summonerName">
+				</div>
+
+
+				<legend>Parameters</legend>
+				<div class="col-md-6">
+					<label class="form-check-label" for="selectQueue">Queue</label> <br />
+					<select class="form-select" aria-label="Select a queue" id="selectQueue">
+						<option selected>Select a queue</option>
+						<option value="soloQ" selected="true">SoloQ</option>
+						<option value="flexQ">FlexQ</option>
+						<option value="tft">TFT</option>
+					</select>
+				</div>
+				<div class="col-md-6">
+					<!-- all -->
+					<input type="checkbox" class="form-check-input" id="chkShowAllQueue">
+					<label class="form-check-label" for="chkShowAllQueue">Afficher toutes les queues</label> <br />
+
+					<!-- type -->
+					<input type="checkbox" class="form-check-input" id="chkShowWinRate">
+					<label class="form-check-label" for="chkShowWinRate">Afficher le nom de la queue</label> <br />
+				</div>
+
+
+				<div class="form-check">
+					<div class="mb-6">
+						<!-- lp -->
+						<input type="checkbox" class="form-check-input" id="chkShowLP">
+						<label class="form-check-label" for="chkShowLP">Afficher les LP</label> <br />
+
+						<!-- winrate -->
+						<input type="checkbox" class="form-check-input" id="chkShowWinRate">
+						<label class="form-check-label" for="chkShowWinRate">Afficher les WinRate</label> <br />
+					</div>
+				</div>
+
+				<div>
+					<button id="btnShow" type="submit" class="btn btn-primary">Aperçu</button>
+					<button id="btnGenerate" type="submit" class="btn btn-primary">Générer</button>
+				</div>
+			</div>
+		</div>
+	</form>

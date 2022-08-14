@@ -23,35 +23,58 @@ var summonerRouter = require('./routes/lol/summoner');
 var overlayRouter = require('./routes/api/overlay');
 var extensionRouter = require('./routes/api/extension');
 
+/* Twitch Route */
+var twitchRouter = require('./routes/twitch/eventsub')
+
 /* OW Route */
 var overwatchRouter = require('./routes/ow/rank');
 
 /* Initialize Express */
 var app = express();
 
-/* Middleware */
+/* View */
+app.engine('hbs', hbs({
+    helpers: {
+      GreaterThanZero: function(x) { (x > 0); }
+    },
+    defaultLayout: 'layout',
+    extname: 'hbs',
+    layoutsDir: path.join(__dirname,'/views/layouts/'),
+    partialsDir : path.join(__dirname, '/views/partials/')
+  }));
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'hbs');
+  
 
-app.use(logger('[:date[iso]] :method :url :status :res[content-length] - :response-time ms')); /* TODO: Valider le type */
+/* Middleware */
+app.use(logger('[:date[iso]] :method "":url" :status :res[content-length] - :response-time ms - :remote-addr')); /* TODO: Valider le type */
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false })); // false
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/emblems', express.static('static/images/emblems'))
 
+
+
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hbs');
+// app.set('views', path.join(__dirname, 'views'));
+// app.set('view engine', 'hbs');
+
 
 
 /* Dragon Load on start */
 const dragonLoading = require('./controller/dragonLoading');
 app.use(async function (req, res, next) {
-    let dragLoad = new dragonLoading();
-    await dragLoad.loadChampion('fr_fr').then(async function (result) {
-        if (result) {
-            await dragLoad.convertToLeagueChampion('fr_fr');
-        }
-    });
+    if (req.url.includes('overlay')) { 
+        console.log('dragon loading');
+
+        let dragLoad = new dragonLoading();
+        await dragLoad.loadChampion('fr_fr').then(async function (result) {
+            if (result) {
+                await dragLoad.convertToLeagueChampion('fr_fr');
+            }
+        });
+    }
     next();
 });
 
@@ -82,12 +105,16 @@ app.get('/:lang?/ow/rank/:region/:platform/:tag', overwatchRouter.rank);
 app.get('/rank', rankRouter.rank);
 app.get('/v2/rank', rankRouter.rank);
 
+// Twitch
+// app.get('/twitch/eventSub', twitchRouter.eventSub);
+// app.post('/twitch/eventSub', twitchRouter.eventSub);
+
 // Navigator Extension
-app.post('/api/register', extensionRouter.registerAPI);
-app.post('/api/register/:username/:token', extensionRouter.registerAPI);
-app.put('/api/song/:token', extensionRouter.addSong);
-app.get('/api/song/:token', extensionRouter.getLastSong);
-app.delete('/api/song/:token', extensionRouter.clearPlaylist);
+// app.post('/api/register', extensionRouter.registerAPI);
+// app.post('/api/register/:username/:token', extensionRouter.registerAPI);
+// app.put('/api/song/:token', extensionRouter.addSong);
+// app.get('/api/song/:token', extensionRouter.getLastSong);
+// app.delete('/api/song/:token', extensionRouter.clearPlaylist);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

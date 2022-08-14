@@ -4,41 +4,76 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="">
-  <meta name="author" content="Mathieu (Bedy)">
+  <meta name="description"
+    content="Bedy API - API League of legend pour obtenir le rang de l'invocateur. Passerelle avec les bot twitch">
+  <meta name="author" content="Mathieu B - Elmat90">
   <!--<link rel="icon" href="/docs/4.0/assets/img/favicons/favicon.ico"> -->
 
-  <title>{{suggestedChamps.pageTitle}}</title>
+  <title>{{vm.pageTitle}}</title>
 
   <!-- Add icon library -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <!-- Social icon : https://www.w3schools.com/howto/howto_css_social_media_buttons.asp -->
 
   <!-- Bootstrap core CSS -->
-  <link href="/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Custom styles for this template -->
-  {{#unless suggestedChamps.connected}}
-    <!-- <link href="/css/signin.css" rel="stylesheet"> -->
-  {{/unless}}
-
-  
-  <!-- <link href="/css/starter-template.css" rel="stylesheet">
-  <link href="/css/sticky-footer-navbar.css" rel="stylesheet"> -->
+  {{!--
+  <link href="/css/bootstrap.min.css" rel="stylesheet"> --}}
 
 
-    <link href="/css/style.css" rel="stylesheet">
+  {{!--
+  <link href="/css/starter-template.css" rel="stylesheet"> --}}
+  <link href="/css/sticky-footer-navbar.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/stylesheets/style.css">
+  <!-- NA -->
+  {{!--
+  <link href="/css/style.css" rel="stylesheet"> --}}
+
+
+  <!-- CSS only -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" 
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" 
+  integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+
+
+  <script
+    src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+    crossorigin="anonymous"></script>
+
+
+  <style>
+    body.bg-dark main {
+      color: white;
+      padding-top: 15px;
+    }
+
+    body.bg-dark main .btn-outline-secondary {
+     /* background-color: whitesmoke; */
+      color: #212529;
+      background-color: #fff;
+    }
+
+    /*
+		!-- body {
+			background-color: #282828;
+			color: white;
+		}
+
+		.btn-outline-secondary  {
+			background-color: white;
+		}
+    */
+  </style>
+
+
 </head>
+<!-- text-center -->
 
-
-<style>
-  .miniProfileIcon {
-    width: 42px;
-    height: 42px;
-    border-radius: 20px;
-  }
-</style>
-
-<body class="text-center {{bodyClass}}">
+<body class="{{bodyClass}}">
   <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
     <a class="navbar-brand" href="/">BedyAPI</a>
 
@@ -52,38 +87,16 @@
         <li class="nav-item active">
           <a class="nav-link" href="#">Accueil <span class="sr-only">(current)</span></a>
         </li>
-        <li class="nav-item dropdown">
+        {{!-- <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01" data-toggle="dropdown"
             aria-haspopup="true" aria-expanded="false">Documentation</a>
           <div class="dropdown-menu" aria-labelledby="dropdown01">
             <a class="dropdown-item" href="#">Rank</a>
             <a class="dropdown-item" href="#">Rotate</a>
           </div>
-        </li>
+        </li> --}}
       </ul>
     </div>
-    <!-- https://stackoverflow.com/questions/19733447/bootstrap-navbar-with-left-center-or-right-aligned-items 
-            Exemple : Bouton centrale -->
-    {{#if suggestedChamps.connected}}
-    <div class="navbar-collapse collapse" id="navbar-list-4" style="height: 32px;">
-      <ul class="navbar-nav ml-auto">
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown"
-            aria-haspopup="true" aria-expanded="false">
-            <img src="{{suggestedChamps.twitch.profile_image_url}}" width="32" height="32" class="rounded-circle">
-          </a>
-          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-            <!-- LISTE DES SHARED -->
-            <a class="dropdown-item" href="#">Configuration</a>
-            <a class="dropdown-item" href="/auth/logout">Se déconnecter</a>
-          </div>
-        </li>
-      </ul>
-    </div>
-
-    {{else}}
-    <!-- TODO -->
-    {{/if}}
   </nav>
 
   <main class="{{mainClass}}">
@@ -91,21 +104,24 @@
     {{{body}}}
   </main>
 
-  <footer class="footer">
+  <footer class="footer bg">
     <div class="container">
-      <span class="text-muted">BedyAPI par Elmat90 &copy; 2020</span>
+      <span class="text-muted">BedyAPI par Elmat90 &copy; 2022</span>
     </div>
   </footer>
 
-  <!-- Bootstrap core JavaScript
-    ================================================== -->
-  <!-- Placed at the end of the document so the pages load faster -->
-  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-    integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-    crossorigin="anonymous"></script>
-  <script>window.jQuery || document.write('<script src="/js/jquery-slim.min.js"><\/script>')</script>
-  <script src="/js/popper.min.js"></script>
-  <script src="/js/bootstrap.min.js"></script>
+
+
+{{!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" 
+      integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" 
+      crossorigin="anonymous"></script> --}}
+
+  <!-- Option 1: Bootstrap Bundle with Popper --> 
+  {{!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" 
+  integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" 
+  crossorigin="anonymous"></script> --}}
+
+
 </body>
 
 </html>

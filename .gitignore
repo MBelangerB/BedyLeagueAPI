@@ -37,3 +37,12 @@
 
 # dotenv environment variables file
 .env
+
+# temps
+/docker/*
+/docker/nginx/*
+/V1.3/*
+Dockerfile
+docker-compose.yml
+.sequelizerc
+/db/*
