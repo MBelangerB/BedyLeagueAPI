@@ -5,11 +5,6 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 require('./util/Prototype');
 
-//Loads the handlebars module
-const hbs = require('express-handlebars');
-const hbshelpers = require('handlebars-helpers');
-const multihelpers = hbshelpers();
-
 /* Base Route */
 var indexRouter = require('./routes/index');
 var dragonsRouter = require('./routes/dragon');
@@ -20,8 +15,7 @@ var leagueRouter = require('./routes/lol/league');
 var summonerRouter = require('./routes/lol/summoner');
 
 /* API Route */
-var overlayRouter = require('./routes/api/overlay');
-var extensionRouter = require('./routes/api/extension');
+var emailRouteur = require('./routes/api/email');
 
 /* OW Route */
 var overwatchRouter = require('./routes/ow/rank');
@@ -36,11 +30,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/emblems', express.static('static/images/emblems'))
-
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hbs');
 
 
 /* Dragon Load on start */
@@ -70,24 +59,14 @@ app.get('/:lang?/lol/summonerInfo/:region/:summonerName', summonerRouter.summone
 app.get('/:lang?/lol/rank', rankRouter.rank);
 app.get('/:lang?/lol/rank/:region/:summonerName', rankRouter.rank);
 
-// Api Route
-app.get('/:lang?/overlay/rank', overlayRouter.rank);
-app.get('/:lang?/overlay/rank/:region/:summonerName', overlayRouter.rank);
-
 // Overwatch Route
 app.get('/:lang?/ow/rank', overwatchRouter.rank);
 app.get('/:lang?/ow/rank/:region/:platform/:tag', overwatchRouter.rank);
 
 // Temporary redirection
-app.get('/rank', rankRouter.rank);
-app.get('/v2/rank', rankRouter.rank);
-
-// Navigator Extension
-app.post('/api/register', extensionRouter.registerAPI);
-app.post('/api/register/:username/:token', extensionRouter.registerAPI);
-app.put('/api/song/:token', extensionRouter.addSong);
-app.get('/api/song/:token', extensionRouter.getLastSong);
-app.delete('/api/song/:token', extensionRouter.clearPlaylist);
+// TODO: Remove
+app.get('/rank', rankRouter.rankRework);
+app.get('/v2/rank', rankRouter.rankRework);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -102,7 +81,7 @@ app.use(function (err, req, res, next) {
 
     // render the error page
     res.status(err.status || 500);
-    res.render('error');
+    res.send('error');
 });
 
 module.exports = app;

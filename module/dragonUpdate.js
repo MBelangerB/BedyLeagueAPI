@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 var axios = require('axios'); 
 
+require('../util/Prototype');
 const util = require("util");
 const { basename } = require('path');
 const writeFile = util.promisify(fs.writeFile);
@@ -146,11 +147,15 @@ class dragonUpdate {
                         await writeFile(filepath, data);
                     }
                     
-                    this.needUpdate = (this.currentVersion < latestVersion);
+                    const oldestVersion = this.currentVersion.replaceAll('[.]', '');
+                    const newVersion = latestVersion.replaceAll('[.]', '');
+
+                    this.needUpdate = (parseInt(oldestVersion) < parseInt(newVersion));
                     if (this.needUpdate) {
                         this.currentVersion = latestVersion;
                         await this.updateAPIConfig();
                         await this.loadAPIConfigFile();
+                        console.log('  Config interna a été mis-à-jour');
                     } else {
                         console.log('  Les fichiers sont à jours');
                     }
