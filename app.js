@@ -1,5 +1,6 @@
 var createError = require('http-errors');
 var express = require('express');
+var cors = require('cors')
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
@@ -24,13 +25,27 @@ var overwatchRouter = require('./routes/ow/rank');
 var app = express();
 
 /* Middleware */
-
 app.use(logger('[:date[iso]] :method :url :status :res[content-length] - :response-time ms')); /* TODO: Valider le type */
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+/* Cors configuration */
+//TODO: Whitelist in config
+var allowlist = ['http://bedyapi.com', 'https://bedyapi.com', 'localhost', 'localhost:4200', 'http://localhost:4200'];
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (allowlist.indexOf(origin) !== -1) {
+            callback(null, true)
+        } else {
+            callback(new Error('401'))
+        }
+    },
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders:'Content-Type, Authorization, Origin, X-Requested-With, Accept'
+}
 
 /* Dragon Load on start */
 const dragonLoading = require('./controller/dragonLoading');
@@ -68,6 +83,11 @@ app.get('/:lang?/ow/rank/:region/:platform/:tag', overwatchRouter.rank);
 app.get('/rank', rankRouter.rankRework);
 app.get('/v2/rank', rankRouter.rankRework);
 
+// Private API routing
+// app.options('/api/sendEmail', cors())
+app.options('*', cors()) // include before other routes
+app.post('/api/sendEmail', cors(corsOptions), emailRouteur.sendMail);
+
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
     next(createError(404));
@@ -79,9 +99,17 @@ app.use(function (err, req, res, next) {
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-    // render the error page
-    res.status(err.status || 500);
-    res.send('error %d - ', err.status, err.message);
+    if (err.message == '401') {
+        // render the error page
+        res.status(401).send('Unauthorized');
+    } else {
+        const returnMessage = `Error ${err.status} \n ${err.message}`;
+        console.error(err);
+
+        // render the error page
+        res.status(err.status || 500);
+        res.send(returnMessage);
+    }
 });
 
 module.exports = app;
