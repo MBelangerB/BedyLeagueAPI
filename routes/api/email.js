@@ -44,7 +44,6 @@ exports.sendMail = async function (req, res, next) {
             } else {
                 console.log('Email sent: ' + info.response);
                 return res.json({ msg: 'Email will be sent with success.' });
-
             }
         });
 

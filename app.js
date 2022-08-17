@@ -33,7 +33,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 /* Cors configuration */
 //TODO: Whitelist in config
-var allowlist = ['http://bedyapi.com', 'https://bedyapi.com', 'localhost', 'localhost:4200', 'http://localhost:4200'];
+var allowlist = ['http://bedyapi.com', 'http://localhost:4200', 'http://localhost:8080', 'http://localhost:8081'];
 
 const corsOptions = {
     origin: (origin, callback) => {
@@ -71,8 +71,8 @@ app.get('/:lang?/lol/topMasteries/:region/:summonerName', summonerRouter.topMast
 app.get('/:lang?/lol/summonerInfo', summonerRouter.summonerInfo);
 app.get('/:lang?/lol/summonerInfo/:region/:summonerName', summonerRouter.summonerInfo);
 
-app.get('/:lang?/lol/rank', rankRouter.rank);
-app.get('/:lang?/lol/rank/:region/:summonerName', rankRouter.rank);
+app.get('/:lang?/lol/rank', cors(), rankRouter.rank);
+app.get('/:lang?/lol/rank/:region/:summonerName',cors(), rankRouter.rank);
 
 // Overwatch Route
 app.get('/:lang?/ow/rank', overwatchRouter.rank);
