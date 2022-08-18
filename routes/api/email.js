@@ -23,7 +23,7 @@ function initTransporter() {
 
 exports.sendMail = async function (req, res, next) {
     try {
-        console.log('Coucou l\'email.');
+        console.log('Enter in SendMail');
         initTransporter();
         let { subject, content, emailFrom, name } = req.body;
 
@@ -40,15 +40,19 @@ exports.sendMail = async function (req, res, next) {
         await transporter.sendMail(mailOptions, function (error, info) {
             if (error) {
                 console.log(error);
-                return res.json({ msg: 'Cannot Send Mail. An Error Occurred while delivering this message.' });
+                return res.status(503).json({ msg: 'Cannot Send Mail. An Error Occurred while delivering this message.' });
             } else {
                 console.log('Email sent: ' + info.response);
-                return res.json({ msg: 'Email will be sent with success.' });
+                return res.status(200).json({ msg: 'Email will be sent with success.' });
             }
         });
 
     } catch (ex) {
         console.error(ex);
-        res.send(ex);
+        return res.status(500).json({
+            msg: 'Cannot Send Mail. An Error Occurred while delivering this message.',
+            err: ex
+        });
     }
 }
+// https://umbraco.com/knowledge-base/http-status-codes/
