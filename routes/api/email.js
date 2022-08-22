@@ -40,10 +40,10 @@ exports.sendMail = async function (req, res, next) {
         await transporter.sendMail(mailOptions, function (error, info) {
             if (error) {
                 console.log(error);
-                return res.status(503).json({ msg: 'Cannot Send Mail. An Error Occurred while delivering this message.' });
+                return res.status(503).json({ OK: false, msg: 'Cannot Send Mail. An Error Occurred while delivering this message.' });
             } else {
                 console.log('Email sent: ' + info.response);
-                return res.status(200).json({ msg: 'Email will be sent with success.' });
+                return res.status(200).json({ OK: true, msg: 'Email will be sent with success.' });
             }
         });
 
@@ -51,6 +51,7 @@ exports.sendMail = async function (req, res, next) {
         console.error(ex);
         return res.status(500).json({
             msg: 'Cannot Send Mail. An Error Occurred while delivering this message.',
+            OK: false,
             err: ex
         });
     }
