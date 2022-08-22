@@ -33,7 +33,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 /* Cors configuration */
 //TODO: Whitelist in config
-var allowlist = ['http://bedyapi.com', 'http://localhost:4200', 'http://localhost:8080', 'http://localhost:8081'];
+var allowlist = ['http://bedyapi.com', 'http://localhost:4200', 'http://localhost:8080', 'http://localhost:8081', 'http://localhost:3001', 
+                'http://test.bedypapi.com', 'http://web.bedyapi.com'];
 
 const corsOptions = {
     origin: (origin, callback) => {
@@ -50,6 +51,7 @@ const corsOptions = {
 /* Dragon Load on start */
 const dragonLoading = require('./controller/dragonLoading');
 app.use(async function (req, res, next) {
+    console.log('Start DragonLoading');
     let dragLoad = new dragonLoading();
     await dragLoad.loadChampion('fr_fr').then(async function (result) {
         if (result) {
