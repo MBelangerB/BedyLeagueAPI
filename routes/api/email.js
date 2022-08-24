@@ -14,13 +14,10 @@ function initTransporter() {
         transporter = nodemailer.createTransport({
             host: process.env.email_host,
             port: parseInt(process.env.email_port),
-            secure: process.env.email_secure, // true for 465, false for other ports
+            secure: false, // process.env.email_secure, // true for 465, false for other ports
             auth: {
                 user: process.env.email_username,
                 pass: process.env.email_passwd,
-            },
-            tls: {
-                ciphers:'SSLv3'
             }
         });
     }
