@@ -19,6 +19,9 @@ function initTransporter() {
                 user: process.env.email_username,
                 pass: process.env.email_passwd,
             },
+            tls: {
+                ciphers:'SSLv3'
+            }
         });
     }
 }
