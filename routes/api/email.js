@@ -18,7 +18,11 @@ function initTransporter() {
             auth: {
                 user: process.env.email_username,
                 pass: process.env.email_passwd,
-            }
+            },
+            // TODO: C'est pas jolie ça
+			tls: {
+				rejectUnauthorized: false
+			}
         });
     }
 }
@@ -27,13 +31,15 @@ exports.sendMail = async function (req, res, next) {
     try {
         console.log('Enter in SendMail');
         initTransporter();
-        let { subject, content, emailFrom, name } = req.body;
+        let { subject, content, email, name } = req.body;
+        // replyTo  ==> emailFrom
 
         let message = '<b>From </b> :' + name + ' <br/>' + content;
 
         var mailOptions = {
-            from: emailFrom,
-            to: process.env.email_emailTo,
+            from: process.env.email_emailTo,
+            to: process.env.email_emailTo, // qui recoit le mail  ===> a moi que je veux l'envoyer
+            replyTo: email,
             subject: subject,
             text: message,
             html: message
