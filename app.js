@@ -33,8 +33,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 /* Cors configuration */
 //TODO: Whitelist in config
-var allowlist = ['http://bedyapi.com', 'http://localhost:4200', 'http://localhost:8080', 'http://localhost:8081', 'http://localhost:3001', 
-                'http://test.bedypapi.com', 'http://web.bedyapi.com'];
+// FrontEnd Address
+var allowlist = ['http://bedyapi.com', 'https://bedyapi.com',
+                'http://localhost:4200', 'http://localhost:8080', 
+                'http://web.bedyapi.com', 'https://web.bedyapi.com'];
 
 const corsOptions = {
     origin: (origin, callback) => {

@@ -32,14 +32,13 @@ exports.sendMail = async function (req, res, next) {
         console.log('Enter in SendMail');
         initTransporter();
         let { subject, content, email, name } = req.body;
-        // replyTo  ==> emailFrom
 
         let message = '<b>From </b> :' + name + ' <br/>' + content;
 
         var mailOptions = {
-            from: process.env.email_emailTo,
-            to: process.env.email_emailTo, // qui recoit le mail  ===> a moi que je veux l'envoyer
-            replyTo: email,
+            from: process.env.email_emailFrom, // Email who sent the mail. It's postfix email
+            to: process.env.email_emailTo, // Email who receive the mail. Target
+            replyTo: email, // Person who send the mail
             subject: subject,
             text: message,
             html: message
