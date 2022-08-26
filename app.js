@@ -24,8 +24,13 @@ var overwatchRouter = require('./routes/ow/rank');
 /* Initialize Express */
 var app = express();
 
+/* Add morgan token */
+logger.token('host', function(req, res) {
+    return req.hostname;
+});
+
 /* Middleware */
-app.use(logger('[:date[iso]] :method :url :status :res[content-length] - :response-time ms')); /* TODO: Valider le type */
+app.use(logger('[:date[iso]] :method :host :url :status :res[content-length] - :response-time ms')); /* TODO: Valider le type */
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
