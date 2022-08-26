@@ -28,9 +28,12 @@ var app = express();
 logger.token('host', function(req, res) {
     return req.hostname;
 });
+logger.token('origin', function(req, res) {
+    return req.header('Origin');
+});
 
 /* Middleware */
-app.use(logger('[:date[iso]] :method :host :url :status :res[content-length] - :response-time ms')); /* TODO: Valider le type */
+app.use(logger('[:date[iso]] :method - Origin (:origin) Remote (:remote-addr) Host (:host) - :url :status :res[content-length] - :response-time ms')); /* TODO: Valider le type */
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());

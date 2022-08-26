@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   nodeAlpine:
-    container_name: bedyboy-apiServer
+    container_name: bedybot-apiServer
     build:
       context: .
       target: nodeAlpine
@@ -9,7 +9,7 @@ services:
       - 8081:3000
     image: bedybot-apiserver:latest
     volumes:
-      - ./dist/website:/usr/share/nginx/html
+      - .:/usr/src/app
 
   mailhog:
     container_name: mailhog
