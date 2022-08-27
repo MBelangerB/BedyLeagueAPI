@@ -31,9 +31,34 @@ logger.token('host', function(req, res) {
 logger.token('origin', function(req, res) {
     return req.header('Origin');
 });
+logger.token('liveBot', function(req, res) {
+    let bot = '';
+    try {
+        if (req.header('user-agent')?.toLocaleLowerCase().includes('nightbot-url-fetcher')) {
+            // ["nightbot-channel", "nightbot-response-url","nightbot-user","user-agent"]
+            bot = 'NightBot';
+        } else if (req.header('user-agent')?.toLocaleLowerCase().includes('wizebot')) {
+            // ["x-wizebot-channel-twitchid","x-wizebot-channel-twitchname","user-agent"]
+            bot = 'WizeBot';
+
+        } else if (req.header('user-agent')?.toLocaleLowerCase().includes('streamelements')) {
+            // [ "x-streamelements-channel", "user-agent"]
+            bot = 'StreamElements';
+
+        } else if (req.header('user-agent')?.toLocaleLowerCase().includes('streamlabs')) {
+            // [ "x-channel",, "user-agent" ]
+            bot = 'StreamLabs';
+        }
+    } catch {
+        // do nothing
+    }
+    return bot;
+});
 
 /* Middleware */
-app.use(logger('[:date[iso]] :method - Origin (:origin) Remote (:remote-addr) Host (:host) - :url :status :res[content-length] - :response-time ms')); /* TODO: Valider le type */
+/* Origin (:origin)  */
+// app.use(logger('[:date[iso]] :method - :liveBot Remote (:remote-addr) Host (:host) - :url :status :res[content-length] - :response-time ms'));
+app.use(logger('[:date[iso]] :method - (:liveBot, Host :host) - :url :status :res[content-length] - :response-time ms'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -58,6 +83,33 @@ const corsOptions = {
     allowedHeaders:'Content-Type, Authorization, Origin, X-Requested-With, Accept'
 }
 
+/* Identify Bot */
+// app.use(async function (req, res, next) {
+//     try {
+//         // [ "x-forwarded-for" ]
+//         if (req.header('user-agent')?.toLocaleLowerCase().includes('nightbot-url-fetcher')) {
+//             // ["nightbot-channel", "nightbot-response-url","nightbot-user","user-agent"]
+//            console.info('NightBot')
+//         } else if (req.header('user-agent')?.toLocaleLowerCase().includes('wizebot')) {
+//             // ["x-wizebot-channel-twitchid","x-wizebot-channel-twitchname","user-agent"]
+//             console.info('WizeBot')
+
+//         } else if (req.header('user-agent')?.toLocaleLowerCase().includes('streamelements')) {
+//             // [ "x-streamelements-channel", "user-agent"]
+//             console.info('StreamElements')
+
+//         } else if (req.header('user-agent')?.toLocaleLowerCase().includes('streamlabs')) {
+//             // [ "x-channel",, "user-agent" ]
+//             console.info('StreamLabs')
+//         }
+//     } catch (ex) {
+//         // Do nothing
+//         console.log('Error occured during bot identification')
+//     }
+//     next();
+// });
+
+
 /* Dragon Load on start */
 const dragonLoading = require('./controller/dragonLoading');
 app.use(async function (req, res, next) {
@@ -69,7 +121,6 @@ app.use(async function (req, res, next) {
             }
         });
     } catch (ex) {
-        // Do nothing
         console.log('do nothing')
     }
     next();
