@@ -59,21 +59,22 @@ const corsOptions = {
 }
 
 /* Dragon Load on start */
-const dragonLoading = require('./controller/dragonLoading');
-app.use(async function (req, res, next) {
-    try {
-        console.log('Start DragonLoading');
-        let dragLoad = new dragonLoading();
-        await dragLoad.loadChampion('fr_fr').then(async function (result) {
-            if (result) {
-                await dragLoad.convertToLeagueChampion('fr_fr');
-            }
-        });
-    } catch (ex) {
-        // Do anythings
-    }
-    next();
-});
+// const dragonLoading = require('./controller/dragonLoading');
+// app.use(async function (req, res, next) {
+//     try {
+//         console.log('Start DragonLoading');
+//         let dragLoad = new dragonLoading();
+//         await dragLoad.loadChampion('fr_fr').then(async function (result) {
+//             if (result) {
+//                 await dragLoad.convertToLeagueChampion('fr_fr');
+//             }
+//         });
+//     } catch (ex) {
+//         // Do nothing
+//         console.log('do nothing')
+//     }
+//     next();
+// });
 
 // Load default route
 app.use('/', indexRouter);
