@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const BedyBot = require('../../util/GlobalEnum')
 
 var transporter;
 
@@ -31,18 +32,25 @@ exports.sendMail = async function (req, res, next) {
     try {
         console.log('Enter in SendMail');
         initTransporter();
-        let { subject, content, email, name } = req.body;
+        let { subject, content, email, name, messageType } = req.body;
 
-        let message = '<b>From </b> :' + name + ' <br/>' + content;
+        let message = '<b>From </b> :' + name + ' <br/>';
+        message += '<b>Email </b> : '  + email + ' <br/>';
+        message += content;
 
         var mailOptions = {
-            from: process.env.email_emailFrom, // Email who sent the mail. It's postfix email
-            to: process.env.email_emailTo, // Email who receive the mail. Target
-            replyTo: email, // Person who send the mail
+            from: process.env.email_emailFrom,  // Email who sent the mail. It's postfix email
+            to: process.env.email_emailTo,      // Email who receive the mail. Target
+            replyTo: email,                     // Person who send the mail
             subject: subject,
             text: message,
             html: message
         };
+
+        if (messageType == BedyBot.FrontEnd.CONTACTUS_TYPE.SUGGESTION) {
+            let emailTo = process.env.email_emailTo.split('@');
+            mailOptions.to = emailTo[0] + '+suggest@' + emailTo[1];
+        }
 
         await transporter.sendMail(mailOptions, function (error, info) {
             if (error) {
