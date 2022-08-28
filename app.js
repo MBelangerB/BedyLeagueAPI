@@ -17,6 +17,7 @@ var summonerRouter = require('./routes/lol/summoner');
 
 /* API Route */
 var emailRouteur = require('./routes/api/email');
+var validateCaptchaRouteur = require('./routes/api/validateCaptcha');
 
 /* OW Route */
 var overwatchRouter = require('./routes/ow/rank');
@@ -83,33 +84,6 @@ const corsOptions = {
     allowedHeaders:'Content-Type, Authorization, Origin, X-Requested-With, Accept'
 }
 
-/* Identify Bot */
-// app.use(async function (req, res, next) {
-//     try {
-//         // [ "x-forwarded-for" ]
-//         if (req.header('user-agent')?.toLocaleLowerCase().includes('nightbot-url-fetcher')) {
-//             // ["nightbot-channel", "nightbot-response-url","nightbot-user","user-agent"]
-//            console.info('NightBot')
-//         } else if (req.header('user-agent')?.toLocaleLowerCase().includes('wizebot')) {
-//             // ["x-wizebot-channel-twitchid","x-wizebot-channel-twitchname","user-agent"]
-//             console.info('WizeBot')
-
-//         } else if (req.header('user-agent')?.toLocaleLowerCase().includes('streamelements')) {
-//             // [ "x-streamelements-channel", "user-agent"]
-//             console.info('StreamElements')
-
-//         } else if (req.header('user-agent')?.toLocaleLowerCase().includes('streamlabs')) {
-//             // [ "x-channel",, "user-agent" ]
-//             console.info('StreamLabs')
-//         }
-//     } catch (ex) {
-//         // Do nothing
-//         console.log('Error occured during bot identification')
-//     }
-//     next();
-// });
-
-
 /* Dragon Load on start */
 const dragonLoading = require('./controller/dragonLoading');
 app.use(async function (req, res, next) {
@@ -154,6 +128,7 @@ app.get('/v2/rank', rankRouter.rankRework);
 // app.options('/api/sendEmail', cors())
 app.options('*', cors()) // include before other routes
 app.post('/api/sendEmail', cors(corsOptions), emailRouteur.sendMail);
+app.post('/api/validateReCAPTCHA', cors(corsOptions), validateCaptchaRouteur.validateReCAPTCHA);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

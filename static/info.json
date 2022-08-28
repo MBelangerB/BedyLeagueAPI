@@ -95,5 +95,10 @@
             "fr",
             "en"
         ]
+    },
+    "google": {
+        "routes": {
+            "validation": "https://www.google.com/recaptcha/api/siteverify?secret={SECRET}&response={RESPONSE}"
+        }
     }
 }
