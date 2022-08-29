@@ -76,13 +76,13 @@ class RequestManager {
      * Execute une requête AXIOS
      * @param {string} requestUrl 
      */
-    static async ExecuteRequest(requestUrl) {
+    static async ExecuteRequest(requestUrl, method = 'get', responseType = 'json') {
         return new Promise(function (resolve, reject) {
 
             const instance = axios({
                 url: encodeURI(requestUrl),
-                method: 'get',
-                responseType: 'json',
+                method: method,
+                responseType: responseType,
                 transformResponse: [function (data) {
                     try {
                         if (data && data.isJSON()) {

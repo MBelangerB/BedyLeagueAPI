@@ -1,3 +1,0 @@
-/*
-    Obtenir les info SQL
-*/

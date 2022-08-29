@@ -1,5 +1,5 @@
 /*
-    Get Rnak
+    Get Rank
 */
 const validator = require('../../util/validator');
 const staticFunc = require('../../util/staticFunction');
@@ -8,6 +8,12 @@ const { SummonerInfo } = require('../../module/lol/summoner');
 const LeagueEntry = require('../../module/lol/rank');
 
 /* GET Rank. */
+exports.rankRework = async function (req, res, next) {
+    //TODO: Replace by doc URL
+    return res.send(`Invalid URL, please use 'api.bedyapi.com' or contact the support for more informations.`);
+};
+
+
 exports.rank = async function (req, res, next) {
     try {
         let { query, params } = req;

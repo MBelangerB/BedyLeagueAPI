@@ -1,14 +1,10 @@
 var createError = require('http-errors');
 var express = require('express');
+var cors = require('cors')
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 require('./util/Prototype');
-
-//Loads the handlebars module
-const hbs = require('express-handlebars');
-const hbshelpers = require('handlebars-helpers');
-const multihelpers = hbshelpers();
 
 /* Base Route */
 var indexRouter = require('./routes/index');
@@ -20,8 +16,8 @@ var leagueRouter = require('./routes/lol/league');
 var summonerRouter = require('./routes/lol/summoner');
 
 /* API Route */
-var overlayRouter = require('./routes/api/overlay');
-var extensionRouter = require('./routes/api/extension');
+var emailRouteur = require('./routes/api/email');
+var validateCaptchaRouteur = require('./routes/api/validateCaptcha');
 
 /* OW Route */
 var overwatchRouter = require('./routes/ow/rank');
@@ -29,29 +25,78 @@ var overwatchRouter = require('./routes/ow/rank');
 /* Initialize Express */
 var app = express();
 
-/* Middleware */
+/* Add morgan token */
+logger.token('host', function(req, res) {
+    return req.hostname;
+});
+logger.token('origin', function(req, res) {
+    return req.header('Origin');
+});
+logger.token('liveBot', function(req, res) {
+    let bot = '';
+    try {
+        if (req.header('user-agent')?.toLocaleLowerCase().includes('nightbot-url-fetcher')) {
+            // ["nightbot-channel", "nightbot-response-url","nightbot-user","user-agent"]
+            bot = 'NightBot';
+        } else if (req.header('user-agent')?.toLocaleLowerCase().includes('wizebot')) {
+            // ["x-wizebot-channel-twitchid","x-wizebot-channel-twitchname","user-agent"]
+            bot = 'WizeBot';
 
-app.use(logger('[:date[iso]] :method :url :status :res[content-length] - :response-time ms')); /* TODO: Valider le type */
+        } else if (req.header('user-agent')?.toLocaleLowerCase().includes('streamelements')) {
+            // [ "x-streamelements-channel", "user-agent"]
+            bot = 'StreamElements';
+
+        } else if (req.header('user-agent')?.toLocaleLowerCase().includes('streamlabs')) {
+            // [ "x-channel",, "user-agent" ]
+            bot = 'StreamLabs';
+        }
+    } catch {
+        // do nothing
+    }
+    return bot;
+});
+
+/* Middleware */
+/* Origin (:origin)  */
+// app.use(logger('[:date[iso]] :method - :liveBot Remote (:remote-addr) Host (:host) - :url :status :res[content-length] - :response-time ms'));
+app.use(logger('[:date[iso]] :method - (:liveBot, Host :host) - :url :status :res[content-length] - :response-time ms'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/emblems', express.static('static/images/emblems'))
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hbs');
+/* Cors configuration */
+//TODO: Whitelist in config
+// FrontEnd Address
+var allowlist = ['http://bedyapi.com', 'https://bedyapi.com',
+                'http://localhost:4200', 'http://localhost:8080', 
+                'http://web.bedyapi.com', 'https://web.bedyapi.com'];
 
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (allowlist.indexOf(origin) !== -1) {
+            callback(null, true)
+        } else {
+            callback(new Error('401'))
+        }
+    },
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders:'Content-Type, Authorization, Origin, X-Requested-With, Accept'
+}
 
 /* Dragon Load on start */
 const dragonLoading = require('./controller/dragonLoading');
 app.use(async function (req, res, next) {
-    let dragLoad = new dragonLoading();
-    await dragLoad.loadChampion('fr_fr').then(async function (result) {
-        if (result) {
-            await dragLoad.convertToLeagueChampion('fr_fr');
-        }
-    });
+    try {
+        let dragLoad = new dragonLoading();
+        await dragLoad.loadChampion('fr_fr').then(async function (result) {       
+            if (result) {
+                await dragLoad.convertToLeagueChampion('fr_fr');
+            }
+        });
+    } catch (ex) {
+        console.log('do nothing')
+    }
     next();
 });
 
@@ -67,31 +112,27 @@ app.get('/:lang?/lol/topMasteries/:region/:summonerName', summonerRouter.topMast
 app.get('/:lang?/lol/summonerInfo', summonerRouter.summonerInfo);
 app.get('/:lang?/lol/summonerInfo/:region/:summonerName', summonerRouter.summonerInfo);
 
-app.get('/:lang?/lol/rank', rankRouter.rank);
-app.get('/:lang?/lol/rank/:region/:summonerName', rankRouter.rank);
-
-// Api Route
-app.get('/:lang?/overlay/rank', overlayRouter.rank);
-app.get('/:lang?/overlay/rank/:region/:summonerName', overlayRouter.rank);
+app.get('/:lang?/lol/rank', cors(), rankRouter.rank);
+app.get('/:lang?/lol/rank/:region/:summonerName',cors(), rankRouter.rank);
 
 // Overwatch Route
 app.get('/:lang?/ow/rank', overwatchRouter.rank);
 app.get('/:lang?/ow/rank/:region/:platform/:tag', overwatchRouter.rank);
 
 // Temporary redirection
-app.get('/rank', rankRouter.rank);
-app.get('/v2/rank', rankRouter.rank);
+// TODO: Remove
+app.get('/rank', rankRouter.rankRework);
+app.get('/v2/rank', rankRouter.rankRework);
 
-// Navigator Extension
-app.post('/api/register', extensionRouter.registerAPI);
-app.post('/api/register/:username/:token', extensionRouter.registerAPI);
-app.put('/api/song/:token', extensionRouter.addSong);
-app.get('/api/song/:token', extensionRouter.getLastSong);
-app.delete('/api/song/:token', extensionRouter.clearPlaylist);
+// Private API routing
+// app.options('/api/sendEmail', cors())
+app.options('*', cors()) // include before other routes
+app.post('/api/sendEmail', cors(corsOptions), emailRouteur.sendMail);
+app.post('/api/validateReCAPTCHA', cors(corsOptions), validateCaptchaRouteur.validateReCAPTCHA);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-    next(createError(404));
+    res.status(404).send('404 - Not found');
 });
 
 // error handler
@@ -100,9 +141,17 @@ app.use(function (err, req, res, next) {
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-    // render the error page
-    res.status(err.status || 500);
-    res.render('error');
+    if (err.message == '401') {
+        // render the error page
+        res.status(401).send('Unauthorized');
+    } else {
+        const returnMessage = `Error ${err.status} \n ${err.message}`;
+        console.error(err);
+
+        // render the error page
+        res.status(err.status || 500);
+        res.send(returnMessage);
+    }
 });
 
 module.exports = app;

@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  nodeAlpine:
+    container_name: bedybot-apiServer
+    build:
+      context: .
+      target: nodeAlpine
+    ports:
+      - 8081:3000
+    image: bedybot-apiserver:latest
+    volumes:
+      - .:/usr/src/app
+
+  mailhog:
+    container_name: mailhog
+    image: mailhog/mailhog
+    ports:
+      - 1025:1025
+      - 8025:8025
+
+  # nginx:
+  #   container_name: bedybot-frontEnd
+  #   build:
+  #     context: .
+  #     target: nginx
+  #   ports:
+  #     - 8080:80
+  #   image: bedybot-frontend:latest
+  #   volumes:
+  #     - ../WebSite:/usr/src/app
+

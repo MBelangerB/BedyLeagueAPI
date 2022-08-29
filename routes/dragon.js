@@ -81,7 +81,7 @@ router.get('/update', async function (req, res, next) {
         }
 
     } catch (ex) {
-        console.error(ex);
+        console.error('A error occured : ', ex);
         res.send(ex);
     }
 });

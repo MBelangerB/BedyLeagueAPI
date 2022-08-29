@@ -1,32 +1,27 @@
 {
   "name": "bedyapi",
-  "version": "1.4.0",
+  "version": "2.1.0",
   "private": true,
   "scripts": {
     "start": "node ./bin/www"
   },
   "dependencies": {
-    "axios": "^0.21.1",
-    "cookie-parser": "~1.4.4",
+    "axios": "^0.27.2",
+    "cookie-parser": "~1.4.6",
+    "cors": "^2.8.5",
     "crypto": "^1.0.1",
-    "debug": "~2.6.9",
-    "express": "~4.16.1",
-    "express-handlebars": "^5.2.0",
+    "debug": "~4.3.4",
+    "express": "~4.18.1",
     "fs": "0.0.1-security",
-    "handlebars-helpers": "^0.10.0",
-    "hbs": "^4.1.1",
-    "http-errors": "^1.8.0",
+    "http-errors": "^2.0.0",
     "https": "^1.0.0",
-    "mariadb": "^2.5.2",
-    "moment": "^2.29.1",
-    "morgan": "~1.9.1",
-    "mysql": "^2.18.1",
-    "mysql2": "^2.2.5",
+    "moment": "^2.29.4",
+    "morgan": "~1.10.0",
     "node-cache": "^5.1.2",
-    "sequelize": "^6.3.5",
-    "util": "^0.12.3"
+    "nodemailer": "^6.7.8",
+    "util": "^0.12.4"
   },
   "devDependencies": {
-    "dotenv": "^8.2.0"
+    "dotenv": "^16.0.1"
   }
 }

@@ -28,7 +28,7 @@ module.exports = {
            // this.url = this.getUrlBySummonerName();
 
             this.gameType = RequestManager.TokenType.LOL;
-            if (this.queueType.toLowerCase() === "tft") {
+            if (this.queueType?.toLowerCase() === "tft") {
                 this.gameType = RequestManager.TokenType.TFT;
             }
 
