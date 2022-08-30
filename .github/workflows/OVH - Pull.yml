@@ -37,7 +37,7 @@ jobs:
       - name: Adding Known Hosts
         run: ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_REMOTE_IP }} >> ~/.ssh/known_hosts
         
-      - run: ssh -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'pwd;'
+      - run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'pwd;'
         
         # Run Update
       - name: Git pull action
