@@ -52,10 +52,10 @@ jobs:
       # - run: ssh ${{ steps.ssh-ovh.outputs.SERVER }} pwd
       
       - name: Run UpdateApi
-        run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'updateAPI;'
+        run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'cd ${{ secrets.API_PATH }}; git pull;'
         
       - name:  Restart API
-        run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'restartAPI;'      
+        run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'pm2 stop ${{ secrets.PM2_NAME }}; pm2 flush ${{ secrets.PM2_NAME }}; pm2 start ${{ secrets.PM2_NAME }};'      
         
       # Runs a single command using the runners shell
      # - name: Run a one-line script
