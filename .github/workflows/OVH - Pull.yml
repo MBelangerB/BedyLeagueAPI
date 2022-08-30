@@ -1,0 +1,110 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Pull on OVH
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "dev" branch
+  push:
+    branches: [ "prod" ]
+  # pull_request:
+  #   branches: [ "dev" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  updateSource:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Install node
+#       - name: Use Node 16.x
+#         uses: actions/setup-node@v3.4.1
+#         with:
+#           node-version: '16.x'
+          
+      # Install SSH
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2.3.1
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+          
+      # Create known_hosts
+      - name: Create known_hosts
+        run: touch ~/.ssh/known_hosts
+
+      # Add known_hosts
+      - name: Adding Known Hosts
+        run: ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_REMOTE_IP }} >> ~/.ssh/known_hosts
+
+      - name: Remote SSH Commands
+        uses: fifsky/ssh-action@v0.0.6
+        with:
+          # Command to execute on the remote server.
+          command: 'export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; nvm install v16.16.0; nvm use v16.16.0; node -v; npm -v; pm2 stop ${{ secrets.PM2_NAME }}; pm2 flush ${{ secrets.PM2_NAME }}; pm2 start ${{ secrets.PM2_NAME }};'
+          # Hostname or IP address of the server.
+          host: ${{ secrets.SSH_REMOTE_IP }}
+          # Username for authentication.
+          user: ${{ secrets.SSH_USERNAME }}  
+          # Port number of the server.
+          port: ${{ secrets.SSH_PORT }}
+          # String that contains a private key for either key-based or hostbased user authentication (OpenSSH format)
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # - run: ssh -p 6646 git@149.56.14.122 'export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; nvm install v16.16.0; nvm use v16.16.0; node -v; npm -v;'
+  
+  
+  # - run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'pwd;'
+        
+      # Run Update
+#       - name: Actions
+#         uses: invi5H/ssh-action@v1.0.0
+#         with:
+#           NAME: ovh
+#           SSH_USER: ${{ secrets.SSH_USERNAME }}    
+#           SSH_HOST: ${{ secrets.SSH_REMOTE_IP }}
+#           SSH_PORT: ${{ secrets.SSH_PORT }}
+#           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+#       - name: SSH Execute Commands
+#         uses: JimCronqvist/action-ssh@0.1.1
+#         with:
+#           # Command(s) to execute on the remote server.
+#           command: 'npm -v'
+#           # Hostname or IP address of the remote server(s). Separate multiple servers with a blank space. Example: 'user@mydomain.com:22 user@otherdomain.com:2222'
+#           hosts: ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }}:${{ secrets.SSH_PORT }}
+#           privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
+# #           command: |
+# #             npm -v
+# #             echo "I am $NAME"
+          
+#       - run: ssh ${{ steps.ssh-ovh.outputs.SERVER }} 'npm -v'
+      
+#       - run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'pwd'
+#       - run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'ls'
+#       - run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'nvm --version'
+#       - run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'npm -v'  
+#       - run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'node -v'
+
+      
+#       - name: Run UpdateApi
+#         run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'cd ${{ secrets.API_PATH }}; git pull;'
+        
+#       - name:  Restart API
+#         run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'pm2 stop ${{ secrets.PM2_NAME }}; pm2 flush ${{ secrets.PM2_NAME }}; pm2 start ${{ secrets.PM2_NAME }};'      
+        
+      # Runs a single command using the runners shell
+     # - name: Run a one-line script
+     #   run: echo Hello, world!
+
+      # Runs a set of commands using the runners shell
+      # - name: Run a multi-line script
+      #  run: |
+      #    echo Add other actions to build,
+      #    echo test, and deploy your project.

@@ -10,7 +10,7 @@ const LeagueEntry = require('../../module/lol/rank');
 /* GET Rank. */
 exports.rankRework = async function (req, res, next) {
     //TODO: Replace by doc URL
-    return res.send(`Invalid URL, please use 'api.bedyapi.com' or contact the support for more informations.`);
+    return res.send(`Invalid URL, please use 'api.bedyapi.com/lol/rank/' or contact the suppor on 'bedyapi.com' for more informations.`);
 };
 
 
