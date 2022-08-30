@@ -59,13 +59,13 @@ jobs:
         uses: JimCronqvist/action-ssh@0.1.1
         with:
           # Command(s) to execute on the remote server.
-          # command: 'npm -v'
+          command: 'npm -v'
           # Hostname or IP address of the remote server(s). Separate multiple servers with a blank space. Example: 'user@mydomain.com:22 user@otherdomain.com:2222'
           hosts: ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }}:${{ secrets.SSH_PORT }}
           privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
-          command: |
-            npm -v
-            echo "I am $NAME"
+#           command: |
+#             npm -v
+#             echo "I am $NAME"
           
 #       - run: ssh ${{ steps.ssh-ovh.outputs.SERVER }} 'npm -v'
       
