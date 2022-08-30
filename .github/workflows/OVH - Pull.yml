@@ -42,7 +42,16 @@ jobs:
       # Add known_hosts
       - name: Adding Known Hosts
         run: ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_REMOTE_IP }} >> ~/.ssh/known_hosts
-        
+
+      - name: executing remote ssh commands using password
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_REMOTE_IP }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: whoami
+
       # - run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'pwd;'
         
       # Run Update
@@ -55,17 +64,17 @@ jobs:
 #           SSH_PORT: ${{ secrets.SSH_PORT }}
 #           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: SSH Execute Commands
-        uses: JimCronqvist/action-ssh@0.1.1
-        with:
-          # Command(s) to execute on the remote server.
-          command: 'npm -v'
-          # Hostname or IP address of the remote server(s). Separate multiple servers with a blank space. Example: 'user@mydomain.com:22 user@otherdomain.com:2222'
-          hosts: ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }}:${{ secrets.SSH_PORT }}
-          privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
-#           command: |
-#             npm -v
-#             echo "I am $NAME"
+#       - name: SSH Execute Commands
+#         uses: JimCronqvist/action-ssh@0.1.1
+#         with:
+#           # Command(s) to execute on the remote server.
+#           command: 'npm -v'
+#           # Hostname or IP address of the remote server(s). Separate multiple servers with a blank space. Example: 'user@mydomain.com:22 user@otherdomain.com:2222'
+#           hosts: ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }}:${{ secrets.SSH_PORT }}
+#           privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
+# #           command: |
+# #             npm -v
+# #             echo "I am $NAME"
           
 #       - run: ssh ${{ steps.ssh-ovh.outputs.SERVER }} 'npm -v'
       
