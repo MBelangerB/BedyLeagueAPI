@@ -46,10 +46,10 @@ jobs:
       # - run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'pwd;'
         
       # Run Update
-      - name: Git pull action
+      - name: Actions
         uses: invi5H/ssh-action@v1.0.0
         with:
-          name: ovh
+          NAME: ovh
           SSH_USER: ${{ secrets.SSH_USERNAME }}    
           SSH_HOST: ${{ secrets.SSH_REMOTE_IP }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
