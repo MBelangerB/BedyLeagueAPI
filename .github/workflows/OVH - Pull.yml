@@ -47,7 +47,7 @@ jobs:
         uses: fifsky/ssh-action@v0.0.6
         with:
           # Command to execute on the remote server.
-          command: 'export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; nvm install v16.16.0; nvm use v16.16.0; node -v; npm -v; pm2 list'
+          command: 'export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; nvm install v16.16.0; nvm use v16.16.0; node -v; npm -v; pm2 stop ${{ secrets.PM2_NAME }}; pm2 flush ${{ secrets.PM2_NAME }}; pm2 start ${{ secrets.PM2_NAME }};'
           # Hostname or IP address of the server.
           host: ${{ secrets.SSH_REMOTE_IP }}
           # Username for authentication.
