@@ -23,10 +23,10 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Install node
-      - name: Use Node 16.x
-        uses: actions/setup-node@v3.4.1
-        with:
-          node-version: '16.x'
+#       - name: Use Node 16.x
+#         uses: actions/setup-node@v3.4.1
+#         with:
+#           node-version: '16.x'
           
       # Install SSH
       - name: Install SSH Key
@@ -47,7 +47,7 @@ jobs:
         uses: fifsky/ssh-action@v0.0.6
         with:
           # Command to execute on the remote server.
-          command: npm -v
+          command: 'export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; nvm install v16.16.0; nvm use v16.16.0; node -v; npm -v; pm2 list'
           # Hostname or IP address of the server.
           host: ${{ secrets.SSH_REMOTE_IP }}
           # Username for authentication.
@@ -56,15 +56,11 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           # String that contains a private key for either key-based or hostbased user authentication (OpenSSH format)
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # File location to an identity file
-          # keyfile: # optional
-          # Password for authentication.
-          # pass: # optional
-          # SSH parameters for example: -tt.
-          # args: # optional
 
-
-      # - run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'pwd;'
+      # - run: ssh -p 6646 git@149.56.14.122 'export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; nvm install v16.16.0; nvm use v16.16.0; node -v; npm -v;'
+  
+  
+  # - run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'pwd;'
         
       # Run Update
 #       - name: Actions
