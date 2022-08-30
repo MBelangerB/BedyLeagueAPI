@@ -43,17 +43,25 @@ jobs:
       - name: Adding Known Hosts
         run: ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_REMOTE_IP }} >> ~/.ssh/known_hosts
 
-      - name: executing remote ssh commands using password
-        uses: appleboy/ssh-action@master
+      - name: Remote SSH Commands
+        uses: fifsky/ssh-action@v0.0.6
         with:
+          # Command to execute on the remote server.
+          command: npm -v
+          # Hostname or IP address of the server.
           host: ${{ secrets.SSH_REMOTE_IP }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # Username for authentication.
+          user: ${{ secrets.SSH_USERNAME }}  
+          # Port number of the server.
           port: ${{ secrets.SSH_PORT }}
-          script: |
-            whoami
-            ls -al
-            npm -v
+          # String that contains a private key for either key-based or hostbased user authentication (OpenSSH format)
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # File location to an identity file
+          # keyfile: # optional
+          # Password for authentication.
+          # pass: # optional
+          # SSH parameters for example: -tt.
+          # args: # optional
 
 
       # - run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_REMOTE_IP }} 'pwd;'
