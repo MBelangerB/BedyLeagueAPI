@@ -1,15 +1,15 @@
 'use strict';
- 
+
 const infoJson = require('../static/info.json');
 const path = require('path');
 const fs = require('fs');
-var axios = require('axios'); 
+const axios = require('axios');
 
 require('../util/Prototype');
-const util = require("util");
+const util = require('util');
 const { basename } = require('path');
 const writeFile = util.promisify(fs.writeFile);
-const { JSONFileReader } = require(__dirname + "/../util/fileReader");
+const { JSONFileReader } = require(__dirname + '/../util/fileReader');
 
 class dragonUpdate {
     /* Définition des chemins */
@@ -22,17 +22,14 @@ class dragonUpdate {
 
     /* Définition du data */
     apiConfig = {};
-    currentVersion = "";
+    currentVersion = '';
 
     needUpdate = false;
 
-    log = {data:[]};
+    log = { data:[] };
 
 
     /* Mis en place des fonctions */
-    constructor() {
-    }
-
     addLog(message) {
         this.log.data.push(message);
     }
@@ -69,12 +66,12 @@ class dragonUpdate {
                 await this.createNewFolder(this.configPath);
                  //   console.info(this.log);
                 if (!fs.existsSync(this.getConfigFullPath())) {
-                    await writeFile(this.getConfigFullPath(), this.castDataToJSON({ "dragonVersion": "1.0" }));
+                    await writeFile(this.getConfigFullPath(), this.castDataToJSON({ 'dragonVersion': '1.0' }));
                 }
 
                 await this.createNewFolder(this.getDragonFullPath());
-                await this.createNewFolder(this.getDragonFullPath("/en_us/"));
-                await this.createNewFolder(this.getDragonFullPath("/fr_fr/"));
+                await this.createNewFolder(this.getDragonFullPath('/en_us/'));
+                await this.createNewFolder(this.getDragonFullPath('/fr_fr/'));
             } catch (ex) {
                 console.error(ex);
                 reject(ex);
@@ -100,12 +97,12 @@ class dragonUpdate {
                         console.log(`  Le répertoire '${folder}' a été crée avec succès.`);
                     } else {
                         // vm.addLog(`  Le répertoire '${folder}' existe déjà.`);
-                        console.log(`  Le répertoire '${folder}' existe déjà.`)
+                        console.log(`  Le répertoire '${folder}' existe déjà.`);
                     }
                     resolve(true);
                 } else {
                     console.warn(`  Erreur! Il est impossible d'effectuer la création du répertoire '${folder}'.`);
-                    reject(false)
+                    reject(false);
                 }
             } catch (ex) {
                 console.error(ex);
@@ -119,10 +116,10 @@ class dragonUpdate {
     *   Télécharge le fichier de version et détermine si une MAJ est requise
     */
     async downloadVersionFile() {
-        let url = infoJson.dragon.version;
+        const url = infoJson.dragon.version;
         let data;
         let requestComplete = false;
-        let latestVersion = "";
+        let latestVersion = '';
 
         return new Promise(async (resolve, reject) => {
             try {
@@ -140,13 +137,13 @@ class dragonUpdate {
                 });
 
                 if (requestComplete) {
-                    var filepath = this.getDragonFullPath(`/version.json`);
-                    if (typeof(data) !== "string") {
+                    const filepath = this.getDragonFullPath('/version.json');
+                    if (typeof (data) !== 'string') {
                         await writeFile(filepath, JSON.stringify(data));
                     } else {
                         await writeFile(filepath, data);
                     }
-                    
+
                     const oldestVersion = this.currentVersion.replaceAll('[.]', '');
                     const newVersion = latestVersion.replaceAll('[.]', '');
 
@@ -171,25 +168,25 @@ class dragonUpdate {
     async downloadFileData(lang) {
         if (!lang) { lang = 'fr_FR';}
 
-        let championsUrl = infoJson.dragon.champions.replace(`{version}`, this.currentVersion).replace(`{lang}`, lang);
-        let iconsUrl = infoJson.dragon.profileIcons.replace(`{version}`, this.currentVersion).replace(`{lang}`, lang);
-        let spellsUrl = infoJson.dragon.summonerSpells.replace(`{version}`, this.currentVersion).replace(`{lang}`,  lang);
-        let runesReforgedUrl = infoJson.dragon.runesReforged.replace(`{version}`, this.currentVersion).replace(`{lang}`,lang);
-        let queueUrl = infoJson.dragon.queues;
-        let seasonUrl = infoJson.dragon.seasons;
-        
+        const championsUrl = infoJson.dragon.champions.replace('{version}', this.currentVersion).replace('{lang}', lang);
+        const iconsUrl = infoJson.dragon.profileIcons.replace('{version}', this.currentVersion).replace('{lang}', lang);
+        const spellsUrl = infoJson.dragon.summonerSpells.replace('{version}', this.currentVersion).replace('{lang}', lang);
+        const runesReforgedUrl = infoJson.dragon.runesReforged.replace('{version}', this.currentVersion).replace('{lang}', lang);
+        // const queueUrl = infoJson.dragon.queues;
+        // const seasonUrl = infoJson.dragon.seasons;
+
 
         let fileName = '';
         let data;
-        let ext = this;
-        return new Promise(async function (resolve, reject) {
+        const ext = this;
+        return new Promise(async function (resolve) {
 
             console.info(`[DragonUpdate] - Download file : ${championsUrl}`);
             await ext.ExecuteRequest(championsUrl).then(async function (res) {
                 data = res;
                 if (data) {
                     fileName = `/${lang}/${basename(championsUrl)}`;
-                    var filepath = ext.getDragonFullPath(fileName);
+                    const filepath = ext.getDragonFullPath(fileName);
                     data = ext.castDataToJSON(data);
                     await writeFile(filepath, data);
                 }
@@ -203,7 +200,7 @@ class dragonUpdate {
                 data = res;
                 if (data) {
                     fileName = `/${lang}/${basename(iconsUrl)}`;
-                    var filepath = ext.getDragonFullPath(fileName);
+                    const filepath = ext.getDragonFullPath(fileName);
                     data = ext.castDataToJSON(data);
                     await writeFile(filepath, data);
                 }
@@ -217,7 +214,7 @@ class dragonUpdate {
                 data = res;
                 if (data) {
                     fileName = `/${lang}/${basename(spellsUrl)}`;
-                    var filepath = ext.getDragonFullPath(fileName);
+                    const filepath = ext.getDragonFullPath(fileName);
                     data = ext.castDataToJSON(data);
                     await writeFile(filepath, data);
                 }
@@ -231,7 +228,7 @@ class dragonUpdate {
                 data = res;
                 if (data) {
                     fileName = `/${lang}/${basename(spellsUrl)}`;
-                    var filepath = ext.getDragonFullPath(fileName);
+                    const filepath = ext.getDragonFullPath(fileName);
                     data = ext.castDataToJSON(data);
                     await writeFile(filepath, data);
                 }
@@ -245,20 +242,20 @@ class dragonUpdate {
     }
 
     async downloadStaticData() {
-        let queueUrl = infoJson.dragon.queues;
-        let seasonUrl = infoJson.dragon.seasons;
-        
+        const queueUrl = infoJson.dragon.queues;
+        const seasonUrl = infoJson.dragon.seasons;
+
         let fileName = '';
         let data;
-        let ext = this;
-        return new Promise(async function (resolve, reject) {
+        const ext = this;
+        return new Promise(async function (resolve) {
 
             console.info(`[DragonUpdate] - Download file : ${queueUrl}`);
             await ext.ExecuteRequest(queueUrl).then(async function (res) {
                 data = res;
                 if (data) {
                     fileName = `/${basename(queueUrl)}`;
-                    var filepath = ext.getDragonFullPath(fileName);
+                    const filepath = ext.getDragonFullPath(fileName);
                     data = ext.castDataToJSON(data);
                     await writeFile(filepath, data);
                 }
@@ -272,7 +269,7 @@ class dragonUpdate {
                 data = res;
                 if (data) {
                     fileName = `/${basename(seasonUrl)}`;
-                    var filepath = ext.getDragonFullPath(fileName);
+                    const filepath = ext.getDragonFullPath(fileName);
                     data = ext.castDataToJSON(data);
                     await writeFile(filepath, data);
                 }
@@ -291,21 +288,21 @@ class dragonUpdate {
     */
     async ExecuteRequest(requestUrl) {
         return new Promise(function (resolve, reject) {
-  
-            const instance = axios({
+
+            axios({
                 url: encodeURI(requestUrl),
                 method: 'get',
                 responseType: 'json',
                 transformResponse: [function (data) {
                     try {
                         if (data) {
-                            // Do whatever you want to transform the data         
+                            // Do whatever you want to transform the data
                             return JSON.parse(data);
-                        }  
+                        }
                     } catch (ex) {
                         return data;
                     }
-                               
+
                 }],
             }).then(response => {
                 if (response.status === 200 && response.statusText === 'OK') {
@@ -330,21 +327,21 @@ class dragonUpdate {
     async updateAPIConfig() {
         return new Promise(async resolve => {
             if (fs.existsSync(this.getConfigFullPath())) {
-                await writeFile(this.getConfigFullPath(), this.castDataToJSON({ "dragonVersion": this.currentVersion }));
-                console.log('  Mise-à-jour de BedyConfig')
+                await writeFile(this.getConfigFullPath(), this.castDataToJSON({ 'dragonVersion': this.currentVersion }));
+                console.log('  Mise-à-jour de BedyConfig');
             }
             resolve(true);
         });
     }
 
     async readFile(filePath) {
-        var data;
+        let data;
         return new Promise(async resolve => {
             await JSONFileReader(filePath).then(function (f) {
                 data = f;
             });
 
-            resolve(data)
+            resolve(data);
         });
     }
 
@@ -354,15 +351,15 @@ class dragonUpdate {
 
     /**
      * Retourne la localisation complète du répetoire «Dragon»
-     * @param {*} culture 
+     * @param {*} culture
      */
     getDragonFullPath(culture) {
-        if (!culture || typeof culture === "undefined") { culture = ""; }
-        var fpath = `${this.dragonPath}${culture}`;
+        if (!culture || typeof culture === 'undefined') { culture = ''; }
+        const fpath = `${this.dragonPath}${culture}`;
         return path.join(fpath);
     }
     castDataToJSON(data) {
-        return JSON.stringify(data, null, 2)
+        return JSON.stringify(data, null, 2);
     }
     getConfigFullPath() {
         return path.join(`${this.configPath}`, `${this.configFileName}`);

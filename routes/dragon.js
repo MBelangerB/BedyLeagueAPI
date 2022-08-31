@@ -1,16 +1,16 @@
-var express = require('express');
-var router = express.Router();
-var dragonUpdate = require('../module/dragonUpdate')
+const express = require('express');
+const router = express.Router();
+const dragonUpdate = require('../module/dragonUpdate');
 
 /* GET - UPDATE Dragon Data. */
-router.get('/', async function (req, res, next) {
+router.get('/', async function (req, res) {
     res.redirect('/dragon/version');
 });
- 
-router.get('/version', async function (req, res, next) {
+
+router.get('/version', async function (req, res) {
     try {
-        var ds = new dragonUpdate();
-        var strArray = [];
+        const ds = new dragonUpdate();
+        const strArray = [];
         await ds.initFolder().then(async isSuccess => {
             return await ds.loadAPIConfigFile();
         }).then(async loading => {
@@ -18,7 +18,7 @@ router.get('/version', async function (req, res, next) {
                 strArray.push(`Version actuel : ${JSON.stringify(loading)}`);
             }
         }).catch(error => {
-            console.log(`A error occured during GetDragonVersion`);
+            console.log('A error occured during GetDragonVersion');
         });
         res.send(`Dragon version : ${ds.currentVersion}`);
     } catch (ex) {
@@ -27,12 +27,12 @@ router.get('/version', async function (req, res, next) {
     }
 });
 
-router.get('/update', async function (req, res, next) {
+router.get('/update', async function (req, res) {
     try {
-        var ds = new dragonUpdate();
-        var strArray = [];
-        var complete = false;
- 
+        const ds = new dragonUpdate();
+        const strArray = [];
+        let complete = false;
+
         await ds.initFolder().then(async isSuccess => {
             return await ds.loadAPIConfigFile();
 
@@ -69,15 +69,16 @@ router.get('/update', async function (req, res, next) {
             complete = true;
 
         }).catch(error => {
-            console.log(`A error occured during Update Dragon`);
+            console.error('A error occured during Update Dragon');
+            console.error(error);
             complete = false;
         });
-        console.log(strArray.join(" - "));
+        console.log(strArray.join(' - '));
 
         if (complete) {
             res.send('La mise-à-jour des fichiers est terminée.');
         } else {
-            res.send(`Une erreur s'est produite. Veuillez essayer à nouveau.`);
+            res.send('Une erreur s\'est produite. Veuillez essayer à nouveau.');
         }
 
     } catch (ex) {

@@ -1,29 +1,25 @@
-
-var axios = require('axios');
+const axios = require('axios');
 
 class RequestManager {
 
     static TokenType = {
         TFT: 'TFT',
-        LOL: 'LOL'
-    }
-
-    constructor(data) {
-    }
+        LOL: 'LOL',
+    };
 
     static getToken(tokenType) {
-        var token;
+        let token;
         switch (tokenType) {
             case this.TokenType.TFT:
                 token = `${process.env.tftKey}`;
                 break;
- 
+
             case this.TokenType.LOL:
                 token = `${process.env.lolKey}`;
                 break;
 
             default:
-                token = ``;
+                token = '';
                 break;
         }
         return token;
@@ -31,22 +27,21 @@ class RequestManager {
 
     /*
         Methode base pour executer Query.
-
     */
     static async ExecuteTokenRequest(requestUrl, tokenType) {
-        var self = this;
-        var authToken = this.getToken(tokenType);
+        const authToken = this.getToken(tokenType);
         return new Promise(function (resolve, reject) {
 
-            const instance = axios({
+            // HEADER ==> , 'Origin': 'https://bedyapi.com' },
+            axios({
                 url: encodeURI(requestUrl),
                 method: 'get',
-                headers: { 'X-Riot-Token': authToken}, // , 'Origin': 'https://bedyapi.com' },
+                headers: { 'X-Riot-Token': authToken },
                 responseType: 'json',
                 transformResponse: [function (data) {
                     try {
                         if (data && data.isJSON()) {
-                            // Do whatever you want to transform the data         
+                            // Do whatever you want to transform the data
                             return JSON.parse(data);
                         }
                     } catch (ex) {
@@ -59,7 +54,7 @@ class RequestManager {
                     resolve(response.data);
 
                 } else if (response.status === 404) {
-                    reject(response)
+                    reject(response);
                 }
             }).catch(error => {
                 if (error.response.status === 404) {
@@ -74,19 +69,19 @@ class RequestManager {
 
     /**
      * Execute une requête AXIOS
-     * @param {string} requestUrl 
+     * @param {string} requestUrl
      */
     static async ExecuteRequest(requestUrl, method = 'get', responseType = 'json') {
         return new Promise(function (resolve, reject) {
 
-            const instance = axios({
+            axios({
                 url: encodeURI(requestUrl),
                 method: method,
                 responseType: responseType,
                 transformResponse: [function (data) {
                     try {
                         if (data && data.isJSON()) {
-                            // Do whatever you want to transform the data         
+                            // Do whatever you want to transform the data
                             return JSON.parse(data);
                         }
                     } catch (ex) {
@@ -114,6 +109,6 @@ class RequestManager {
             });
         });
     }
-};
+}
 
 module.exports = RequestManager;

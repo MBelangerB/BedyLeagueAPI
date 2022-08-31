@@ -1,9 +1,10 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-  res.redirect('https://bedyapi.com'); //TODO: Replace by ENV.VAR
+router.get('/', function(req, res) {
+ // TODO: Replace by ENV.VAR
+  res.redirect('https://bedyapi.com');
 });
 
 module.exports = router;

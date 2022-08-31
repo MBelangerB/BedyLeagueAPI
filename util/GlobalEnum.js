@@ -1,6 +1,6 @@
 'use strict';
 
-var BedyBot = BedyBot || {};
+const BedyBot = BedyBot || {};
 
 /**
  * FrontEnd
@@ -11,7 +11,7 @@ BedyBot.FrontEnd = {
      */
     CONTACTUS_TYPE: {
         COMMENTARY: '1', SUGGESTION: '2',
-    }
+    },
 };
 
 module.exports = BedyBot;

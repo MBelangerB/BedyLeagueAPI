@@ -1,6 +1,4 @@
-/*
-    Get Rank
-*/
+/* Get Rank */
 const validator = require('../../util/validator');
 const staticFunc = require('../../util/staticFunction');
 
@@ -8,22 +6,21 @@ const { SummonerInfo } = require('../../module/lol/summoner');
 const LeagueEntry = require('../../module/lol/rank');
 
 /* GET Rank. */
-exports.rankRework = async function (req, res, next) {
-    //TODO: Replace by doc URL
-    return res.send(`Invalid URL, please use 'api.bedyapi.com/lol/rank/' or contact the suppor on 'bedyapi.com' for more informations.`);
+exports.rankRework = async function (req, res) {
+    // TODO: Replace by doc URL
+    return res.send('Invalid URL, please use \'api.bedyapi.com/lol/rank/\' or contact the suppor on \'bedyapi.com\' for more informations.');
 };
 
-
-exports.rank = async function (req, res, next) {
+exports.rank = async function (req, res) {
     try {
-        let { query, params } = req;
+        const { query, params } = req;
 
         // Gestion de la culture
         validator.parameters.validateCulture(params);
 
         // Gestion des paramètres
         let queryParameters;
-        let queryString = staticFunc.request.lowerQueryString(query);
+        const queryString = staticFunc.request.lowerQueryString(query);
         console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
 
         /*
@@ -31,7 +28,7 @@ exports.rank = async function (req, res, next) {
             Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
             en QueryString
         */
-        var validationErrors = [];
+        let validationErrors = [];
         if (params && Object.keys(params).length > 1) {
             validationErrors = validator.lol.validateParams(params, validator.lol.METHOD_ENUM.RANK);
             queryParameters = params;
@@ -40,9 +37,9 @@ exports.rank = async function (req, res, next) {
             queryParameters = queryString;
         }
         if (validationErrors && validationErrors.length > 0) {
-            console.error("Error in validationErrors")
+            console.error('Error in validationErrors');
             console.error(validationErrors);
-            res.send(`'please try again'`);
+            res.send('\'please try again\'');
 
         //    res.send(validationErrors)
             return;
@@ -52,29 +49,29 @@ exports.rank = async function (req, res, next) {
         /*
             Obtenir initiale le summoner pour avoir EncryptedAccountID
         */
-        var summoner = new SummonerInfo(queryParameters);
+        const summoner = new SummonerInfo(queryParameters);
 
         await summoner.getSummonerInfo().then(async function (result) {
             if (result.code !== 200) {
-                console.error(`Return code is invalid in getSummonerInfo`);
+                console.error('Return code is invalid in getSummonerInfo');
                 console.error(`${result.code} - ${result}`);
-                res.send(`'please try again'`);
+                res.send('\'please try again\'');
             } else {
                 return result.data;
             }
             return;
 
         }).catch(error => {
-            console.error(`An error occured during getSummonerInfo`);
+            console.error('An error occured during getSummonerInfo');
             console.error(`${error.code} - ${error.err.statusMessage}`);
-            res.send(``);
+            res.send('');
             return;
         });
         queryParameters.summoner = summoner.summonerInfo;
 
-        var leagueEntries = new LeagueEntry(queryParameters);
-        await leagueEntries.getLeagueRank().then(async function (result) {
-            if (result.code === 200) {
+        const leagueEntries = new LeagueEntry(queryParameters);
+        await leagueEntries.getLeagueRank().then(async function (rankResult) {
+            if (rankResult.code === 200) {
                 await leagueEntries.getReturnValue().then(result => {
                     if (leagueEntries.getJson && leagueEntries.getJson == true) {
                         res.json(result);
@@ -86,16 +83,16 @@ exports.rank = async function (req, res, next) {
             return;
 
         }).catch(error => {
-            console.error(`An error occured during getLeagueRank`);
+            console.error('An error occured during getLeagueRank');
             console.error(`${error.code} - ${error.err.statusMessage}`);
-            res.send(``);
+            res.send('');
             return;
         });
 
 
     } catch (ex) {
-        console.error("Error in GetRank")
+        console.error('Error in GetRank');
         console.error(ex);
-        res.send(`'please try again'`);
+        res.send('\'please try again\'');
     }
 };

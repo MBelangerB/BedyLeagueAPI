@@ -2,12 +2,10 @@
 
 const path = require('path');
 const fs = require('fs');
-var axios = require('axios'); 
 
-const util = require("util");
-const { basename } = require('path');
+const util = require('util');
 const writeFile = util.promisify(fs.writeFile);
-const { JSONFileReader } = require(__dirname + "/../util/fileReader");
+const { JSONFileReader } = require(__dirname + '/../util/fileReader');
 
 class extensionFileData {
     /* Définition des chemins */
@@ -68,11 +66,11 @@ class extensionFileData {
         return new Promise(async (resolve, reject) => {
             try {
                 if (!fs.existsSync(this.getExtensionFileFullPath(token))) {
-                    this.userData = {   "username": this.username,     
-                                        "createDate": this.createDate.toLocaleDateString("fr-CA"), 
-                                        "current": {}, 
-                                        "playlist": []};
-                    
+                    this.userData = { 'username': this.username,
+                                        'createDate': this.createDate.toLocaleDateString('fr-CA'),
+                                        'current': {},
+                                        'playlist': [] };
+
                     await writeFile(this.getExtensionFileFullPath(token), this.castDataToJSON(this.userData));
                 }
 
@@ -82,13 +80,13 @@ class extensionFileData {
                 return;
             }
             resolve(this.userData);
-        });      
+        });
     }
     async updateExtensionFile(token) {
         return new Promise(async resolve => {
             if (fs.existsSync(this.getExtensionFileFullPath(token))) {
                 await writeFile(this.getExtensionFileFullPath(token), this.castDataToJSON(this.userData));
-                console.log(`  Mise-à-jour du fichier pour ${token}`)
+                console.log(`  Mise-à-jour du fichier pour ${token}`);
             }
             resolve(this.userData);
         });
@@ -96,13 +94,13 @@ class extensionFileData {
 
 
     async readFile(filePath) {
-        var data;
+        let data;
         return new Promise(async resolve => {
             await JSONFileReader(filePath).then(function (f) {
                 data = f;
             });
 
-            resolve(data)
+            resolve(data);
         });
     }
 
@@ -110,7 +108,7 @@ class extensionFileData {
         Private function
     */
     castDataToJSON(data) {
-        return JSON.stringify(data, null, 2)
+        return JSON.stringify(data, null, 2);
     }
     getExtensionFileFullPath(token) {
         return path.join(`${this.dataPath}`, `${token}.json`);
@@ -128,12 +126,12 @@ class extensionFileData {
                         await fs.mkdirSync(folder);
                         console.log(`  Le répertoire '${folder}' a été crée avec succès.`);
                     } else {
-                        console.log(`  Le répertoire '${folder}' existe déjà.`)
+                        console.log(`  Le répertoire '${folder}' existe déjà.`);
                     }
                     resolve(true);
                 } else {
                     console.log(`  Erreur! Il est impossible d'effectuer la création du répertoire '${folder}'.`);
-                    reject(false)
+                    reject(false);
                 }
             } catch (ex) {
                 console.error(ex);

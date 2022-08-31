@@ -1,25 +1,22 @@
-/*
-    Get Rotate
-*/
-var routeInfo = require('../../static/info.json');
+/* Get Rotate */
+const routeInfo = require('../../static/info.json');
 const validator = require('../../util/validator');
 const staticFunc = require('../../util/staticFunction');
 
 /* Temp */
-const dragonLoading = require('../../controller/dragonLoading');
 const ChampionRotations = require('../../module/lol/league');
 
 /* GET home page. */
-exports.rotate = async function (req, res, next) {
+exports.rotate = async function (req, res) {
     try {
-        let { query, params } = req;
+        const { query, params } = req;
 
         // Gestion de la culture
         validator.parameters.validateCulture(params);
 
         // Gestion des paramètres
         let queryParameters;
-        let queryString = staticFunc.request.lowerQueryString(query);
+        const queryString = staticFunc.request.lowerQueryString(query);
         console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
 
         /*
@@ -27,7 +24,7 @@ exports.rotate = async function (req, res, next) {
             Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
             en QueryString
         */
-        var validationErrors = [];
+        let validationErrors = [];
         if (params && Object.keys(params).length > 1) {
             validationErrors = validator.lol.validateRotateParams(params);
             queryParameters = params;
@@ -36,21 +33,21 @@ exports.rotate = async function (req, res, next) {
             queryParameters = queryString;
         }
         if (validationErrors && validationErrors.length > 0) {
-            res.send(validationErrors)
+            res.send(validationErrors);
             return;
         }
         validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters);
 
-        var championRotate = new ChampionRotations(queryParameters, generateUrl(queryParameters));
+        const championRotate = new ChampionRotations(queryParameters, generateUrl(queryParameters));
 
-        await championRotate.getLeagueRotate().then(async function(result) {
-            if (result.code === 200) {
+        await championRotate.getLeagueRotate().then(async function(rotateResult) {
+            if (rotateResult.code === 200) {
                 await championRotate.getReturnValue().then(result => {
                     if (championRotate.getJson && championRotate.getJson == true) {
                         res.json(result);
                     } else {
                         res.send(result);
-                    }    
+                    }
                 });
             }
             return;
@@ -69,7 +66,7 @@ exports.rotate = async function (req, res, next) {
 
 function generateUrl(queryParameters) {
     let baseUrl = routeInfo.lol.routes.champion.v3.championRotation;
-    baseUrl = baseUrl.replace("{region}", queryParameters.region)
+    baseUrl = baseUrl.replace('{region}', queryParameters.region);
 
     return baseUrl;
 }

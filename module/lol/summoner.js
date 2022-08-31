@@ -1,5 +1,5 @@
-var RequestManager = require(`../../util/RequestManager`);
-var routeInfo = require('../../static/info.json');
+const RequestManager = require('../../util/RequestManager');
+const routeInfo = require('../../static/info.json');
 
 const CacheService = require('../Cache.Service');
 const DragonLoading = require('../../controller/dragonLoading');
@@ -11,11 +11,11 @@ const ChampionMasteryDTO = require('../../entity/riot/Champion-Mastery-v4/Champi
     Cache configuration
     const ttl = 60 * 60 * 1; // cache for 1 Hour
 */
-var masteriesDelay = 60 * 30; // cache for Secs * Min * Hour
-var summonerInfoDelay = 60 * 60 * 1 // cache for 1 Hour
+const masteriesDelay = 60 * 30; // cache for Secs * Min * Hour
+const summonerInfoDelay = 60 * 60 * 1; // cache for 1 Hour
 
-var masteriesCache = new CacheService(masteriesDelay); // Create a new cache service instance
-var summonerCache = new CacheService(summonerInfoDelay); // Create a new cache service instance
+const masteriesCache = new CacheService(masteriesDelay); // Create a new cache service instance
+const summonerCache = new CacheService(summonerInfoDelay); // Create a new cache service instance
 
 
 module.exports = {
@@ -28,7 +28,7 @@ module.exports = {
            // this.url = this.getUrlBySummonerName();
 
             this.gameType = RequestManager.TokenType.LOL;
-            if (this.queueType?.toLowerCase() === "tft") {
+            if (this.queueType?.toLowerCase() === 'tft') {
                 this.gameType = RequestManager.TokenType.TFT;
             }
 
@@ -45,33 +45,34 @@ module.exports = {
             if (!queueType) { queueType = this.queueType; }
 
             let baseUrl = routeInfo.lol.routes.summoner.v4.getBySummonerName;
-            if (queueType === "tft") {
+            if (queueType === 'tft') {
                 baseUrl = routeInfo.lol.routes.tft_summoner.v1.getBySummonerName;
             }
-            baseUrl = baseUrl.replace("{summonerName}", summonerName);
-            baseUrl = baseUrl.replace("{region}", region);
+            baseUrl = baseUrl.replace('{summonerName}', summonerName);
+            baseUrl = baseUrl.replace('{region}', region);
 
             return baseUrl;
         }
 
         async _querySummonerInfo(requestManager, result) {
+            let data;
             try {
                 // Le SummonerInfo n'est pas présent dans la cache
-                var data = await requestManager.ExecuteTokenRequest(this.getUrlBySummonerName(), this.gameType).then(function (summonerDTO) {
+                data = await requestManager.ExecuteTokenRequest(this.getUrlBySummonerName(), this.gameType).then(function (summonerDTO) {
                     return summonerDTO;
                 }, function (error) {
                     if (error.response) {
                         result.err = {
                             statusCode: error.response.status,
                             statusMessage: error.response.statusText,
-                            stack: error.stack
-                        }
+                            stack: error.stack,
+                        };
                     } else {
                         result.err = {
                             statusCode: 404,
                             statusMessage: error.message,
-                            stack: error.stack
-                        }
+                            stack: error.stack,
+                        };
                     }
 
                     return result;
@@ -79,7 +80,12 @@ module.exports = {
 
             } catch (ex) {
                 console.error(ex);
-                res.send(ex);
+                result.err = {
+                    statusCode: 400,
+                    statusMessage: ex.message,
+                    stack: '',
+                };
+                return result;
             }
             return data;
         }
@@ -89,21 +95,21 @@ module.exports = {
          * Méthode principale
          */
         async getSummonerInfo() {
-            var result = {
-                "code": 0,
-                "err": {}
+            const result = {
+                'code': 0,
+                'err': {},
             };
             this.summonerInfo = new SummonerDTO();
 
-            var key = this.getCacheKey();
-            var self = this;
+            const key = this.getCacheKey();
+            const self = this;
 
             return new Promise(async function (resolve, reject) {
                 try {
                     await summonerCache.getAsyncB(key).then(async function (resultData) {
                         // Vérifie si les données sont déjà en cache, si OUI on utilise la cache
-                        if (typeof resultData === "undefined") {
-                            var data = await self._querySummonerInfo(RequestManager, result);
+                        if (typeof resultData === 'undefined') {
+                            const data = await self._querySummonerInfo(RequestManager, result);
                             if (data) {
                                 summonerCache.setCacheValue(key, data);
                                 return data;
@@ -118,13 +124,13 @@ module.exports = {
 
                     }).then(async resultQry => {
                         // On traite le Resut
-                        if (resultQry && typeof resultQry.err === "undefined") {
+                        if (resultQry && typeof resultQry.err === 'undefined') {
                             // On convertie le data
                             self.summonerInfo.init(resultQry);
                             result.data = resultQry;
                             result.code = 200;
 
-                        } else if (resultQry && typeof resultQry.err != "undefined" && resultQry.err.statusCode === "200-1") {
+                        } else if (resultQry && typeof resultQry.err != 'undefined' && resultQry.err.statusCode === '200-1') {
                             // Erreur normal (pas classé, invocateur n'Existe pas)
                             result.code = 201;
 
@@ -150,12 +156,12 @@ module.exports = {
 
         // Return
         async getReturnValue() {
-            var returnValue = '';
+            let returnValue = '';
 
-            let summonerInfo = this.summonerInfo;
-            let jsonReturn = this.getJson;
+            const summonerInfo = this.summonerInfo;
+            const jsonReturn = this.getJson;
 
-            return new Promise(async function (resolve, reject) {
+            return new Promise(async function (resolve) {
                 if (jsonReturn) {
                     resolve(summonerInfo);
 
@@ -191,33 +197,34 @@ module.exports = {
             if (!region) { region = this.region; }
 
             let baseUrl = routeInfo.lol.routes.championMastery.v4.getChampionMasteriesBySummoner;
-            baseUrl = baseUrl.replace("{encryptedSummonerId}", encryptedSummonerId);
-            baseUrl = baseUrl.replace("{region}", region);
+            baseUrl = baseUrl.replace('{encryptedSummonerId}', encryptedSummonerId);
+            baseUrl = baseUrl.replace('{region}', region);
 
             return baseUrl;
         }
 
         /**
-         * Step 1 : 
+         * Step 1 :
          */
         async _querySummonerMasteries(requestManager, result) {
+            let data;
             try {
                 // Le SummonerInfo n'est pas présent dans la cache
-                var data = await requestManager.ExecuteTokenRequest(this.getUrlBySummonerName(), requestManager.TokenType.LOL).then(function (championMasteryDTO) {
+                data = await requestManager.ExecuteTokenRequest(this.getUrlBySummonerName(), requestManager.TokenType.LOL).then(function (championMasteryDTO) {
                     return championMasteryDTO;
                 }, function (error) {
                     if (error.response) {
                         result.err = {
                             statusCode: error.response.status,
                             statusMessage: error.response.statusText,
-                            stack: error.stack
-                        }
+                            stack: error.stack,
+                        };
                     } else {
                         result.err = {
                             statusCode: 404,
                             statusMessage: error.message,
-                            stack: error.stack
-                        }
+                            stack: error.stack,
+                        };
                     }
 
                     return result;
@@ -235,21 +242,21 @@ module.exports = {
          * Méthode principale
          */
         async getSummonerMasteries() {
-            var result = {
-                "code": 0,
-                "err": {}
+            const result = {
+                'code': 0,
+                'err': {},
             };
             this.summonerInfo = new SummonerDTO();
 
-            var key = this.getCacheKey();
-            var self = this;
+            const key = this.getCacheKey();
+            const self = this;
 
             return new Promise(async function (resolve, reject) {
                 try {
                     await masteriesCache.getAsyncB(key).then(async function (resultData) {
                         // Vérifie si les données sont déjà en cache, si OUI on utilise la cache
-                        if (typeof resultData === "undefined") {
-                            var data = await self._querySummonerMasteries(RequestManager, result);
+                        if (typeof resultData === 'undefined') {
+                            const data = await self._querySummonerMasteries(RequestManager, result);
                             if (data) {
                                 masteriesCache.setCacheValue(key, data);
                                 return data;
@@ -263,12 +270,12 @@ module.exports = {
                         }
                     }).then(async resultQry => {
                         // On traite le Resut
-                        if (resultQry && typeof resultQry.err === "undefined") {
+                        if (resultQry && typeof resultQry.err === 'undefined') {
                             // On convertie le data
                             self.allSummonerMasteries = await self.loadChampionData(resultQry, self.nbMasteries);
                             result.code = 200;
 
-                        } else if (resultQry && typeof resultQry.err != "undefined" && resultQry.err.statusCode === "200-1") {
+                        } else if (resultQry && typeof resultQry.err != 'undefined' && resultQry.err.statusCode === '200-1') {
                             // Erreur normal (pas classé, invocateur n'Existe pas)
                             result.code = 201;
 
@@ -293,16 +300,17 @@ module.exports = {
 
         /**
          * Obtenir les informations sur les champions auxquelle appartient les masteries
-         * @param {*} currentMasteries 
+         * @param {*} currentMasteries
          */
         async loadChampionData(currentMasteries, nbMasteries) {
+            const resultData = {
+                'sliceMasteries': [],
+                'championMasteries': [],
+            };
             if (currentMasteries) {
-                var resultData = {
-                    "sliceMasteries": [],
-                    "championMasteries": []
-                }
-                let dragLoad = new DragonLoading();
-                let championData = await dragLoad.loadChampion('fr_fr').then(async function (result) {
+
+                const dragLoad = new DragonLoading();
+                const championData = await dragLoad.loadChampion('fr_fr').then(async function (result) {
                     if (result) {
                         return await dragLoad.convertToLeagueChampion('fr_fr');
                     }
@@ -311,18 +319,18 @@ module.exports = {
                 // Obtenir la liste des masteries du summoner en fonction du NbMasteries
                 resultData.sliceMasteries = currentMasteries.slice(0, nbMasteries);
 
-                let summonerMasteriesData = [];
+                const summonerMasteriesData = [];
 
                 resultData.sliceMasteries.forEach(function (masteriesData) {
                     try {
-                        let championMasteryDTO = new ChampionMasteryDTO(masteriesData);
+                        const championMasteryDTO = new ChampionMasteryDTO(masteriesData);
                         // Obtenir le champion
-                        var champion = championData.find(e => e.id === masteriesData.championId.toString());
+                        const champion = championData.find(e => e.id === masteriesData.championId.toString());
                         championMasteryDTO.initChampion(champion);
 
                         summonerMasteriesData.push(championMasteryDTO);
                     } catch (ex) {
-                        console.warn(`Cannot add ${masteriesData.championId} in summonerMasteriesData. Champion doesn't exists. Try to update dragon file.`)
+                        console.warn(`Cannot add ${masteriesData.championId} in summonerMasteriesData. Champion doesn't exists. Try to update dragon file.`);
                     }
 
                 });
@@ -334,10 +342,10 @@ module.exports = {
 
         // Return
         async getReturnValue() {
-            var returnValue = '';
+            let returnValue = '';
 
-            let allSummonerMasteries = this.allSummonerMasteries;
-            let jsonReturn = this.getJson;
+            const allSummonerMasteries = this.allSummonerMasteries;
+            const jsonReturn = this.getJson;
 
             return new Promise(async function (resolve, reject) {
                 if (jsonReturn) {
@@ -345,11 +353,11 @@ module.exports = {
 
                 } else {
                     allSummonerMasteries.championMasteries.forEach(function (champion) {
-                        if (returnValue.length > 0) { returnValue += " | " }
-            
+                        if (returnValue.length > 0) { returnValue += ' | '; }
+
                         returnValue += champion.getMasterieInfo();
                     });
-            
+
                     returnValue = returnValue.trimEnd();
 
                     resolve(returnValue.trim());
@@ -358,7 +366,7 @@ module.exports = {
 
         }
 
-    }
+    },
 
-}
+};
 

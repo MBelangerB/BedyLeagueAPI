@@ -3,11 +3,10 @@
 const fs = require('fs');
 
 async function JSONFileReader(filePath) {
-    let rawdata = fs.readFileSync(filePath);
-    let data = JSON.parse(rawdata);
+    const rawdata = fs.readFileSync(filePath);
+    const data = JSON.parse(rawdata);
     return data;
 }
-
 
 
 module.exports = { JSONFileReader };

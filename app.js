@@ -1,38 +1,41 @@
-var createError = require('http-errors');
-var express = require('express');
-var cors = require('cors')
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+// const compression = require('compression');
 require('./util/Prototype');
 
 /* Base Route */
-var indexRouter = require('./routes/index');
-var dragonsRouter = require('./routes/dragon');
+const indexRouter = require('./routes/index');
+const dragonsRouter = require('./routes/dragon');
 
 /* League of Legend Route */
-var rankRouter = require('./routes/lol/rank');
-var leagueRouter = require('./routes/lol/league');
-var summonerRouter = require('./routes/lol/summoner');
+const rankRouter = require('./routes/lol/rank');
+const leagueRouter = require('./routes/lol/league');
+const summonerRouter = require('./routes/lol/summoner');
 
 /* API Route */
-var emailRouteur = require('./routes/api/email');
-var validateCaptchaRouteur = require('./routes/api/validateCaptcha');
+const emailRouteur = require('./routes/api/email');
+const validateCaptchaRouteur = require('./routes/api/validateCaptcha');
 
 /* OW Route */
-var overwatchRouter = require('./routes/ow/rank');
+const overwatchRouter = require('./routes/ow/rank');
 
 /* Initialize Express */
-var app = express();
+const app = express();
+
+/* Compress all routes */
+// app.use(compression());
 
 /* Add morgan token */
-logger.token('host', function(req, res) {
+logger.token('host', function(req) {
     return req.hostname;
 });
-logger.token('origin', function(req, res) {
+logger.token('origin', function(req) {
     return req.header('Origin');
 });
-logger.token('liveBot', function(req, res) {
+logger.token('liveBot', function(req) {
     let bot = '';
     try {
         if (req.header('user-agent')?.toLocaleLowerCase().includes('nightbot-url-fetcher')) {
@@ -66,36 +69,36 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 /* Cors configuration */
-//TODO: Whitelist in config
+// TODO: Whitelist in config
 // FrontEnd Address
-var allowlist = ['http://bedyapi.com', 'https://bedyapi.com',
-                'http://localhost:4200', 'http://localhost:8080', 
+const allowlist = ['http://bedyapi.com', 'https://bedyapi.com',
+                'http://localhost:4200', 'http://localhost:8080',
                 'http://web.bedyapi.com', 'https://web.bedyapi.com'];
 
 const corsOptions = {
     origin: (origin, callback) => {
         if (allowlist.indexOf(origin) !== -1) {
-            callback(null, true)
+            callback(null, true);
         } else {
-            callback(new Error('401'))
+            callback(new Error('401'));
         }
     },
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders:'Content-Type, Authorization, Origin, X-Requested-With, Accept'
-}
+    allowedHeaders:'Content-Type, Authorization, Origin, X-Requested-With, Accept',
+};
 
 /* Dragon Load on start */
 const dragonLoading = require('./controller/dragonLoading');
 app.use(async function (req, res, next) {
     try {
-        let dragLoad = new dragonLoading();
-        await dragLoad.loadChampion('fr_fr').then(async function (result) {       
+        const dragLoad = new dragonLoading();
+        await dragLoad.loadChampion('fr_fr').then(async function (result) {
             if (result) {
                 await dragLoad.convertToLeagueChampion('fr_fr');
             }
         });
     } catch (ex) {
-        console.log('do nothing')
+        console.log('do nothing');
     }
     next();
 });
@@ -113,7 +116,7 @@ app.get('/:lang?/lol/summonerInfo', summonerRouter.summonerInfo);
 app.get('/:lang?/lol/summonerInfo/:region/:summonerName', summonerRouter.summonerInfo);
 
 app.get('/:lang?/lol/rank', cors(), rankRouter.rank);
-app.get('/:lang?/lol/rank/:region/:summonerName',cors(), rankRouter.rank);
+app.get('/:lang?/lol/rank/:region/:summonerName', cors(), rankRouter.rank);
 
 // Overwatch Route
 app.get('/:lang?/ow/rank', overwatchRouter.rank);
@@ -126,17 +129,17 @@ app.get('/v2/rank', rankRouter.rankRework);
 
 // Private API routing
 // app.options('/api/sendEmail', cors())
-app.options('*', cors()) // include before other routes
+app.options('*', cors()); // include before other routes
 app.post('/api/sendEmail', cors(corsOptions), emailRouteur.sendMail);
 app.post('/api/validateReCAPTCHA', cors(corsOptions), validateCaptchaRouteur.validateReCAPTCHA);
 
 // catch 404 and forward to error handler
-app.use(function (req, res, next) {
+app.use(function (req, res) {
     res.status(404).send('404 - Not found');
 });
 
 // error handler
-app.use(function (err, req, res, next) {
+app.use(function (err, req, res) {
     // set locals, only providing error in development
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
