@@ -1,6 +1,6 @@
 'use strict';
 
-const staticFunction = staticFunction || { };
+const staticFunction = {};
 
 staticFunction.request = {
 

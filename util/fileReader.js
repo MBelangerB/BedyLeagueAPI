@@ -8,5 +8,8 @@ async function JSONFileReader(filePath) {
     return data;
 }
 
+async function JSONFileExist(filePath) {
+    return fs.existsSync(filePath);
+}
 
-module.exports = { JSONFileReader };
+module.exports = { JSONFileReader, JSONFileExist };

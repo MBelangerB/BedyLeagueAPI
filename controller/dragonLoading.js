@@ -2,7 +2,7 @@ const path = require('path');
 const CacheService = require('../module/Cache.Service');
 
 const LeagueChampion = require('../entity/api/leagueChampion');
-const { JSONFileReader } = require('../util/fileReader');
+const { JSONFileReader, JSONFileExist } = require('../util/fileReader');
 
 /*
     Cache configuration
@@ -59,18 +59,23 @@ const dragonLoading = class DragonLoading {
         const self = this;
         return new Promise(async function (resolve) {
             const cacheResult = await cacheService.getAsyncB(key).then(async function (cacheData) {
-                // Vérifie si les données sont déjà en cache, si OUI on utilise la cache
-                if (typeof cacheData === 'undefined' || !cacheData) {
-                    const result = await self.readFile(fileName).then(readResult => {
-                        cacheService.setCacheValue(key, readResult);
-                        return readResult;
-                    });
+                try {
+                    // Vérifie si les données sont déjà en cache, si OUI on utilise la cache
+                    if (typeof cacheData === 'undefined' || !cacheData) {
+                        const result = await self.readFile(fileName).then(readResult => {
+                            cacheService.setCacheValue(key, readResult);
+                            return readResult;
+                        });
 
-                    return result;
-                } else {
-                    // L'information est présente dans la cache
-                    return cacheData;
+                        return result;
+                    } else {
+                        // L'information est présente dans la cache
+                        return cacheData;
+                    }
+                } catch (ex) {
+                    console.error(ex);
                 }
+
             });
 
             resolve(cacheResult);
@@ -118,16 +123,21 @@ const dragonLoading = class DragonLoading {
         let fileData;
         return new Promise(async function (resolve, reject) {
             try {
-                await JSONFileReader(pathFile).then(function (f) {
-                    fileData = f;
+                await JSONFileExist(pathFile).then(exist => {
+                    if (exist) {
+                        JSONFileReader(pathFile).then(function (f) {
+                            fileData = f;
+                            return resolve(fileData);
+                        });
+                    }
                 });
-                resolve(fileData);
-                return;
+
             } catch (ex) {
                 console.error(`An error occured during on dragonLoading.readFile. (${pathFile})`);
                 console.error(ex);
                 reject(ex);
             }
+            return reject('File doesn\'t exist');
         });
     }
 };

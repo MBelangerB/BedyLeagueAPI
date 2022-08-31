@@ -1,6 +1,6 @@
 'use strict';
 
-const BedyBot = BedyBot || {};
+const BedyBot = {};
 
 /**
  * FrontEnd

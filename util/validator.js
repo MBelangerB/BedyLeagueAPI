@@ -2,7 +2,7 @@
 
 const routeInfo = require('../static/info.json');
 
-const validator = validator || {};
+const validator = {};
 
 validator.ow = {
     errors: [],

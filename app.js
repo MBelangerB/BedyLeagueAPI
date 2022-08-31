@@ -2,8 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+
 const logger = require('morgan');
-// const compression = require('compression');
+const compression = require('compression');
+const helmet = require("helmet");
 require('./util/Prototype');
 
 /* Base Route */
@@ -24,9 +26,6 @@ const overwatchRouter = require('./routes/ow/rank');
 
 /* Initialize Express */
 const app = express();
-
-/* Compress all routes */
-// app.use(compression());
 
 /* Add morgan token */
 logger.token('host', function(req) {
@@ -67,6 +66,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+/* Compress all routes */
+app.use(compression());
+/* Secure all route */
+app.use(helmet());
 
 /* Cors configuration */
 // TODO: Whitelist in config
