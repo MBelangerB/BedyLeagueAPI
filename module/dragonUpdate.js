@@ -92,11 +92,8 @@ class dragonUpdate {
                 if (folder) {
                     if (!fs.existsSync(folder)) {
                         await fs.mkdirSync(folder);
-
-                        // vm.addLog(`  Le répertoire '${folder}' a été crée avec succès.`);
                         console.log(`  Le répertoire '${folder}' a été crée avec succès.`);
                     } else {
-                        // vm.addLog(`  Le répertoire '${folder}' existe déjà.`);
                         console.log(`  Le répertoire '${folder}' existe déjà.`);
                     }
                     resolve(true);
@@ -144,7 +141,7 @@ class dragonUpdate {
                         await writeFile(filepath, data);
                     }
 
-                    const oldestVersion = this.currentVersion.replaceAll('[.]', '');
+                    const oldestVersion = this.currentVersion?.replaceAll('[.]', '') | 0;
                     const newVersion = latestVersion.replaceAll('[.]', '');
 
                     this.needUpdate = (parseInt(oldestVersion) < parseInt(newVersion));
@@ -152,7 +149,7 @@ class dragonUpdate {
                         this.currentVersion = latestVersion;
                         await this.updateAPIConfig();
                         await this.loadAPIConfigFile();
-                        console.log('  Config interna a été mis-à-jour');
+                        console.log('  La config interne a été mis-à-jour');
                     } else {
                         console.log('  Les fichiers sont à jours');
                     }
@@ -166,7 +163,7 @@ class dragonUpdate {
         });
     }
     async downloadFileData(lang) {
-        if (!lang) { lang = 'fr_FR';}
+        if (!lang) { lang = 'fr_fr';}
 
         const championsUrl = infoJson.dragon.champions.replace('{version}', this.currentVersion).replace('{lang}', lang);
         const iconsUrl = infoJson.dragon.profileIcons.replace('{version}', this.currentVersion).replace('{lang}', lang);

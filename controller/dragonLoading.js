@@ -137,7 +137,7 @@ const dragonLoading = class DragonLoading {
                 console.error(ex);
                 reject(ex);
             }
-            return reject('File doesn\'t exist');
+            return reject('Dragon files doesn\'t exist');
         });
     }
 };

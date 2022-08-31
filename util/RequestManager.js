@@ -19,7 +19,9 @@ class RequestManager {
                 break;
 
             default:
-                token = '';
+                // token = '';
+                // TODO: Add TokenType (SummonerInfo)
+                token = `${process.env.lolKey}`;
                 break;
         }
         return token;
@@ -57,7 +59,7 @@ class RequestManager {
                     reject(response);
                 }
             }).catch(error => {
-                if (error.response.status === 404) {
+                if (error.response.status === 404 || error.response.status === 403) {
                     reject(error.response);
                 } else {
                     console.error(`An error occured in (base static) RequestManager.ExecuteRequest(url, token).\n ${error}`);

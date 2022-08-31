@@ -52,6 +52,8 @@ exports.summonerInfo = async function (req, res) {
                         res.send(result);
                     }
                 });
+            } else if (infoResult.code === 403 || infoResult.code === 404) {
+                res.status(infoResult.code).send(`The summoner ${summonerInfo?.summonerName} doesn't exist.`);  
             }
             return;
 

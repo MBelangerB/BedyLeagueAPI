@@ -39,10 +39,7 @@ exports.rank = async function (req, res) {
         if (validationErrors && validationErrors.length > 0) {
             console.error('Error in validationErrors');
             console.error(validationErrors);
-            res.send('\'please try again\'');
-
-        //    res.send(validationErrors)
-            return;
+            return res.status(400).send('Invalid parameters, please try again');
         }
         validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters, validator.lol.METHOD_ENUM.RANK);
 
@@ -52,47 +49,43 @@ exports.rank = async function (req, res) {
         const summoner = new SummonerInfo(queryParameters);
 
         await summoner.getSummonerInfo().then(async function (result) {
-            if (result.code !== 200) {
-                console.error('Return code is invalid in getSummonerInfo');
-                console.error(`${result.code} - ${result}`);
-                res.send('\'please try again\'');
-            } else {
+            if (result.code === 200) {
                 return result.data;
+            } else if (result.code === 403 || result.code === 404) {
+                return res.status(result.code).send(`The summoner ${summoner?.summonerName} doesn't exist.`);  
             }
-            return;
-
         }).catch(error => {
             console.error('An error occured during getSummonerInfo');
             console.error(`${error.code} - ${error.err.statusMessage}`);
-            res.send('');
+            res.status(400).send('A error occured, please try again');
             return;
         });
         queryParameters.summoner = summoner.summonerInfo;
 
-        const leagueEntries = new LeagueEntry(queryParameters);
-        await leagueEntries.getLeagueRank().then(async function (rankResult) {
-            if (rankResult.code === 200) {
-                await leagueEntries.getReturnValue().then(result => {
-                    if (leagueEntries.getJson && leagueEntries.getJson == true) {
-                        res.json(result);
-                    } else {
-                        res.send(result);
-                    }
-                });
-            }
-            return;
-
-        }).catch(error => {
-            console.error('An error occured during getLeagueRank');
-            console.error(`${error.code} - ${error.err.statusMessage}`);
-            res.send('');
-            return;
-        });
-
-
+        if (res.statusCode === 200 && queryParameters.summoner.id !== '') {
+            const leagueEntries = new LeagueEntry(queryParameters);
+            await leagueEntries.getLeagueRank().then(async function (rankResult) {
+                if (rankResult.code === 200) {
+                    await leagueEntries.getReturnValue().then(result => {
+                        if (leagueEntries.getJson && leagueEntries.getJson == true) {
+                            res.json(result);
+                        } else {
+                            res.send(result);
+                        }
+                    });
+                }
+                return;
+    
+            }).catch(error => {
+                console.error('An error occured during getLeagueRank');
+                console.error(`${error.code} - ${error.err.statusMessage}`);
+                res.status(400).send('A error occured, please try again');
+                return;
+            });
+        }
     } catch (ex) {
         console.error('Error in GetRank');
         console.error(ex);
-        res.send('\'please try again\'');
+        res.status(400).send('A error occured, please try again');
     }
 };

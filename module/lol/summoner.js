@@ -135,7 +135,7 @@ module.exports = {
                             result.code = 201;
 
                         } else {
-                            result.code = 404;
+                            result.code = resultQry.err.statusCode;
                         }
 
                     });
