@@ -1,6 +1,6 @@
 {
-  "name": "bedyapi",
-  "version": "2.1.0",
+  "name": "bedybot_api",
+  "version": "2022.8.1",
   "private": true,
   "description": "BedyBot - API. Api for get summoner info, summoner rank and another information.",
   "main": "./bin/www",
