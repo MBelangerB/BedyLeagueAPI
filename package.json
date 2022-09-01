@@ -9,7 +9,7 @@
     "eslint": "eslint .",
     "eslintFix": "eslint . --fix",
     "cleanState": "npm ci",
-    "test": "mocha ./tests/*.spec.js"
+    "test": "mocha ./tests/*.spec.js --timeout 5000"
   },
   "dependencies": {
     "axios": "^0.27.2",

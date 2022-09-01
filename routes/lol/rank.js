@@ -86,6 +86,6 @@ exports.rank = async function (req, res) {
     } catch (ex) {
         console.error('Error in GetRank');
         console.error(ex);
-        res.status(400).send('A error occured, please try again');
+        res.status(500).send('A error occured, please try again');
     }
 };

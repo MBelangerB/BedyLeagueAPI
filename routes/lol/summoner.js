@@ -64,7 +64,7 @@ exports.summonerInfo = async function (req, res) {
 
     } catch (ex) {
         console.error(ex);
-        res.send(ex);
+        res.status(500).send(ex);
     }
 };
 

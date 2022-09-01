@@ -97,7 +97,7 @@ validator.lol = {
                 if (this.requireArguments(params)) {
                     this.validateRegion(params.region);
 
-                    this.convertToRealRegion(params);
+                    this.convertToRealRegion(params?.region);
                 }
                 break;
 
@@ -107,7 +107,7 @@ validator.lol = {
                     this.validateRegion(params.region);
                     this.validateSummonerName((params.summonerName || params.summonername));
 
-                    this.convertToRealRegion(params);
+                    this.convertToRealRegion(params?.region);
                 }
                 break;
 
@@ -118,7 +118,7 @@ validator.lol = {
                     this.validateSummonerName((params.summonerName || params.summonername));
                     this.validateQueueType(params.queuetype);
 
-                    this.convertToRealRegion(params);
+                    this.convertToRealRegion(params?.region);
                     this.convertToRealQueueType(params);
                 }
                 break;
@@ -137,8 +137,8 @@ validator.lol = {
      */
     validateRotateParams: function (params) {
         this.errors = [];
-        this.validateRegion(params.region);
-        this.convertToRealRegion(params);
+        this.validateRegion(params?.region);
+        params.region = this.convertToRealRegion(params?.region);
         return this.errors;
     },
 
@@ -264,40 +264,59 @@ validator.lol = {
         // Valider la présence de la region en parametre
         if (typeof region === 'undefined' || region.trim().length === 0) {
             this.errors.push('Le paramètre \'region\' est obligatoire.');
-
-        } else if (!this.isValidRegion(region)) {
-            this.errors.push('La paramètre \'region\' est invalide.');
         }
     },
     isValidRegion: function (region) {
         let valid = false;
-        switch (region.toUpperCase()) {
-            case 'NA':
-            case 'NA1':
-            case 'EUW':
-            case 'EUW1':
-            case 'EUN1':
-            case 'EUNE':
-                valid = true;
-                break;
-            default:
-                valid = false;
-                break;
+        const availabledRegions = routeInfo.lol.region;
+        if (availabledRegions.includes(region)) {
+            return true;
+        } else {
+            return false;
         }
-        return valid;
     },
-    convertToRealRegion: function(params) {
-        const region = params.region.toUpperCase();
+    convertToRealRegion: function(regionParam) {
+        const region = regionParam?.toUpperCase();
+
         const regionData = {
+            // BR1
+            'BR': 'BR1',
+            'BR1': 'BR1',
+            // EUN1
+            'EUN': 'EUN1',
+            'EUN1': 'EUN1',
+            'EUNE': 'EUN1',
+            // EUW1
             'EUW': 'EUW1',
             'EUW1': 'EUW1',
+            // JP1
+            'JP': 'JP1',
+            'JP1': 'JP1',
+            // KR
+            'KR': 'KR',
+            // LA1
+            'LA1': 'LA1',
+            'LA2': 'LA2',
+            // NA1
             'NA': 'NA1',
             'NA1': 'NA1',
-            'EUNE': 'EUN1',
-            'EUN1': 'EUN1',
+            // OC1
+            'OC': 'OC1',
+            'OC1': 'OC1',
+            // TR1
+            'TR': 'TR1',
+            'TR1': 'TR1',
+            // RU
+            'RU': 'RU',         
         };
-        params.region = regionData[region];
-        return regionData[region];
+        const realRegion = regionData[region];
+
+        if (!this.isValidRegion(realRegion)) {
+            this.errors.push('La paramètre \'region\' est invalide.');
+            return null;
+        } else {
+            return realRegion;
+        }     
     },
 
     validateQueueType: function (queueType) {

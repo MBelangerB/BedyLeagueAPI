@@ -33,7 +33,7 @@ exports.rotate = async function (req, res) {
             queryParameters = queryString;
         }
         if (validationErrors && validationErrors.length > 0) {
-            res.send(validationErrors);
+            res.status(400).send(validationErrors);
             return;
         }
         validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters);
@@ -44,22 +44,22 @@ exports.rotate = async function (req, res) {
             if (rotateResult.code === 200) {
                 await championRotate.getReturnValue().then(result => {
                     if (championRotate.getJson && championRotate.getJson == true) {
-                        res.json(result);
+                        res.status(200).json(result);
                     } else {
-                        res.send(result);
+                        res.status(200).send(result);
                     }
                 });
             }
             return;
 
         }).catch(error => {
-            res.send(`${error.code} - ${error.err.statusMessage}`);
+            res.status(400).send(`${error.code} - ${error.err.statusMessage}`);
             return;
         });
 
     } catch (ex) {
         console.error(ex);
-        res.send(ex);
+        res.status(500).send(ex);
     }
 };
 
