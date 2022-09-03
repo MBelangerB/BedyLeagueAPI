@@ -1,11 +1,11 @@
-var RequestManager = require(`../util/RequestManager`);
+const RequestManager = require('../util/RequestManager');
 const CacheService = require('../module/Cache.Service');
 
 /*
     Cache configuration
 */
-var ttStats = 60 * 3; // cache for 1 mn (60 sec * 1 min)
-var owCache = new CacheService(ttStats); // Create a new cache service instance
+const ttStats = 60 * 3; // cache for 1 mn (60 sec * 1 min)
+const owCache = new CacheService(ttStats); // Create a new cache service instance
 
 class OverwatchProfilStatsController {
     constructor(params, url) {
@@ -22,18 +22,18 @@ class OverwatchProfilStatsController {
         this.fullString = (params.fullstring === 1) || false;
     }
 
-    //#region "CacheKey"
+    // #region "CacheKey"
     getStatsCacheKey() {
         return `${this.tag}-${this.region}-${this.platform}`;
     }
-    //#endregion
+    // #endregion
 
     /**
      * Step 1 : Execution de la Query qui obtient les informations sur l'invocateur
      */
     async queryOverwatchStats(requestManager, result) {
-        var data;
-        var url = this.url;
+        let data;
+        const url = this.url;
 
         // Le SummonerInfo n'est pas présent dans la cache
         await requestManager.ExecuteRequest(url).then(function (res) {
@@ -41,31 +41,31 @@ class OverwatchProfilStatsController {
         }, function (error) {
             result.err = {
                 statusCode: error.status,
-                statusMessage: error.statusText
-            }
+                statusMessage: error.statusText,
+            };
             return result;
         });
         return data;
-    };
+    }
 
 
     /**
      * Permet d'effectue les appels nécessaire pour obtenir le rôle
      */
     async getProfileStats() {
-        var result = {
-            "code": 0,
-            "err": {}
+        const result = {
+            'code': 0,
+            'err': {},
         };
-        var self = this;
+        const self = this;
         return new Promise(async function (resolve, reject) {
             try {
-                var key = self.getStatsCacheKey();
+                const key = self.getStatsCacheKey();
 
                 await owCache.getAsyncB(key).then(async function (resultData) {
                     // Vérifie si les données sont déjà en cache, si OUI on utilise la cache
-                    if (typeof resultData === "undefined") {
-                        var data = await self.queryOverwatchStats(RequestManager, result);
+                    if (typeof resultData === 'undefined') {
+                        const data = await self.queryOverwatchStats(RequestManager, result);
                         if (data) {
                             owCache.setCacheValue(key, data);
                             return data;
@@ -79,12 +79,12 @@ class OverwatchProfilStatsController {
                     }
                 }).then(resultQry => {
                     // On traite le Resut
-                    if (resultQry && typeof resultQry.err === "undefined") {
+                    if (resultQry && typeof resultQry.err === 'undefined') {
                         // Aucune erreur
                         self.OverwatchStats = resultQry;
                         result.code = 200;
 
-                    } else if (resultQry && typeof resultQry.err != "undefined" && resultQry.err.statusCode === "200-1") {
+                    } else if (resultQry && typeof resultQry.err != 'undefined' && resultQry.err.statusCode === '200-1') {
                         // Erreur normal (pas classé, invocateur n'Existe pas)
                         result.code = 201;
 
@@ -108,86 +108,86 @@ class OverwatchProfilStatsController {
         });
     }
 
-    //#region "Get League Data"
+    // #region "Get League Data"
 
     getRatio(data) {
-        var nbGame = data.played;
-        var wins = data.won;
+        const nbGame = data.played;
+        const wins = data.won;
 
-        var rates = (wins / nbGame * 100);
+        const rates = (wins / nbGame * 100);
         return parseFloat(rates).toFixed(1);
     }
-    //#endregion
+    // #endregion
 
     getReturnValue() {
-        var returnValue = '';
+        let returnValue = '';
 
         try {
-            var stats = this.OverwatchStats;
+            const stats = this.OverwatchStats;
             if (this.getJson) {
                 // Préparer le retour
-                var data = {
-                    "profile": {
-                        "name": stats.name,
-                        "prestige": {
-                            "points": stats.prestige,
-                            "icon": stats.prestigeIcon
+                const data = {
+                    'profile': {
+                        'name': stats.name,
+                        'prestige': {
+                            'points': stats.prestige,
+                            'icon': stats.prestigeIcon,
                         },
-                        "level": {
-                            "level": stats.level,
-                            "icon": stats.levelIcon
+                        'level': {
+                            'level': stats.level,
+                            'icon': stats.levelIcon,
                         },
                     },
-                    "region": this.region,
-                    "platform": this.platform,
-                    "ratings": {
-                        "global": {
-                            "level": stats.rating,
-                            "icon": stats.ratingIcon
+                    'region': this.region,
+                    'platform': this.platform,
+                    'ratings': {
+                        'global': {
+                            'level': stats.rating,
+                            'icon': stats.ratingIcon,
                         },
-                        "specific": []
+                        'specific': [],
                     },
-                    "quickPlayStats": stats.quickPlayStats,
-                    "competitiveStats": stats.competitiveStats
-                }
+                    'quickPlayStats': stats.quickPlayStats,
+                    'competitiveStats': stats.competitiveStats,
+                };
 
                 stats.ratings.forEach(n => {
-                    let rate = {
-                        "role": n.role,
-                        "level": n.level,
-                        "icon": n.roleIcon
-                    }
+                    const rate = {
+                        'role': n.role,
+                        'level': n.level,
+                        'icon': n.roleIcon,
+                    };
                     data.ratings.specific.push(rate);
                 });
 
                 return data;
 
             } else {
-                var nbGame = stats.competitiveStats.games.played;
-                var wins = stats.competitiveStats.games.won;
-                var loose = nbGame - wins;
-                var rates = this.getRatio(stats.competitiveStats.games);
+                const nbGame = stats.competitiveStats.games.played;
+                const wins = stats.competitiveStats.games.won;
+                const loose = nbGame - wins;
+                const rates = this.getRatio(stats.competitiveStats.games);
 
                 // Bohe dispose de 2141 pts en tant que support (78 W / 148));
-                var level = '';
-                var winRate = ` ${rates != 'NaN' ? rates : 0} % (${wins}W/${loose})`;
-                var rolePts = '';
+                let level = '';
+                const winRate = ` ${rates != 'NaN' ? rates : 0} % (${wins}W/${loose})`;
+                let rolePts = '';
 
                 if (this.showLevel) {
                     level = ` (Level ${stats.level})`;
                 }
-                var tmpStats = stats.ratings;
+                const tmpStats = stats.ratings;
                 if (tmpStats && tmpStats.length > 0) {
                     tmpStats.sort(function (a, b) {
                         return (a.level > b.level);
                     });
 
                     tmpStats.forEach(n => {
-                        let rate = {
-                            "role": n.role,
-                            "level": n.level,
-                            "icon": n.roleIcon
-                        }
+                        const rate = {
+                            'role': n.role,
+                            'level': n.level,
+                            'icon': n.roleIcon,
+                        };
                         if (rolePts.length === 0) {
                             rolePts = ` dispose de ${rate.level} pts en tant que ${rate.role}.`;
                         }

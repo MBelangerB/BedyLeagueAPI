@@ -1,5 +1,5 @@
-var routeInfo = require('../../static/info.json');
-var RequestManager = require(`../../util/RequestManager`);
+const routeInfo = require('../../static/info.json');
+const RequestManager = require('../../util/RequestManager');
 
 const CacheService = require('../Cache.Service');
 const path = require('path');
@@ -10,8 +10,8 @@ const LeagueEntryDTO = require('../../entity/riot/League-v4/leagueEntryDTO');
     Cache configuration
     const ttl = 60 * 60 * 1; // cache for 1 Hour
 */
-var rankDelay = 60 * 2; // cache for 2 min
-var rankCache = new CacheService(rankDelay); // Create a new cache service instance
+const rankDelay = 60 * 2; // cache for 2 min
+const rankCache = new CacheService(rankDelay); // Create a new cache service instance
 
 module.exports = class LeagueEntry {
 
@@ -36,14 +36,14 @@ module.exports = class LeagueEntry {
         this.queueType = params.queuetype;
 
         this.gameType = RequestManager.TokenType.LOL;
-        if (this.queueType.toLowerCase() === "tft") {
+        if (this.queueType.toLowerCase() === 'tft') {
             this.gameType = RequestManager.TokenType.TFT;
         }
 
     }
 
     getCacheKey() {
-        return `LeagueEntry-${this.summonerDTO.name}-${this.region}-${this.queueType}`
+        return `LeagueEntry-${this.summonerDTO.name}-${this.region}-${this.queueType}`;
     }
     getUrlBySummonerName(encryptedSummonerId, region, queueType) {
         if (!encryptedSummonerId) { encryptedSummonerId = this.encryptedSummonerId; }
@@ -52,11 +52,11 @@ module.exports = class LeagueEntry {
 
 
         let baseUrl = routeInfo.lol.routes.league.v4.getLeagueEntriesForSummoner;
-        if (queueType === "tft") {
+        if (queueType === 'tft') {
             baseUrl = routeInfo.lol.routes.tft_league.v1.getTFTLeagueEntriesForSummoner;
         }
-        baseUrl = baseUrl.replace("{encryptedSummonerId}", encryptedSummonerId);
-        baseUrl = baseUrl.replace("{region}", region);
+        baseUrl = baseUrl.replace('{encryptedSummonerId}', encryptedSummonerId);
+        baseUrl = baseUrl.replace('{region}', region);
 
         return baseUrl;
     }
@@ -66,46 +66,47 @@ module.exports = class LeagueEntry {
      */
     async _queryRankData(requestManager, result) {
         // Le SummonerInfo n'est pas présent dans la cache
-        var data = await requestManager.ExecuteTokenRequest(this.getUrlBySummonerName(), this.gameType).then(function (LeagueEntryDTO) {
-            return LeagueEntryDTO;
+        // TODO: Avant ==> LeagueEntryDto
+        const data = await requestManager.ExecuteTokenRequest(this.getUrlBySummonerName(), this.gameType).then(function (dto) {
+            return dto;
         }, function (error) {
             if (error.response) {
                 result.err = {
                     statusCode: error.response.status,
                     statusMessage: error.response.statusText,
-                    stack: error.stack
-                }
+                    stack: error.stack,
+                };
             } else {
                 result.err = {
                     statusCode: 404,
                     statusMessage: error.message,
-                    stack: error.stack
-                }
+                    stack: error.stack,
+                };
             }
 
             return result;
         });
         return data;
-    };
+    }
 
     /**
      * Méthode principale
      */
     async getLeagueRank() {
-        var result = {
-            "code": 0,
-            "err": {}
+        const result = {
+            'code': 0,
+            'err': {},
         };
-        var key = this.getCacheKey();
-        var self = this;
+        const key = this.getCacheKey();
+        const self = this;
 
         return new Promise(async function (resolve, reject) {
             try {
 
                 await rankCache.getAsyncB(key).then(async function (resultData) {
                     // Vérifie si les données sont déjà en cache, si OUI on utilise la cache
-                    if (typeof resultData === "undefined") {
-                        var data = await self._queryRankData(RequestManager, result);
+                    if (typeof resultData === 'undefined') {
+                        const data = await self._queryRankData(RequestManager, result);
                         if (data) {
                             rankCache.setCacheValue(key, data);
                             return data;
@@ -119,18 +120,18 @@ module.exports = class LeagueEntry {
                     }
                 }).then(async resultQry => {
                     // On traite le Resut
-                    var entries = [];
-                    if (resultQry && typeof resultQry.err === "undefined") {
+                    const entries = [];
+                    if (resultQry && typeof resultQry.err === 'undefined') {
                         // On converti le data
                         resultQry.forEach(function (data) {
-                            var leagueEntryDTO = new LeagueEntryDTO(data);
+                            const leagueEntryDTO = new LeagueEntryDTO(data);
                             entries.push(leagueEntryDTO);
                         });
                         self.leagueEntries = entries;
 
                         result.code = 200;
 
-                    } else if (resultQry && typeof resultQry.err != "undefined" && resultQry.err.statusCode === "200-1") {
+                    } else if (resultQry && typeof resultQry.err != 'undefined' && resultQry.err.statusCode === '200-1') {
                         // Erreur normal (pas classé, invocateur n'Existe pas)
                         result.code = 201;
 
@@ -160,7 +161,7 @@ module.exports = class LeagueEntry {
             'soloq': 'RANKED_SOLO_5x5',
             'flex': 'RANKED_FLEX_SR',
             'flex5': 'RANKED_FLEX_SR',
-            'tft': 'RANKED_TFT'
+            'tft': 'RANKED_TFT',
         };
     }
     static getMappingRegionToLeagueQueue() {
@@ -170,7 +171,7 @@ module.exports = class LeagueEntry {
             'NA': 'NA1',
             'NA1': 'NA1',
             'EUNE': 'EUN1',
-            'EUN1': 'EUN1'
+            'EUN1': 'EUN1',
         };
     }
 
@@ -187,35 +188,35 @@ module.exports = class LeagueEntry {
         //     iconUrl = `http://ddragon.leagueoflegends.com/cdn/10.8.1/img/profileicon/${fullIconId}`;
         // }
         //  "profileIconUrl": iconUrl,
-        var mappingQueue = LeagueEntry.getMappingQueueTypeToLeagueQueue();
+        const mappingQueue = LeagueEntry.getMappingQueueTypeToLeagueQueue();
 
         // Préparer le retour
-        var data = {
-            "summoner": {
-                "name": this.summonerDTO.name,
-                "profileIcon": this.summonerDTO.profileIconId,
-                "profileIconUrl": "",
-                "level": this.summonerDTO.summonerLevel
+        const data = {
+            'summoner': {
+                'name': this.summonerDTO.name,
+                'profileIcon': this.summonerDTO.profileIconId,
+                'profileIconUrl': '',
+                'level': this.summonerDTO.summonerLevel,
             },
-            "region": this.region,
-            "queues": []
-        }
+            'region': this.region,
+            'queues': [],
+        };
 
 
         entries.forEach(n => {
-            var tier = {
-                "RiotQueueType": n.queueType,
-                "QueueType": Object.entries(mappingQueue).find(q => q[1] === n.queueType)[0], // queueEntrier.find(q => q[1] === n.queueType),
-                "tiers": n.tier,
-                "rank": n.rank,
-                "series": n.getSeries(this.series, isOverlay),
-                "LP": n.getLeaguePoint(true),
-                "stats": {
-                    "ratio": n.getRatio(),
-                    "W": n.wins,
-                    "L": n.losses
-                }
-            }
+            const tier = {
+                'RiotQueueType': n.queueType,
+                'QueueType': Object.entries(mappingQueue).find(q => q[1] === n.queueType)[0], // queueEntrier.find(q => q[1] === n.queueType),
+                'tiers': n.tier,
+                'rank': n.rank,
+                'series': n.getSeries(this.series, isOverlay),
+                'LP': n.getLeaguePoint(true),
+                'stats': {
+                    'ratio': n.getRatio(),
+                    'W': n.wins,
+                    'L': n.losses,
+                },
+            };
 
             data.queues.push(tier);
         });
@@ -225,24 +226,24 @@ module.exports = class LeagueEntry {
 
     async getTextData(entries, queue, all, withName) {
         //  var entries = this.leagueEntries;
-        var mappingQueue = LeagueEntry.getMappingQueueTypeToLeagueQueue();
-        var returnValue = '';
+        const mappingQueue = LeagueEntry.getMappingQueueTypeToLeagueQueue();
+        let returnValue = '';
 
         if (all) {
-            var soloQ = await this.getTextData(entries, "solo5", false, true);
-            var flex = await this.getTextData(entries, "flex", false, (soloQ.length === 0));
+            const soloQ = await this.getTextData(entries, 'solo5', false, true);
+            const flex = await this.getTextData(entries, 'flex', false, (soloQ.length === 0));
 
             returnValue = `${soloQ} / ${flex}`;
         } else {
 
-            var league = entries.find(entry => entry.queueType === mappingQueue[queue]);
+            const league = entries.find(entry => entry.queueType === mappingQueue[queue]);
 
             if (league) {
-                var rankTiers = league.getTiersRank();
-                var leaguePt = '';
-                var winRate = '';
-                var series = league.getSeries(this.series);
-                var gameType = '';
+                const rankTiers = league.getTiersRank();
+                let leaguePt = '';
+                let winRate = '';
+                const series = league.getSeries(this.series);
+                let gameType = '';
 
                 if (this.showLp) {
                     leaguePt = league.getLeaguePoint();
@@ -253,14 +254,14 @@ module.exports = class LeagueEntry {
                 }
 
                 if (this.showType) {
-                    if (this.fullqueue && league.getGameType() === "SoloQ") {
-                        gameType = ` (SoloQ/DuoQ)`;
+                    if (this.fullqueue && league.getGameType() === 'SoloQ') {
+                        gameType = ' (SoloQ/DuoQ)';
                     } else {
                         gameType = ` (${league.getGameType()})`;
                     }
                 }
 
-                if ((this.fullString && withName) || (this.fullString && (typeof withName !== "undefined" && withName))) {
+                if ((this.fullString && withName) || (this.fullString && (typeof withName !== 'undefined' && withName))) {
                     let CapSummonerName = `${this.summonerDTO.name}`;
                     CapSummonerName = CapSummonerName.charAt(0).toUpperCase() + CapSummonerName.slice(1);
 
@@ -268,37 +269,34 @@ module.exports = class LeagueEntry {
                 } else {
                     returnValue = `${rankTiers}${leaguePt}${series}${winRate}${gameType}`;
                 }
-            }
-            else {
-                if ((this.fullString && withName) || (this.fullString && (typeof withName !== "undefined" && withName))) {
+            } else if ((this.fullString && withName) || (this.fullString && (typeof withName !== 'undefined' && withName))) {
                     let CapSummonerName = `${this.summonerDTO.name}`;
                     CapSummonerName = CapSummonerName.charAt(0).toUpperCase() + CapSummonerName.slice(1);
 
                     returnValue = `${CapSummonerName} est actuellement Unranked.`;
                 } else {
-                    returnValue = `unranked`;
-                }           
-            }
+                    returnValue = 'unranked';
+                }
         }
         return returnValue;
     }
 
     async getReturnValue() {
-        var returnValue = '';
-        let entries = this.leagueEntries;
-        let jsonReturn = this.getJson;
-        let getAll = this.getAll;
-        let queue = this.queueType;
-        let self = this;
+        let returnValue = '';
+        const entries = this.leagueEntries;
+        const jsonReturn = this.getJson;
+        const getAll = this.getAll;
+        const queue = this.queueType;
+        const self = this;
 
         try {
-            return new Promise(async function (resolve, reject) {
+            return new Promise(async function (resolve) {
                 if (jsonReturn) {
                     returnValue = (self.getJsonData(entries));
                 } else {
                     returnValue = (self.getTextData(entries, queue, getAll, true));
                 }
-                resolve(returnValue)
+                resolve(returnValue);
             });
         } catch (ex) {
             console.error(ex);
@@ -306,43 +304,43 @@ module.exports = class LeagueEntry {
     }
 
     async getOverlayData(mode) {
-        var returnValue = {
+        const returnValue = {
             mode: parseInt(mode),
             summoner: {
-                name: "",
-                level: 0
+                name: '',
+                level: 0,
             },
             queue: this.queueType,
             stats: {
-                ratio: "",
+                ratio: '',
                 wins: 0,
                 looses: 0,
                 series: {
                     enabled: 0,
-                    result: ''
-                }
-            },      
+                    result: '',
+                },
+            },
             rank: {
-                colorRank: "",
-                tier: "",
+                colorRank: '',
+                tier: '',
                 lp: 0,
-                rank: "",
+                rank: '',
             },
             image: {
-                src: "",
-                alt: ""
-            }
+                src: '',
+                alt: '',
+            },
         };
 
-        let entries = this.leagueEntries;
-        let queue = this.queueType;
-        let self = this;
+        const entries = this.leagueEntries;
+        const queue = this.queueType;
+        const self = this;
         let data;
 
         try {
-            return new Promise(async function (resolve, reject) {
+            return new Promise(async function (resolve) {
                 data = await self.getJsonData(entries, true);
-                let userQueue = data.queues.find(q => q.QueueType === queue);
+                const userQueue = data.queues.find(q => q.QueueType === queue);
 
                 returnValue.summoner.name = data.summoner.name;
                 returnValue.summoner.level = data.summoner.level;
@@ -363,11 +361,11 @@ module.exports = class LeagueEntry {
                 returnValue.rank.colorRank = userQueue.tiers.toLowerCase();
 
                 returnValue.image.alt = `${userQueue.tiers} ${userQueue.rank}`;
-                returnValue.image.src = `${LeagueEntry.getEmbles(userQueue.tiers)}`
+                returnValue.image.src = `${LeagueEntry.getEmbles(userQueue.tiers)}`;
 
                 console.log(returnValue);
 
-                resolve(returnValue)
+                resolve(returnValue);
             });
         } catch (ex) {
             console.error(ex);
@@ -375,44 +373,44 @@ module.exports = class LeagueEntry {
     }
 
     static getEmbles(tiers) {
-        var folder = `/emblems`;
-        var imgName;
+        const folder = '/emblems';
+        let imgName;
 
         switch (tiers.toUpperCase()) {
             case 'IRON':
-                imgName = `/Emblem_Iron.png`
+                imgName = '/Emblem_Iron.png';
                 break;
 
             case 'BRONZE':
-                imgName = `/Emblem_Bronze.png`
+                imgName = '/Emblem_Bronze.png';
                 break;
 
             case 'SILVER':
-                imgName = `/Emblem_Silver.png`
+                imgName = '/Emblem_Silver.png';
                 break;
 
             case 'GOLD':
-                imgName = `/Emblem_Gold.png`
+                imgName = '/Emblem_Gold.png';
                 break;
 
             case 'PLATINUM':
-                imgName = `/Emblem_Platinum.png`
+                imgName = '/Emblem_Platinum.png';
                 break;
 
             case 'DIAMOND':
-                imgName = `/Emblem_Diamond.png`
+                imgName = '/Emblem_Diamond.png';
                 break;
 
             case 'MASTER':
-                imgName = `/Emblem_Master.png`
+                imgName = '/Emblem_Master.png';
                 break;
 
             case 'GRANDMASTER':
-                imgName = `/Emblem_GrandMaster.png`
+                imgName = '/Emblem_GrandMaster.png';
                 break;
 
             case 'CHALLENGER':
-                imgName = `/Emblem_Challenger.png`
+                imgName = '/Emblem_Challenger.png';
                 break;
         }
 
@@ -420,6 +418,5 @@ module.exports = class LeagueEntry {
     }
 
 
-
-}
+};
 

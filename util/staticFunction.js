@@ -1,18 +1,12 @@
-// var jsonConfig = require('../class/jsonConfig');
-// var routeInfo = require('./info.json');
-// var riotUserInfo = require('../webModule/riotUserInfo')
-
-// const path = require('path');
-
 'use strict';
 
-var staticFunction = staticFunction || { };
+const staticFunction = {};
 
 staticFunction.request = {
 
     lowerQueryString: function(parameters) {
-        let queryString = [];
-        for (var key in parameters) {
+        const queryString = [];
+        for (const key in parameters) {
             queryString[key.toLowerCase()] = parameters[key];
         }
         return queryString;
@@ -24,7 +18,7 @@ staticFunction.request = {
 
     clone(src) {
         return Object.assign({}, src);
-    }
-}
+    },
+};
 
 module.exports = staticFunction;

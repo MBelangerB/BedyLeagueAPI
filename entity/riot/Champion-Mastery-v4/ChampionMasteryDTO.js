@@ -1,11 +1,11 @@
 /**
- * ChampionMasteryDTO 
+ * ChampionMasteryDTO
  * Riot Entity
  * 2020-09-18
  */
 // let LeagueChampion = require(`../../api/leagueChampion`);
 
-var championMasteryDTO = class ChampionMasteryDTO {
+const championMasteryDTO = class ChampionMasteryDTO {
     /**
      * long
      */
@@ -26,17 +26,17 @@ var championMasteryDTO = class ChampionMasteryDTO {
      */
     lastPlayTime = 0;
 
-    
+
     /**
      * int
      */
     championLevel = 0;
-    
+
     /**
      * string
      */
     summonerId = '';
-    
+
     /**
      * int
      */
@@ -67,8 +67,8 @@ var championMasteryDTO = class ChampionMasteryDTO {
     }
 
     getMasterieInfo() {
-        return `${this.championData.championName} (${this.championPoints} pts)`
+        return `${this.championData.championName} (${this.championPoints} pts)`;
     }
-}
+};
 
 module.exports = championMasteryDTO;

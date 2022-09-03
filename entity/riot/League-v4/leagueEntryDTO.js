@@ -1,61 +1,61 @@
 const miniSeriesDTO = require('./miniSeriesDTO');
 
 /**
- * LeagueEntryDTO 
+ * LeagueEntryDTO
  * Riot Entity
  * 2020-09-18
  */
-var leagueEntryDTO = class LeagueEntryDTO {
+const leagueEntryDTO = class LeagueEntryDTO {
     /**
-     * string 
+     * string
      */
     leagueId = '';
     /**
-     * string 
+     * string
      */
     summonerId = '';
     /**
-     * string 
+     * string
      */
     summonerName = '';
     /**
-     * string 
+     * string
      */
     queueType = '';
     /**
-     * string 
+     * string
      */
     tier = '';
     /**
-     * string 
+     * string
      */
     rank = '';
     /**
-     * int 
+     * int
      */
     leaguePoints = 0;
     /**
-    * int 
+    * int
     */
     wins = 0;
     /**
-    * int 
+    * int
     */
     losses = 0;
     /**
-    * boolean 
+    * boolean
     */
     hotStreak = false;
     /**
-    * boolean 
+    * boolean
     */
     veteran = false;
     /**
-    * boolean 
+    * boolean
     */
     freshBlood = false;
     /**
-    * boolean 
+    * boolean
     */
     inactive = false;
     /**
@@ -85,7 +85,7 @@ var leagueEntryDTO = class LeagueEntryDTO {
     }
 
     getRatio() {
-        var rates = (this.wins / (this.wins + this.losses) * 100);
+        const rates = (this.wins / (this.wins + this.losses) * 100);
         return parseFloat(rates).toFixed(1);
     }
 
@@ -102,7 +102,7 @@ var leagueEntryDTO = class LeagueEntryDTO {
     }
 
     getGameType() {
-        var type = '';
+        let type = '';
         switch (this.queueType) {
             case 'RANKED_SOLO_5x5':
                 type = 'SoloQ';
@@ -120,41 +120,41 @@ var leagueEntryDTO = class LeagueEntryDTO {
 
     getSeries(charSerie, isOverlay = false) {
         if (this.miniSeries) {
-            var cWin = charSerie[0]; // W
-            var cLoose = charSerie[1]; // L
-            var cPending = charSerie[2]; // N
+            const cWin = charSerie[0]; // W
+            const cLoose = charSerie[1]; // L
+            const cPending = charSerie[2]; // N
 
             if (isOverlay) {
-                var series = `${this.miniSeries.progress}`;
-                var result = [];
+                const series = `${this.miniSeries.progress}`;
+                const result = [];
 
-                for (var i = 0; i < series.length; i++) {
-                    var char = series.charAt(i);
-                    var color = "green";
-                    switch(char.toUpperCase()) {
+                for (let i = 0; i < series.length; i++) {
+                    let char = series.charAt(i);
+                    let color = 'green';
+                    switch (char.toUpperCase()) {
                         case 'W':
-                            color = "green";
+                            color = 'green';
                             char = cWin;
                             break;
                         case 'L':
-                            color = "red";
+                            color = 'red';
                             char = cLoose;
                             break;
-                        case "N":
-                            color = "gray"
+                        case 'N':
+                            color = 'gray';
                             char = cPending;
                             break;
                     }
 
                     result.push({
                         'value': char,
-                        'color': color
-                    })
+                        'color': color,
+                    });
                   }
 
                 return result;
             } else {
-                var series = ` [${this.miniSeries.progress}]`;
+                let series = ` [${this.miniSeries.progress}]`;
                 series = series.replaceAll('L', cLoose).replaceAll('W', cWin).replaceAll('N', cPending);
                 return series;
             }
@@ -165,6 +165,6 @@ var leagueEntryDTO = class LeagueEntryDTO {
         }
     }
 
-}
+};
 
 module.exports = leagueEntryDTO;

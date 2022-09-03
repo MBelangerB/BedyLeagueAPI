@@ -1,9 +1,9 @@
 /**
- * MiniSeriesDTO 
+ * MiniSeriesDTO
  * Riot Entity
  * 2020-09-18
  */
-var miniSeriesDTO = class MiniSeriesDTO {
+const miniSeriesDTO = class MiniSeriesDTO {
     /**
      * int
      */
@@ -30,6 +30,6 @@ var miniSeriesDTO = class MiniSeriesDTO {
         this.target = jsonData.target;
         this.progress = jsonData.progress;
     }
-}
+};
 
 module.exports = miniSeriesDTO;

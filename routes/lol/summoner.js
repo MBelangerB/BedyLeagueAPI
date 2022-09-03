@@ -4,24 +4,22 @@
     GEtLiveGame
 */
 
-
-// var routeInfo = require('../../static/info.json');
 const validator = require('../../util/validator');
 const staticFunc = require('../../util/staticFunction');
 
 const { SummonerInfo, SummonerMasteries } = require('../../module/lol/summoner');
 
 /* GET summonerInfo. */
-exports.summonerInfo = async function (req, res, next) {
+exports.summonerInfo = async function (req, res) {
     try {
-        let { query, params } = req;
+        const { query, params } = req;
 
         // Gestion de la culture
         validator.parameters.validateCulture(params);
 
         // Gestion des paramètres
         let queryParameters;
-        let queryString = staticFunc.request.lowerQueryString(query);
+        const queryString = staticFunc.request.lowerQueryString(query);
         console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
 
         /*
@@ -29,7 +27,7 @@ exports.summonerInfo = async function (req, res, next) {
             Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
             en QueryString
         */
-        var validationErrors = [];
+        let validationErrors = [];
         if (params && Object.keys(params).length > 1) {
             validationErrors = validator.lol.validateParams(params, validator.lol.METHOD_ENUM.SUMMONER_INFO);
             queryParameters = params;
@@ -38,22 +36,24 @@ exports.summonerInfo = async function (req, res, next) {
             queryParameters = queryString;
         }
         if (validationErrors && validationErrors.length > 0) {
-            res.send(validationErrors)
+            res.send(validationErrors);
             return;
         }
-        validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters,  validator.lol.METHOD_ENUM.SUMMONER_INFO);
+        validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters, validator.lol.METHOD_ENUM.SUMMONER_INFO);
 
-        var summonerInfo = new SummonerInfo(queryParameters);
+        const summonerInfo = new SummonerInfo(queryParameters);
 
-        await summonerInfo.getSummonerInfo().then(async function(result) {
-            if (result.code === 200) {
+        await summonerInfo.getSummonerInfo().then(async function(infoResult) {
+            if (infoResult.code === 200) {
                 await summonerInfo.getReturnValue().then(result => {
                     if (summonerInfo.getJson && summonerInfo.getJson == true) {
                         res.json(result);
                     } else {
                         res.send(result);
-                    }    
+                    }
                 });
+            } else if (infoResult.code === 403 || infoResult.code === 404) {
+                res.status(infoResult.code).send(`The summoner ${summonerInfo?.summonerName} doesn't exist.`);  
             }
             return;
 
@@ -64,20 +64,20 @@ exports.summonerInfo = async function (req, res, next) {
 
     } catch (ex) {
         console.error(ex);
-        res.send(ex);
+        res.status(500).send(ex);
     }
 };
 
-exports.topMasteries = async function (req, res, next) {
+exports.topMasteries = async function (req, res) {
     try {
-        let { query, params } = req;
+        const { query, params } = req;
 
         // Gestion de la culture
         validator.parameters.validateCulture(params);
 
         // Gestion des paramètres
         let queryParameters;
-        let queryString = staticFunc.request.lowerQueryString(query);
+        const queryString = staticFunc.request.lowerQueryString(query);
         console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
 
         /*
@@ -85,7 +85,7 @@ exports.topMasteries = async function (req, res, next) {
             Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
             en QueryString
         */
-        var validationErrors = [];
+        let validationErrors = [];
         if (params && Object.keys(params).length > 1) {
             validationErrors = validator.lol.validateParams(params, validator.lol.METHOD_ENUM.MASTERIES);
             queryParameters = params;
@@ -94,19 +94,19 @@ exports.topMasteries = async function (req, res, next) {
             queryParameters = queryString;
         }
         if (validationErrors && validationErrors.length > 0) {
-            res.send(validationErrors)
+            res.send(validationErrors);
             return;
         }
-        validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters,  validator.lol.METHOD_ENUM.MASTERIES);
+        validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters, validator.lol.METHOD_ENUM.MASTERIES);
 
         /*
             Obtenir initiale le summoner pour avoir EncryptedAccountID
         */
-       var summoner = new SummonerInfo(queryParameters);
+       const summoner = new SummonerInfo(queryParameters);
 
        await summoner.getSummonerInfo().then(async function(result) {
            if (result.code !== 200) {
-               res.send(`An error occured during getSummonerInfo`)
+               res.send('An error occured during getSummonerInfo');
            } else {
                return result.data;
            }
@@ -118,16 +118,16 @@ exports.topMasteries = async function (req, res, next) {
        });
        queryParameters.id = summoner.summonerInfo.id;
 
-       var masteries = new SummonerMasteries(queryParameters);
+       const masteries = new SummonerMasteries(queryParameters);
 
-        await masteries.getSummonerMasteries().then(async function(result) {
-            if (result.code === 200) {
+        await masteries.getSummonerMasteries().then(async function(masteriesResult) {
+            if (masteriesResult.code === 200) {
                 await masteries.getReturnValue().then(result => {
                     if (masteries.getJson && masteries.getJson == true) {
                         res.json(result);
                     } else {
                         res.send(result);
-                    }    
+                    }
                 });
             }
             return;
@@ -144,16 +144,16 @@ exports.topMasteries = async function (req, res, next) {
     }
 };
 
-exports.liveGame = async function (req, res, next) {
+exports.liveGame = async function (req, res) {
     try {
-        let { query, params } = req;
+        const { query, params } = req;
 
         // Gestion de la culture
         validator.parameters.validateCulture(params);
 
         // Gestion des paramètres
         let queryParameters;
-        let queryString = staticFunc.request.lowerQueryString(query);
+        const queryString = staticFunc.request.lowerQueryString(query);
         console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
 
         /*
@@ -161,7 +161,7 @@ exports.liveGame = async function (req, res, next) {
             Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
             en QueryString
         */
-        var validationErrors = [];
+        let validationErrors = [];
         if (params && Object.keys(params).length > 1) {
             validationErrors = validator.lol.validateRotateParams(params);
             queryParameters = params;
@@ -170,7 +170,7 @@ exports.liveGame = async function (req, res, next) {
             queryParameters = queryString;
         }
         if (validationErrors && validationErrors.length > 0) {
-            res.send(validationErrors)
+            res.send(validationErrors);
             return;
         }
         validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters);
@@ -184,7 +184,7 @@ exports.liveGame = async function (req, res, next) {
         //                 res.json(result);
         //             } else {
         //                 res.send(result);
-        //             }    
+        //             }
         //         });
         //     }
         //     return;

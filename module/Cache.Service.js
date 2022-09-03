@@ -28,10 +28,10 @@ module.exports = class Cache {
   }
 
   async getAsyncB(key) {
-    var lCache = this.cache;
-    return new Promise(function (resolve, reject) {
+    const lCache = this.cache;
+    return new Promise(function (resolve) {
       const value = lCache.get(key);
-      resolve(value);     
+      resolve(value);
     });
   }
 
@@ -61,20 +61,20 @@ module.exports = class Cache {
   }
 
   checkCacheExists(cacheKey) {
-    var cacheInfo = cache.getAsync(cacheKey);
-    var result;
+    const cacheInfo = this.cache.getAsync(cacheKey);
+    let result;
 
     if (cacheInfo !== null) {
       cacheInfo.then(function (value) {
         result = value;
-      })
+      });
     }
 
     return (result || cacheInfo);
   }
 
 
-}
+};
 
 
 // export default Cache;

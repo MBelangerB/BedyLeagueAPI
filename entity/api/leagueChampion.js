@@ -1,5 +1,5 @@
 /*
-    Class interne de API pour contenir les information sur les champion. 
+    Class interne de API pour contenir les information sur les champion.
 */
 const dragonUpdate = require('../../module/dragonUpdate');
 
@@ -15,7 +15,7 @@ module.exports = class ChampionInfo {
 
     async init(id, name, search, imgInfo) {
 
-        let version = await this.getVersion().then(r => {
+        const version = await this.getVersion().then(r => {
             this.championIconUrl = `http://ddragon.leagueoflegends.com/cdn/${r}/img/champion/${search}.png`;
             return r;
         });
@@ -28,8 +28,8 @@ module.exports = class ChampionInfo {
             this.setFullImageName(imgInfo.full, version);
         }
     }
-  
-    setFullImageName(imageName, version) {
+
+    setFullImageName(imageName) {
         this.fullImageName = imageName;
     //    this.fullImageUrl = `http://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${imageName}`;
     }
@@ -52,21 +52,21 @@ module.exports = class ChampionInfo {
 
     async getVersion() {
         try {
-            var ds = new dragonUpdate();
+            const ds = new dragonUpdate();
             await ds.loadAPIConfigFile().then(async loading => {
                 if (loading && loading.dragonVersion) {
                     return true;
                 }
             }).catch(error => {
-                console.log(`A error occured during GetDragonVersion`);
+                console.log('A error occured during GetDragonVersion');
                 console.error(error);
             });
 
             return `${ds.currentVersion}`;
         } catch (ex) {
             console.error(ex);
-            res.send(ex);
+            return false;
         }
     }
 
-}
+};

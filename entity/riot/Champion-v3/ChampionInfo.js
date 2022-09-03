@@ -1,10 +1,9 @@
-
 /**
- * ChampionInfo 
+ * ChampionInfo
  * Riot Entity
  * 2020-09-18
  */
-var championInfo = class ChampionInfo {
+const championInfo = class ChampionInfo {
     /**
      * int
      */
@@ -26,6 +25,6 @@ var championInfo = class ChampionInfo {
         this.freeChampions = jsonData.freeChampions;
     }
 
-}
+};
 
 module.exports = championInfo;
