@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const compression = require('compression');
 const helmet = require("helmet");
+
 require('./util/Prototype');
 
 /* Base Route */
@@ -18,8 +19,9 @@ const leagueRouter = require('./routes/lol/league');
 const summonerRouter = require('./routes/lol/summoner');
 
 /* API Route */
-const emailRouteur = require('./routes/api/email');
-const validateCaptchaRouteur = require('./routes/api/validateCaptcha');
+const { authRouter, verifyToken } = require('./routes/api/auth');
+const emailRouter = require('./routes/api/email');
+const validateCaptchaRouter = require('./routes/api/validateCaptcha');
 
 /* OW Route */
 const overwatchRouter = require('./routes/ow/rank');
@@ -131,10 +133,16 @@ app.get('/rank', rankRouter.rankRework);
 app.get('/v2/rank', rankRouter.rankRework);
 
 // Private API routing
+app.post('/api/login', authRouter.login);
+app.post('/api/refreshToken', verifyToken, authRouter.refreshToken);
+app.get('/api/profile', verifyToken, authRouter.profile);
+
+
+
 // app.options('/api/sendEmail', cors())
 app.options('*', cors()); // include before other routes
-app.post('/api/sendEmail', cors(corsOptions), emailRouteur.sendMail);
-app.post('/api/validateReCAPTCHA', cors(corsOptions), validateCaptchaRouteur.validateReCAPTCHA);
+app.post('/api/sendEmail', cors(corsOptions), emailRouter.sendMail);
+app.post('/api/validateReCAPTCHA', cors(corsOptions), validateCaptchaRouter.validateReCAPTCHA);
 
 // catch 404 and forward to error handler
 app.use(function (req, res) {

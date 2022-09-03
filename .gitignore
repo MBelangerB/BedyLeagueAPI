@@ -38,3 +38,8 @@
 
 # dotenv environment variables file
 .env
+
+
+# Dist
+db/dist
+dist/*
