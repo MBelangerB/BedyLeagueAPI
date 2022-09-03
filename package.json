@@ -31,7 +31,8 @@
     "nodemailer": "^6.7.8",
     "sequelize": "^6.19.0",
     "sqlite3": "^5.0.5",
-    "util": "^0.12.4"
+    "util": "^0.12.4",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "chai": "^4.3.6",
