@@ -23,6 +23,9 @@ const { authRouter, verifyToken } = require('./routes/api/auth');
 const emailRouter = require('./routes/api/email');
 const validateCaptchaRouter = require('./routes/api/validateCaptcha');
 
+/* Discourd Route */
+const { discordAuth } = require('./routes/discord/auth');
+
 /* OW Route */
 const overwatchRouter = require('./routes/ow/rank');
 
@@ -127,10 +130,12 @@ app.get('/:lang?/lol/rank/:region/:summonerName', cors(), rankRouter.rank);
 app.get('/:lang?/ow/rank', overwatchRouter.rank);
 app.get('/:lang?/ow/rank/:region/:platform/:tag', overwatchRouter.rank);
 
-// Temporary redirection
-// TODO: Remove
-app.get('/rank', rankRouter.rankRework);
-app.get('/v2/rank', rankRouter.rankRework);
+// Discord route
+// app.post('discord/login', discordAuth.login);
+// app.get('/discord/login', discordAuth.login);
+app.get('/discord/callback', discordAuth.callback);
+app.get('/discord/userInfo', discordAuth.userInfo);
+// app.post('/discord/callback', discordAuth.callback);
 
 // Private API routing
 app.post('/api/login', authRouter.login);
