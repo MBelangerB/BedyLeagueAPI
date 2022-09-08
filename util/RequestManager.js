@@ -73,7 +73,7 @@ class RequestManager {
      * Execute une requête AXIOS
      * @param {string} requestUrl
      */
-    static async ExecuteRequest(requestUrl, method = 'get', responseType = 'json') {
+    static async ExecuteBasicRequest(requestUrl, method = 'get', responseType = 'json') {
         return new Promise(function (resolve, reject) {
 
             axios({
@@ -117,7 +117,7 @@ class RequestManager {
             Methode base pour executer Query.
         */
         static async ExecuteRequest(requestUrl, headers, bodyData, method = 'get', responseType = 'json') {
-            console.info(requestUrl);
+            // console.info(requestUrl);
 
             return new Promise(function (resolve, reject) {
 
@@ -146,10 +146,11 @@ class RequestManager {
                         reject(response);
                     }
                 }).catch(error => {
-                    if (error.response.status === 404 || error.response.status === 403) {
+                    if (error.response?.status >= 400  && error.response?.status <= 403) {
                         reject(error.response);
                     } else {
                         console.error(`An error occured in (base static) RequestManager.ExecuteRequest(url, token).\n ${error}`);
+                        console.error(error?.stack);
                         reject(error);
                     }
                 });

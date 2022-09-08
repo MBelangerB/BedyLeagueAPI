@@ -133,8 +133,10 @@ app.get('/:lang?/ow/rank/:region/:platform/:tag', overwatchRouter.rank);
 // Discord route
 // app.post('discord/login', discordAuth.login);
 // app.get('/discord/login', discordAuth.login);
-app.get('/discord/callback', discordAuth.callback);
-app.get('/discord/userInfo', discordAuth.userInfo);
+app.post('/discord/accessToken', cors(corsOptions), discordAuth.accessToken);
+app.post('/discord/revokeToken', cors(corsOptions), verifyToken, discordAuth.revokeToken);
+app.get('/dsicord/serverList', verifyToken, authRouter.serverList);
+// app.get('/discord/userInfo', discordAuth.userInfo);
 // app.post('/discord/callback', discordAuth.callback);
 
 // Private API routing

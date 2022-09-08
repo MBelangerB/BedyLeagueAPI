@@ -8,7 +8,14 @@ const tokenList = {}
 // https://github.com/codeforgeek/node-refresh-token/blob/master/app.js
 // https://codeforgeek.com/refresh-token-jwt-nodejs-authentication/
 const authRouter = {
-    // login = async function (req, res, next) {
+
+    /**
+     * Personnal login - JWT Test
+     * @param {*} req 
+     * @param {*} res 
+     * @param {*} next 
+     * @returns 
+     */
     async login(req, res, next) {
         try {
             console.log('Enter in Login');
@@ -49,6 +56,13 @@ const authRouter = {
         }
     },
 
+    /**
+     * Not OK - Not availabled in jwt
+     * @param {*} req 
+     * @param {*} res 
+     * @param {*} next 
+     * @returns 
+     */
     async refreshToken(req, res, next) {
         try {
             console.log('Enter in Login');
@@ -63,7 +77,7 @@ const authRouter = {
                 delete data.exp;
                 delete data.nbf;
                 delete data.jti;
-                
+
                 jwt.sign({ payload }, process.env.SECRET, { expiresIn: process.env.TOKEN_LIFE }, (err, token) => {
                     if (err) {
                         console.warn(err);
@@ -82,7 +96,7 @@ const authRouter = {
                 // Pas acccès
                 return res.status(401).send('Le compte n\'existe pas.')
             }
- 
+
         } catch (ex) {
             console.error('An error occured in /api/refreshToken')
             console.error(ex);
@@ -138,23 +152,31 @@ const authRouter = {
 function verifyToken(req, res, next) {
     const bearerHeader = req.headers['authorization'];
     if (typeof bearerHeader !== 'undefined') {
-
         // Soluce 2
         const bearer = bearerHeader.split(' ');
+        const tokenType = bearer[0];
         const token = bearer[1];
-        jwt.verify(token, process.env.SECRET, (err, payload) => {
-            if (err) {
-                console.warn(err.message);
-                res.status(401).json({
-                    error: true,
-                    message: 'Unauthorized access.'
-                });
-            } else {
-                req.token = token;
-                req.payload = payload;
-                next();
-            }
-        });
+        if (tokenType == 'jwt') {
+            jwt.verify(token, process.env.SECRET, (err, payload) => {
+                if (err) {
+                    console.warn(err.message);
+                    res.status(401).json({
+                        error: true,
+                        message: 'Unauthorized access.'
+                    });
+                } else {
+                    req.token = token;
+                    req.payload = payload;
+                    next();
+                }
+            });
+        } else {
+            res.status(403).json({
+                error: true,
+                message: 'No token provided.'
+            });
+        }
+
 
     } else {
         res.status(403).json({

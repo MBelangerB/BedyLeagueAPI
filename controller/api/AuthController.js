@@ -4,7 +4,8 @@ const { sequelize } = require('../../db/dbSchema');
 const { API_Users, API_Tokens } = sequelize.models;
 const RequestManager = require('../../util/RequestManager');
 const qs = require('qs');
-const { api } = require('../../util/validator');
+const staticInfo = require('../../static/info.json');
+const { CDN } = require('../../module/discord/cdn');
 
 class AuthController {
 
@@ -16,58 +17,30 @@ class AuthController {
     //      res.status(400).json({ 'error': err });
     //  If Global error (catch)
     //      res.status(500).json({ 'error': err });
-    // static async createOrLoadUser(username, email, decryptedPassword, createUserIfNotExist) {
-    //     try {
-    //         const data = {
-    //             isNew: false,
-    //             user: await API_Users.findOne({ where: { username: username, email: email } }),
-    //             jwtUser: {}
-    //         }
 
-    //         if (createUserIfNotExist && data.user == null) {
-    //             data.isNew = true;
-
-    //             data.user = await API_Users.create({
-    //                 username: username,
-    //                 password: decryptedPassword,
-    //                 email: email,
-    //             });
-
-    //         } else if (data.user) {
-    //             // payload
-    //             data.jwtUser = {
-    //                 id: data.user.id,
-    //                 username: data.user.username,
-    //                 email: data.user.email,
-    //             }
-    //         }
-
-    //         return data;
-
-    //     } catch (error) {
-    //         if (error.name === 'SequelizeUniqueConstraintError') {
-    //             return console.error('That Users already exists.', error);
-    //         }
-    //         return console.error('A error occured in AuthController.createOrLoadUser.', error);
-    //     }
-    // }
-
+    /**
+     * Get User DB by payload
+     * @param {*} payload 
+     * @returns 
+     */
     static async getUser(payload) {
         try {
-            return await API_Users.findOne({ where: { id: payload.id, username: payload.username, email: payload.email } });
+            return await API_Users.findOne({ where: { id: payload.userid, username: payload.username, email: payload.email } });
         } catch (error) {
             return console.error('A error occured in AuthController.getUser.', error);
         }
     }
 
-
     /**
-     * 
+     * Call Discord API for get AccessToken
      * @returns 
      */
     static async getDiscordAccessToken(code) {
-        const API_ENDPOINT = 'https://discord.com/api/v10'
-        const REDIRECT_URI = 'http://localhost:3000/discord/callback'
+        const API_ENDPOINT = staticInfo.discord.routes.api + staticInfo.discord.routes.version;
+         // 'https://discord.com/api/v10'; // todo: Use Static/Info
+        const REDIRECT_URI = process.env.FRONTEND_URL + process.env.FRONTEND_CALLBACK;
+        //  'http://localhost:4200/discord/callback';  // todo: ENV Key
+        // const REDIRECT_URI = 'http://localhost:3000/discord/callback'
 
         const data = {
             'client_id': process.env.DISCORD_CLIENTID,
@@ -81,7 +54,7 @@ class AuthController {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
 
-        return await RequestManager.ExecuteRequest(API_ENDPOINT + '/oauth2/token', headers, qs.stringify(data), 'post').then(function (queryRes) {
+        return await RequestManager.ExecuteRequest(API_ENDPOINT + staticInfo.discord.routes.auth.getToken, headers, qs.stringify(data), 'post').then(function (queryRes) {
             console.log(queryRes);
             const result = {
                 data: queryRes,
@@ -100,18 +73,57 @@ class AuthController {
     }
 
     /**
+     * Revoke the Discord Token
+     * @param {*} accessToken 
+     * @returns 
+     */
+    static async revokeAccessToken(accessToken) {
+        // const API_ENDPOINT = 'https://discord.com/api/v10'; // todo: Use Static/Info
+        const API_ENDPOINT = staticInfo.discord.routes.api + staticInfo.discord.routes.version;
+        // const REDIRECT_URI = 'http://localhost:4200/discord/callback';  // todo: ENV Key
+        // const REDIRECT_URI = 'http://localhost:3000/discord/callback'
+
+        const data = {
+            'client_id': process.env.DISCORD_CLIENTID,
+            'client_secret': process.env.DISCORD_SECRET,
+            'token': accessToken,
+        }
+
+        const headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        
+        return await RequestManager.ExecuteRequest(API_ENDPOINT + staticInfo.discord.routes.auth.revokeToken, headers, qs.stringify(data), 'post').then(function (queryRes) {
+            if (queryRes) {
+                const result = {
+                    OK: true,
+                };
+    
+                return result;
+            }
+        }, function (error) {
+            const result = {
+                code: error.error,
+                msg: error.error_description,
+                OK: false,
+            };
+            return result;
+        });
+    }
+
+    /**
      * Contact Discord API for get UserInfo
      * @param {*} token_type 
      * @param {*} access_token 
      * @returns 
      */
     static async getDiscordUserInfo(token_type, access_token) {
-        const userInfoUrl = 'https://discord.com/api/users/@me';
+        const userInfoUrl = staticInfo.discord.routes.api; // 'https://discord.com/api/users/@me';
         const headers = {
             'authorization': `${token_type} ${access_token}`,
         }
 
-        return await RequestManager.ExecuteRequest(userInfoUrl, headers, null, 'get').then(function (userinfo) {
+        return await RequestManager.ExecuteRequest(userInfoUrl + staticInfo.discord.routes.user.currentUser, headers, null, 'get').then(function (userinfo) {
             const result = {
                 OK: true,
                 data: userinfo
@@ -128,6 +140,13 @@ class AuthController {
         });
     }
 
+    /**
+     * Create or Load the API User
+     * @param {*} userData 
+     * @param {*} source 
+     * @param {*} createUserIfNotExist 
+     * @returns 
+     */
     static async createOrLoadApiUser(userData, source, createUserIfNotExist) {
         try {
             const data = {
@@ -138,7 +157,7 @@ class AuthController {
 
             if (createUserIfNotExist && data.user == null) {
                 data.isNew = true;
-
+               
                 data.user = await API_Users.create({
                     id: userData.id,
                     username: userData.username,
@@ -147,15 +166,28 @@ class AuthController {
                     discriminator: userData.discriminator,
                     email: userData.email,
                 });
+                // https://discord.com/developers/docs/reference#image-formatting
+                // UserId / AvatarId
+                // https://cdn.discordapp.com/avatars/272021553745625088/9ad4cb425b89a545db549a7acec8dbfc
+
+                // Server Icon
+                // ServerId (351056134985220098) / iconId (a_e18def95a4827163cbcc4557627569d5)
+                // https://cdn.discordapp.com/icons/351056134985220098/a_e18def95a4827163cbcc4557627569d5.webp?size=96
+
+                // Perm lvl : 2147483647  (admin ??)
 
             } else if (data.user) {
+                const cdnInfo = new CDN();
+                
+                // const avatarUrl = `https://cdn.discordapp.com/avatars/${process.env.DISCORD_CLIENTID}/${data.user.avatar}`;
+                
                 data.payload = {
                     token_type: data.user.API_Token?.token_type,
                     access_token: data.user.API_Token?.access_token,
                     refresh_token: data.user.API_Token?.refresh_token,
                     username: data.user.username,
                     userid: data.user.id,
-                    avatar: data.user.avatar,
+                    avatar: cdnInfo.avatar(process.env.DISCORD_CLIENTID, data.user.avatar),
                 }
             }
 
@@ -168,6 +200,9 @@ class AuthController {
         }
     }
 
+    /**
+     * Create the API Token on DB
+     */
     static async createOrLoadApiToken(apiUser, source, access_Token, refresh_token, token_type) {
         try {
             const apiToken = await API_Tokens.findOne({ where: { userId: apiUser.id }});
@@ -188,7 +223,6 @@ class AuthController {
                 });
                 await apiToken.save();
             }
-
             return apiToken;
         } catch (error) {
             if (error.name === 'SequelizeUniqueConstraintError') {
