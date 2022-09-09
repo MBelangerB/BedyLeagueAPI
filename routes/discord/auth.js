@@ -36,7 +36,13 @@ const discordAuth = {
                             refresh_token: accessTokenInfo.data.refresh_token,
                             username: userInfo.data.username,
                             userid: userInfo.data.id,
-                            avatar: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar, userInfo.data.discriminator) || userInfo.data?.avatar,
+                       //     avatar: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar, userInfo.data.discriminator) || userInfo.data?.avatar,
+                            avatar: {
+                                xSmall: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar,  userInfo.data.discriminator, {size: CDN.SIZES[16]} ) || userInfo.data?.avatar,
+                                small:  cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar,  userInfo.data.discriminator, {size: CDN.SIZES[32]} ) || userInfo.data?.avatar,
+                                medium: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar,  userInfo.data.discriminator, {size: CDN.SIZES[64]} ) || userInfo.data?.avatar,
+                                large:   cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar, userInfo.data.discriminator, {size: CDN.SIZES[128]} ) ||userInfo.data?.avatar,
+                            }, 
                             email: userInfo.data.email,
                         }
 
@@ -48,7 +54,7 @@ const discordAuth = {
                                 accessTokenInfo.data.access_token, accessTokenInfo.data.refresh_token, accessTokenInfo.data.token_type);
 
                             // Save JWT
-                            this.BuildJWT(res, payload, null, accessTokenInfo.data.access_token);
+                            AuthController.BuildJWT(res, payload, null, accessTokenInfo.data.access_token);
                         } else {
                             const result = {
                                 code: 0,
@@ -81,7 +87,7 @@ const discordAuth = {
                         email: dbUser.email,
                     }
 
-                    this.BuildJWT(res, payload, null, payload.access_token);
+                    AuthController.BuildJWT(res, payload, null, payload.access_token);
                 } else {
                     return res.status(401);
                 }
@@ -207,24 +213,24 @@ const discordAuth = {
 
 
 
-    BuildJWT(res, payload, expireDelay, access_token) {
-        // Save JWT
-        const defaultInterval = (process.env.TOKEN_LIFE + process.env.TOKEN_INTERVAL);
-        jwt.sign({ payload }, process.env.SECRET, { expiresIn: (expireDelay || defaultInterval) }, (err, token) => {
-            if (err) {
-                console.warn(err);
-                return res.status(403);
-            } else {
-                console.info(token);
-                return res.status(200).json({
-                    jwt: token,
-                    accessToken: access_token,
-                    expiresIn: (expireDelay || process.env.TOKEN_LIFE),
-                    OK: true,
-                });
-            }
-        });
-    }
+    // BuildJWT(res, payload, expireDelay, access_token) {
+    //     // Save JWT
+    //     const defaultInterval = (process.env.TOKEN_LIFE + process.env.TOKEN_INTERVAL);
+    //     return jwt.sign({ payload }, process.env.SECRET, { expiresIn: (expireDelay || defaultInterval) }, (err, token) => {
+    //         if (err) {
+    //             console.warn(err);
+    //             return res.status(403);
+    //         } else {
+    //             console.info(token);
+    //             return res.status(200).json({
+    //                 jwt: token,
+    //                 accessToken: access_token,
+    //                 expiresIn: (expireDelay || process.env.TOKEN_LIFE),
+    //                 OK: true,
+    //             });
+    //         }
+    //     });
+    // }
 }
 
 module.exports = { discordAuth }

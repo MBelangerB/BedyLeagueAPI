@@ -154,7 +154,7 @@ function verifyToken(req, res, next) {
     if (typeof bearerHeader !== 'undefined') {
         // Soluce 2
         const bearer = bearerHeader.split(' ');
-        const tokenType = bearer[0];
+        const tokenType = bearer[0].toLowerCase();
         const token = bearer[1];
         if (tokenType == 'jwt') {
             jwt.verify(token, process.env.SECRET, (err, payload) => {
@@ -173,7 +173,7 @@ function verifyToken(req, res, next) {
         } else {
             res.status(403).json({
                 error: true,
-                message: 'No token provided.'
+                message: 'Invalid tokem type.'
             });
         }
 

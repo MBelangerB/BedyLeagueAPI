@@ -12,9 +12,9 @@ class DiscordMapper {
                 id: server.id,
                 name: server.name,
                 icon: {
-                   "16x": cdn.icon(server.id, server.icon, {size: CDN.SIZES[16]} ) || server.icon, 
-                   "32x": cdn.icon(server.id, server.icon, {size: CDN.SIZES[32]} ) || server.icon, 
-                   "64x": cdn.icon(server.id, server.icon, {size: CDN.SIZES[64]} ) || server.icon, 
+                   xSmall: cdn.icon(server.id, server.icon, {size: CDN.SIZES[16]} ) || server.icon, 
+                   small: cdn.icon(server.id, server.icon, {size: CDN.SIZES[32]} ) || server.icon, 
+                   medium: cdn.icon(server.id, server.icon, {size: CDN.SIZES[64]} ) || server.icon, 
                 }, 
                 owner: server.owner,
                 permissions: server.permissions,
@@ -23,7 +23,11 @@ class DiscordMapper {
             serverlist.push(data);
         });
 
-        return serverlist;
+        const sortedList = serverlist.sort(function (a, b) {
+            return (a.owner > b.owner || (a.canManage > b.canManage));
+        });
+
+        return sortedList;
     }
 
 

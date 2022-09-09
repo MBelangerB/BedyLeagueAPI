@@ -4,6 +4,7 @@ const { sequelize } = require('../../db/dbSchema');
 const { API_Users, API_Tokens } = sequelize.models;
 const RequestManager = require('../../util/RequestManager');
 const qs = require('qs');
+const jwt = require('jsonwebtoken');
 const staticInfo = require('../../static/info.json');
 const { CDN } = require('../../module/discord/cdn');
 const moment = require('moment');
@@ -172,7 +173,13 @@ class AuthController {
                     refresh_token: data.user.API_Token?.refresh_token,
                     username: data.user.username,
                     userid: data.user.id,
-                    avatar: cdnInfo.avatar(data.user.id, userData?.avatar, data.user.discriminator) || userData?.avatar,
+                    avatar: {
+                        xSmall: cdnInfo.avatar(data.user.id, userData?.avatar, data.user.discriminator, {size: CDN.SIZES[16]} ) || server.icon, 
+                        small:  cdnInfo.avatar(data.user.id, userData?.avatar, data.user.discriminator, {size: CDN.SIZES[32]} ) || server.icon, 
+                        medium: cdnInfo.avatar(data.user.id, userData?.avatar, data.user.discriminator, {size: CDN.SIZES[64]} ) || server.icon, 
+                        large: cdnInfo.avatar(data.user.id, userData?.avatar, data.user.discriminator, {size: CDN.SIZES[128]} ) || server.icon,
+                    }, 
+                    // avatar: cdnInfo.avatar(data.user.id, userData?.avatar, data.user.discriminator) || userData?.avatar,
                 }
 
             }
@@ -207,7 +214,6 @@ class AuthController {
         try {
             const apiToken = await API_Tokens.findOne({ where: { userId: apiUser.id } });
 
-            if (!createUserIfNotExist) {
                 if (apiUser && !apiToken) {
                     apiToken = await API_Tokens.create({
                         userId: apiUser.id,
@@ -224,7 +230,6 @@ class AuthController {
                     });
                     await apiToken.save();
                 }
-            }
 
             return apiToken;
         } catch (error) {
@@ -243,6 +248,25 @@ class AuthController {
         // const expireDelay = null; // (expireIn - 30) + 's'
         // var expireDate = new Date();
         // expireDate = new Date(expireDate.getTime() + (1000 * (expireIn - 30)));
+    }
+
+    static BuildJWT(res, payload, expireDelay, access_token) {
+        // Save JWT
+        const defaultInterval = (process.env.TOKEN_LIFE + process.env.TOKEN_INTERVAL);
+        return jwt.sign({ payload }, process.env.SECRET, { expiresIn: (expireDelay || defaultInterval) }, (err, token) => {
+            if (err) {
+                console.warn(err);
+                return res.status(403);
+            } else {
+                console.info(token);
+                return res.status(200).json({
+                    jwt: token,
+                    accessToken: access_token,
+                    expiresIn: (expireDelay || process.env.TOKEN_LIFE),
+                    OK: true,
+                });
+            }
+        });
     }
 
     // TODO: Pour les catch error de Sequelize, il faudrait  retourne une erreur pour interrompre le traitement
