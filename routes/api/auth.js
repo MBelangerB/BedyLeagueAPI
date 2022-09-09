@@ -70,7 +70,7 @@ const authRouter = {
             let { token } = req.body;
 
             if (payload) {
-                let userInfo = await AuthController.getUser(payload);
+                let userInfo = await AuthController.getUserByPayload(payload);
 
                 let data = jwt.verify(token, process.env.SECRET);
                 delete data.iat;

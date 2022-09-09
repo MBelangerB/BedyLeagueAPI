@@ -1,50 +1,15 @@
-const RequestManager = require('../../util/RequestManager');
 const { AuthController } = require('../../controller/api/AuthController');
+const { DiscordRestController } = require('../../controller/discord/RestDiscordController');
+const { DiscordMapper } = require('../../module/discord/DiscordMapper');
 const jwt = require('jsonwebtoken');
-
+const { CDN } = require('../../module/discord/cdn');
 
 require('dotenv').config();
 
 const discordAuth = {
 
-    async login(req, res, next) {
-
-        // jwt.sign({ user }, process.env.SECRET, { expiresIn: process.env.TOKEN_LIFE }, (err, token) => {
-        //     if (err) {
-        //         console.warn(err);
-        //         return res.status(403);
-        //     } else {
-        //         console.info(token);
-        //         return res.status(200).json(token);
-        //     }
-        // });
-
-        // windows.location.hash.slice(1)
-        // const fragment = new URLSearchParams(req.query);
-        // const [accessToken, tokenType, code] = [fragment.get('access_token'), fragment.get('token_type'), fragment.get('code')];
-
-        // // if (!accessToken) {
-        // //     return (document.getElementById('login').style.display = 'block');
-        // // }
-
-        // fetch('https://discord.com/api/users/@me', {
-        //     headers: {
-        //         authorization: `${tokenType} ${accessToken}`,
-        //     },
-        // })
-        //     .then(result => result.json())
-        //     .then(response => {
-        //         const { username, discriminator } = response;
-        //         document.getElementById('info').innerText += ` ${username}#${discriminator}`;
-        //     })
-        //     .catch(console.error);
-
-
-        // res.send('test');
-    },
-
     /**
-     * Use the Code in Query param for get the AccessToken and create a JWT
+     * Use the Code in Query param for get the AccessToken and create a JWT.
      * @param {*} req 
      * @param {*} res 
      * @param {*} next 
@@ -52,75 +17,86 @@ const discordAuth = {
      */
     async accessToken(req, res, next) {
         const fragment = new URLSearchParams(req.query);
-        const [code] = [fragment.get('code')];
+        const [code, token] = [fragment.get('code'), fragment.get('token')];
+        const cdnInfo = new CDN();
 
-        if (code) {
-            // We have code, we try to call Discord API for get a AccessToken
-            const accessTokenInfo = await AuthController.getDiscordAccessToken(code);
+        try {
+            if (code) {
+                // We have code, we try to call Discord API for get a AccessToken
+                const accessTokenInfo = await AuthController.getDiscordAccessToken(code);
 
-            if (accessTokenInfo && accessTokenInfo.OK) {
-                // We have accessToken we try to call Discord API for get UserInfo
-                const userInfo = await AuthController.getDiscordUserInfo(accessTokenInfo.data.token_type, accessTokenInfo.data.access_token);
+                if (accessTokenInfo && accessTokenInfo.OK) {
+                    // We have accessToken we try to call Discord API for get UserInfo
+                    const userInfo = await DiscordRestController.getDiscordUserInfo(accessTokenInfo.data.token_type, accessTokenInfo.data.access_token);
 
-                if (userInfo && userInfo.OK) {
-                    const payload = {
-                        token_type: accessTokenInfo.data.token_type,
-                        access_token: accessTokenInfo.data.access_token,
-                        refresh_token: accessTokenInfo.data.refresh_token,
-                        username: userInfo.data.username,
-                        userid: userInfo.data.id,
-                        avatar: userInfo.data?.avatar,
-                        email: userInfo.data.email,
-                    }
-                    // let expireIn = accessTokenInfo.data.expires_in;
+                    if (userInfo && userInfo.OK) {
+                        const payload = {
+                            token_type: accessTokenInfo.data.token_type,
+                            access_token: accessTokenInfo.data.access_token,
+                            refresh_token: accessTokenInfo.data.refresh_token,
+                            username: userInfo.data.username,
+                            userid: userInfo.data.id,
+                            avatar: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar, userInfo.data.discriminator) || userInfo.data?.avatar,
+                            email: userInfo.data.email,
+                        }
 
-                    // Remove 30sec for processing
-                    const expireDelay = null; // (expireIn - 30) + 's'
-                    // var expireDate = new Date();
-                    // expireDate = new Date(expireDate.getTime() + (1000 * (expireIn - 30)));
+                        // Save User on db
+                        const dbApiUser = await AuthController.createOrLoadApiUser(userInfo.data, AuthController.TokenSource.DISCORD, true);
+                        // If process is success
+                        if (dbApiUser && dbApiUser.user) {
+                            await AuthController.createOrLoadApiToken(dbApiUser.user, AuthController.TokenSource.DISCORD,
+                                accessTokenInfo.data.access_token, accessTokenInfo.data.refresh_token, accessTokenInfo.data.token_type);
 
-                    // Save User on db
-                    const dbApiUser = await AuthController.createOrLoadApiUser(userInfo.data, AuthController.TokenSource.DISCORD, true);
-
-                    // If process is success
-                    if (dbApiUser && dbApiUser.user) {
-                        await AuthController.createOrLoadApiToken(dbApiUser.user, AuthController.TokenSource.DISCORD, accessTokenInfo.data.access_token,
-                            accessTokenInfo.data.refresh_token, accessTokenInfo.data.token_type);
-
-                        // Save JWT
-                        jwt.sign({ payload }, process.env.SECRET, { expiresIn: (expireDelay || process.env.TOKEN_LIFE) }, (err, token) => {
-                            if (err) {
-                                console.warn(err);
-                                return res.status(403);
-                            } else {
-                                console.info(token);
-                                return res.status(200).json({
-                                    jwt: token,
-                                    OK: true,
-                                });
-                            }
-                        });
-
+                            // Save JWT
+                            this.BuildJWT(res, payload, null, accessTokenInfo.data.access_token);
+                        } else {
+                            const result = {
+                                code: 0,
+                                msg: 'An error occured, please try again.',
+                                OK: false,
+                            };
+                            return res.status(400).send(result);
+                        } // Call DB for create User
                     } else {
-                        const result = {
-                            code: 0,
-                            msg: 'An error occured, please try again.',
-                            OK: false,
-                        };
-                        return res.status(400).send(result);
-                    } // Call DB for create User
-
-
+                        return res.status(400).send(userInfo);
+                    } // After call Discord API (getDiscordUserInfo)
                 } else {
-                    return res.status(400).send(userInfo);
-                } // After call Discord API (getDiscordUserInfo)
+                    return res.status(400).send(accessTokenInfo);
+                } // After call Discord API (getDiscordAccessToken)
+
+            } else if (token && !code) {
+                // We have a token, we check if he exist in DB and we refresh the JWT
+                const dbToken = await AuthController.getUserToken(token, AuthController.TokenSource.DISCORD);
+
+                if (dbToken) {
+                    const dbUser = await AuthController.getUserById(dbToken.userId);
+
+                    const payload = {
+                        token_type: dbToken.tokenType,
+                        access_token: dbToken.accessToken,
+                        refresh_token: dbToken.refreshToken,
+                        username: dbUser.username,
+                        userid: dbUser.id,
+                        avatar: cdnInfo.avatar(dbUser.id, dbUser.avatar, dbUser.discriminator) || dbUser?.avatar,
+                        email: dbUser.email,
+                    }
+
+                    this.BuildJWT(res, payload, null, payload.access_token);
+                } else {
+                    return res.status(401);
+                }
 
             } else {
-                return res.status(400).send(accessTokenInfo);
-            } // After call Discord API (getDiscordAccessToken)
+                return res.sendStatus(401);
+            }
 
-        } else {
-            return res.sendStatus(401);
+        } catch (ex) {
+            console.error('A error occured in DiscordAuth.accessToken')
+            console.error(ex);
+            res.status(400).send({
+                OK: false,
+                msg: 'A error occured. Please try again.'
+            })
         }
     },
 
@@ -131,136 +107,123 @@ const discordAuth = {
      * @param {*} next 
      */
     async revokeToken(req, res, next) {
-        // https://discord.com/api/oauth2/token/revoke
-        const payload = req.payload;
-        if (!payload) {
-            return res.sendStatus(401);
-        }
-
-        const accessToken = payload.accessToken;
-        const result = await AuthController.revokeAccessToken(accessToken);
-        if (result && result.OK) {
-            res.status(200).send('Token is revoked.')
-        } else {
-            res.sendStatus(400).send('An error occured. Token is not revoked.')
-        }
-    },
-
-
-    async callback(req, res, next) {
         const fragment = new URLSearchParams(req.query);
-        const [code] = [fragment.get('code')];
-        console.log('callback :', code);
+        const [accessToken] = [fragment.get('token')];
 
-        // const [code, access_token, refresh_token, expires_in, scope, token_type] = [fragment.get('code'), fragment.get('access_token'),
-        // fragment.get('refresh_token'), fragment.get('expires_in'),
-        // fragment.get('scope'), fragment.get('token_type')];
+        try {
+            const payload = req.payload;
+            if (!payload) {
+                return res.sendStatus(401);
+            }
 
+            const result = await AuthController.revokeAccessToken(accessToken);
+            if (result && result.OK) {
+                res.status(200).send({
+                    OK: true,
+                    msg: 'Token is revoked.'
+                });
 
-        // Step 1 : Use the code for get AccessToken
-        if (code) {
-            // If Code we trying to connect we dont have TOKEN
-            const accessTokenInfo = await AuthController.getDiscordAccessToken(code)
-
-            // const API_ENDPOINT = 'https://discord.com/api/v10'
-            // const REDIRECT_URI = 'http://localhost:3000/discord/callback'
-
-            // const data = {
-            //     'client_id': process.env.DISCORD_CLIENTID,
-            //     'client_secret': process.env.DISCORD_SECRET,
-            //     'grant_type': 'authorization_code',
-            //     'code': code,
-            //     'redirect_uri': REDIRECT_URI
-            // }
-
-            // const headers = {
-            //     'Content-Type': 'application/x-www-form-urlencoded'
-            // }
-
-            // await RequestManager.ExecuteRequest(API_ENDPOINT + '/oauth2/token', headers, qs.stringify(data), 'post').then(function (queryRes) {
-            //     console.log(queryRes);
-            //     return queryRes;
-
-            // }, function (error) {
-            //     const result = {
-            //         code: error.error,
-            //         msg: error.error_description,
-            //         OK: false,
-            //     };
-            //     return res.status(400).send(result);
-            // });
-
-
-            // } else if (!code && access_token) {
-            // If no code but accessToken. We are authentificated
-
-            if (accessTokenInfo && accessTokenInfo.OK) {
-                // We have accessToken we try to call Discord API for get UserInfo
-                const userInfo = await AuthController.getDiscordUserInfo(accessTokenInfo.data.token_type, accessTokenInfo.data.access_token);
-
-                if (userInfo && userInfo.OK) {
-                    const payload = {
-                        token_type: accessTokenInfo.data.token_type,
-                        access_token: accessTokenInfo.data.access_token,
-                        refresh_token: accessTokenInfo.data.refresh_token,
-                        username: userInfo.data.username,
-                        userid: userInfo.data.id,
-                        avatar: userInfo.data?.avatar,
-                    }
-                    let expireIn = accessTokenInfo.data.expires_in;
-
-                    // Remove 30sec for processing
-                    const expireDelay = (expireIn - 30) + 's'
-                    var expireDate = new Date();
-                    expireDate = new Date(expireDate.getTime() + (1000 * (expireIn - 30)));
-
-                    // Save User on db
-                    const dbApiUser = await AuthController.createOrLoadApiUser(userInfo.data, AuthController.TokenSource.DISCORD, true);
-
-                    if (dbApiUser && dbApiUser.user) {
-                        await AuthController.createOrLoadApiToken(dbApiUser.user, AuthController.TokenSource.DISCORD, accessTokenInfo.data.access_token,
-                            accessTokenInfo.data.refresh_token, accessTokenInfo.data.token_type);
-
-                        // Save JWT
-                        jwt.sign({ payload }, process.env.SECRET, { expiresIn: (expireDelay || process.env.TOKEN_LIFE) }, (err, token) => {
-
-                            if (err) {
-                                console.warn(err);
-                                return res.status(403);
-                            } else {
-                                console.info(token);
-                                return res.status(200).json(token);
-                            }
-                        }); // TODO: Maybe safe JWT ?
-
-                    } else {
-                        const result = {
-                            code: 0,
-                            msg: 'An error occured, please try again.',
-                            OK: false,
-                        };
-                        return res.status(400).send(result);
-                    } // Call DB for create User
-
-
-                } else {
-                    return res.status(400).send(userInfo);
-                } // Call Discord API for GetUserInfo
             } else {
-                return res.status(400).send(accessTokenInfo);
-            } // Call Discord API for GetAccessToken
-        } else {
-            // no code do anything
-        } // Callback
+                res.status(400).send({
+                    OK: false,
+                    msg: 'An error occured. Token is not revoked.'
+                });
+            }
+        } catch (ex) {
+            console.error('A error occured in DiscordAuth.revokeToken')
+            console.error(ex);
+            res.status(400).send({
+                OK: false,
+                msg: 'A error occured. Please try again.'
+            })
+        }
     },
 
 
     async userInfo(req, res, next) {
+        const fragment = new URLSearchParams(req.query);
+        const [token] = [fragment.get('token')];
 
+        try {
+            // We have accessToken we try to call Discord API for get UserInfo
+            const userInfo = await DiscordRestController.getDiscordUserInfo('Bearer', token);
+            if (userInfo && userInfo.OK) {        
+                return res.status(200).json({
+                    data : userInfo.data,
+                    OK: true,
+                });
+            } else {
+                res.status(400).send({
+                    OK: false,
+                    msg: 'An error occured. Token is not revoked.'
+                });      
+            }
+        } catch (ex) {
+            console.error('A error occured in DiscordAuth.userInfo')
+            console.error(ex);
+            res.status(400).send({
+                OK: false,
+                msg: 'A error occured. Please try again.'
+            })
+        }
     },
 
     async serverList(req, res, next) {
+        const fragment = new URLSearchParams(req.query);
+        const [token] = [fragment.get('token')];
 
+        try {
+            const guildInfo = await DiscordRestController.getGuilds('Bearer', token);
+            if (guildInfo && guildInfo.OK) {
+                const mapper = new DiscordMapper();
+                const frontData = mapper.castServerDataList(guildInfo.data);
+                if (frontData && frontData.length > 0) {
+                    res.status(200).send({
+                        OK: true,
+                        data: frontData
+                    });      
+                } else {
+                    res.status(400).send({
+                        OK: false,
+                        msg: 'An error occured. Cant obtains data'
+                    });   
+                }     
+            } else {
+                res.status(400).send({
+                    OK: false,
+                    msg: 'An error occured. Cant obtains data'
+                });      
+            }
+            
+        } catch (ex) {
+            console.error('A error occured in DiscordAuth.serverList')
+            console.error(ex);
+            res.status(400).send({
+                OK: false,
+                msg: 'A error occured. Please try again.'
+            })
+        }
+    },
+
+
+
+    BuildJWT(res, payload, expireDelay, access_token) {
+        // Save JWT
+        const defaultInterval = (process.env.TOKEN_LIFE + process.env.TOKEN_INTERVAL);
+        jwt.sign({ payload }, process.env.SECRET, { expiresIn: (expireDelay || defaultInterval) }, (err, token) => {
+            if (err) {
+                console.warn(err);
+                return res.status(403);
+            } else {
+                console.info(token);
+                return res.status(200).json({
+                    jwt: token,
+                    accessToken: access_token,
+                    expiresIn: (expireDelay || process.env.TOKEN_LIFE),
+                    OK: true,
+                });
+            }
+        });
     }
 }
 

@@ -13,8 +13,12 @@ class CDN {
     appIcon(clientId, iconHash, options) {
         return this.makeURL(`/app-icons/${clientId}/${iconHash}`, options);
     }
-    avatar(id, avatarHash, options) {
-        return this.dynamicMakeURL(`/avatars/${id}/${avatarHash}`, avatarHash, options);
+    avatar(id, avatarHash, discriminator, options) {
+        if (avatarHash) {
+            return this.dynamicMakeURL(`/avatars/${id}/${avatarHash}`, avatarHash, options);
+        } else {
+            return this.defaultAvatar(discriminator);
+        }
     }
     channelIcon(channelId, iconHash, options) {
         return this.makeURL(`/channel-icons/${channelId}/${iconHash}`, options);
@@ -32,7 +36,11 @@ class CDN {
         return this.dynamicMakeURL(`/guilds/${guildId}/users/${userId}/banner`, bannerHash, options);
     }
     icon(id, iconHash, options) {
-        return this.dynamicMakeURL(`/icons/${id}/${iconHash}`, iconHash, options);
+        if (iconHash) {
+            return this.dynamicMakeURL(`/icons/${id}/${iconHash}`, iconHash, options);
+        } else {
+            return null;
+        }
     }
     roleIcon(roleId, roleIconHash, options) {
         return this.makeURL(`/role-icons/${roleId}/${roleIconHash}`, options);
@@ -52,8 +60,6 @@ class CDN {
             throw new RangeError(`Invalid size provided: ${size} Must be one of: ${ALLOWED_SIZES.join(", ")}`);
         }
 
-       // const baseUrl = staticInfo.discord.cdn.url;
-
         const url = new URL(`${this.base}${route}.${extension}`);
         if (size) {
             url.searchParams.set("size", String(size));
@@ -61,6 +67,18 @@ class CDN {
         return url.toString();
     }
 }
+
+CDN.SIZES = {
+    "16": 16, 
+    "32": 32, 
+    "64": 64, 
+    "128": 128, 
+    "256": 256, 
+    "512": 512, 
+    "1024": 1024, 
+    "2048": 2048, 
+    "4096": 4096
+};
 
 module.exports = { CDN };
 

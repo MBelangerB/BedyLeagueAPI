@@ -6,9 +6,9 @@ const RequestManager = require('../../util/RequestManager');
 const qs = require('qs');
 const staticInfo = require('../../static/info.json');
 const { CDN } = require('../../module/discord/cdn');
+const moment = require('moment');
 
 class AuthController {
-
 
     // OnCreate : 
     //  If already exist
@@ -23,11 +23,24 @@ class AuthController {
      * @param {*} payload 
      * @returns 
      */
-    static async getUser(payload) {
+    static async getUserByPayload(payload) {
         try {
             return await API_Users.findOne({ where: { id: payload.userid, username: payload.username, email: payload.email } });
         } catch (error) {
-            return console.error('A error occured in AuthController.getUser.', error);
+            return console.error('A error occured in AuthController.getUserByPayload.', error);
+        }
+    }
+
+    /**
+     * Get User DB by UserId
+     * @param {*} userId 
+     * @returns 
+     */
+    static async getUserById(userId) {
+        try {
+            return await API_Users.findOne({ where: { id: userId } });
+        } catch (error) {
+            return console.error('A error occured in AuthController.getUserById.', error);
         }
     }
 
@@ -37,10 +50,7 @@ class AuthController {
      */
     static async getDiscordAccessToken(code) {
         const API_ENDPOINT = staticInfo.discord.routes.api + staticInfo.discord.routes.version;
-         // 'https://discord.com/api/v10'; // todo: Use Static/Info
         const REDIRECT_URI = process.env.FRONTEND_URL + process.env.FRONTEND_CALLBACK;
-        //  'http://localhost:4200/discord/callback';  // todo: ENV Key
-        // const REDIRECT_URI = 'http://localhost:3000/discord/callback'
 
         const data = {
             'client_id': process.env.DISCORD_CLIENTID,
@@ -64,8 +74,9 @@ class AuthController {
             return result;
         }, function (error) {
             const result = {
-                code: error.error,
-                msg: error.error_description,
+                code: error.status,
+                data: error.data,
+                msg: error.statusText,
                 OK: false,
             };
             return result;
@@ -78,11 +89,7 @@ class AuthController {
      * @returns 
      */
     static async revokeAccessToken(accessToken) {
-        // const API_ENDPOINT = 'https://discord.com/api/v10'; // todo: Use Static/Info
         const API_ENDPOINT = staticInfo.discord.routes.api + staticInfo.discord.routes.version;
-        // const REDIRECT_URI = 'http://localhost:4200/discord/callback';  // todo: ENV Key
-        // const REDIRECT_URI = 'http://localhost:3000/discord/callback'
-
         const data = {
             'client_id': process.env.DISCORD_CLIENTID,
             'client_secret': process.env.DISCORD_SECRET,
@@ -92,44 +99,15 @@ class AuthController {
         const headers = {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
-        
+
         return await RequestManager.ExecuteRequest(API_ENDPOINT + staticInfo.discord.routes.auth.revokeToken, headers, qs.stringify(data), 'post').then(function (queryRes) {
             if (queryRes) {
                 const result = {
                     OK: true,
                 };
-    
+
                 return result;
             }
-        }, function (error) {
-            const result = {
-                code: error.error,
-                msg: error.error_description,
-                OK: false,
-            };
-            return result;
-        });
-    }
-
-    /**
-     * Contact Discord API for get UserInfo
-     * @param {*} token_type 
-     * @param {*} access_token 
-     * @returns 
-     */
-    static async getDiscordUserInfo(token_type, access_token) {
-        const userInfoUrl = staticInfo.discord.routes.api; // 'https://discord.com/api/users/@me';
-        const headers = {
-            'authorization': `${token_type} ${access_token}`,
-        }
-
-        return await RequestManager.ExecuteRequest(userInfoUrl + staticInfo.discord.routes.user.currentUser, headers, null, 'get').then(function (userinfo) {
-            const result = {
-                OK: true,
-                data: userinfo
-            }
-            return result;
-
         }, function (error) {
             const result = {
                 code: error.error,
@@ -157,7 +135,7 @@ class AuthController {
 
             if (createUserIfNotExist && data.user == null) {
                 data.isNew = true;
-               
+
                 data.user = await API_Users.create({
                     id: userData.id,
                     username: userData.username,
@@ -177,18 +155,26 @@ class AuthController {
                 // Perm lvl : 2147483647  (admin ??)
 
             } else if (data.user) {
+                // Refresh User
+                data.user.set({
+                    username: userData.username,
+                    avatar: userData.avatar,
+                });
+                await data.user.save();
+
+                // Prepare Data
                 const cdnInfo = new CDN();
-                
-                // const avatarUrl = `https://cdn.discordapp.com/avatars/${process.env.DISCORD_CLIENTID}/${data.user.avatar}`;
-                
+
+                // const avatarUrl = `https://cdn.discordapp.com/avatars/${data.user.id}/${data.user.avatar}`;  
                 data.payload = {
                     token_type: data.user.API_Token?.token_type,
                     access_token: data.user.API_Token?.access_token,
                     refresh_token: data.user.API_Token?.refresh_token,
                     username: data.user.username,
                     userid: data.user.id,
-                    avatar: cdnInfo.avatar(process.env.DISCORD_CLIENTID, data.user.avatar),
+                    avatar: cdnInfo.avatar(data.user.id, userData?.avatar, data.user.discriminator) || userData?.avatar,
                 }
+
             }
 
             return data;
@@ -201,28 +187,45 @@ class AuthController {
     }
 
     /**
+     * Get the API Token
+     * @param {*} token 
+     * @param {*} source 
+     * @returns 
+     */
+    static async getUserToken(token, source) {
+        try {
+            return await API_Tokens.findOne({ where: { accessToken: token, source: source } });
+        } catch (error) {
+            return console.error('A error occured in AuthController.getUserToken.', error);
+        }
+    }
+
+    /**
      * Create the API Token on DB
      */
-    static async createOrLoadApiToken(apiUser, source, access_Token, refresh_token, token_type) {
+    static async createOrLoadApiToken(apiUser, source, access_Token, refresh_token, token_type, createUserIfNotExist = true) {
         try {
-            const apiToken = await API_Tokens.findOne({ where: { userId: apiUser.id }});
+            const apiToken = await API_Tokens.findOne({ where: { userId: apiUser.id } });
 
-            if (apiUser && !apiToken) {
-                apiToken = await API_Tokens.create({
-                    userId: apiUser.id,
-                    accessToken: access_Token,
-                    refreshToken: refresh_token,
-                    tokenType: token_type,
-                    source: source,
-                });
-            } else if (apiUser && apiToken) {
-                apiToken.set({
-                    accessToken: access_Token,
-                    refreshToken: refresh_token,
-                    tokenType: token_type,
-                });
-                await apiToken.save();
+            if (!createUserIfNotExist) {
+                if (apiUser && !apiToken) {
+                    apiToken = await API_Tokens.create({
+                        userId: apiUser.id,
+                        accessToken: access_Token,
+                        refreshToken: refresh_token,
+                        tokenType: token_type,
+                        source: source,
+                    });
+                } else if (apiUser && apiToken) {
+                    apiToken.set({
+                        accessToken: access_Token,
+                        refreshToken: refresh_token,
+                        tokenType: token_type,
+                    });
+                    await apiToken.save();
+                }
             }
+
             return apiToken;
         } catch (error) {
             if (error.name === 'SequelizeUniqueConstraintError') {
@@ -232,7 +235,17 @@ class AuthController {
         }
     }
 
-// TODO: Pour les catch error de Sequelize, il faudrait  retourne une erreur pour interrompre le traitement
+    static getExpireAt(expires_in) {
+        const expiresAt = moment().add(expires_in, 'seconds');
+        return expiresAt;
+
+        // Remove 30sec for processing
+        // const expireDelay = null; // (expireIn - 30) + 's'
+        // var expireDate = new Date();
+        // expireDate = new Date(expireDate.getTime() + (1000 * (expireIn - 30)));
+    }
+
+    // TODO: Pour les catch error de Sequelize, il faudrait  retourne une erreur pour interrompre le traitement
 
 }
 

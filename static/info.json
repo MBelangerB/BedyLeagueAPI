@@ -110,7 +110,8 @@
                 "revokeToken": "/oauth2/token/revoke"
             },
             "user": {
-                "currentUser": "users/@me"
+                "currentUser": "/users/@me",
+                "userGuild": "/users/@me/guilds"
             }
         },
         "cdn": {
