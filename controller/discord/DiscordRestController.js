@@ -181,9 +181,9 @@ class DiscordRestController {
                 const tmpData = [];
                 apiGuildPermissions.forEach(guildPerm => {
                     tmpData.push({
-                        id: guildPerm.guild.id,
-                        name: guildPerm.guild.name,
-                        icon: guildPerm.guild.icon,
+                        id: guildPerm.API_Guild.guildId,
+                        name: guildPerm.API_Guild.name,
+                        icon: guildPerm.API_Guild.icon,
                         owner: guildPerm.isOwner,
                         permissions: guildPerm.permissions,
                         permissions_new: guildPerm.permissionsNew,
