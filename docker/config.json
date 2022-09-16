@@ -1,0 +1,16 @@
+{
+    "development": {
+      "host": "localhost",
+      "dialect": "sqlite",
+      "database": "database_development",
+      "storage": "/usr/src/db/docker_bedybot.db",
+      "logging": false
+    },
+    "production": {
+      "host": "localhost",
+      "dialect": "sqlite",
+      "database": "database_prod",
+      "storage": "/usr/src/db/docker_mkbot_prod.db"
+    }
+}
+  
