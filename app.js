@@ -25,6 +25,7 @@ const validateCaptchaRouter = require('./routes/api/validateCaptcha');
 
 /* Discourd Route */
 const { discordAuth } = require('./routes/discord/auth');
+const { discordRest } = require('./routes/discord/rest');
 
 /* OW Route */
 const overwatchRouter = require('./routes/ow/rank');
@@ -131,13 +132,13 @@ app.get('/:lang?/ow/rank', overwatchRouter.rank);
 app.get('/:lang?/ow/rank/:region/:platform/:tag', overwatchRouter.rank);
 
 // Discord route
+app.post('/discord/callback_auth', discordAuth.callback_auth);
 app.post('/discord/accessToken', cors(corsOptions), discordAuth.accessToken);
 app.post('/discord/revokeToken', cors(corsOptions), verifyToken, discordAuth.revokeToken);
-app.get('/discord/serverList', cors(corsOptions), verifyToken, discordAuth.serverList);
-// app.get('/discord/serverList', discordAuth.serverList);
-app.get('/discord/userInfo', cors(corsOptions), verifyToken, discordAuth.userInfo);
-// app.get('/discord/userInfo', discordAuth.userInfo);
-// app.post('/discord/callback', discordAuth.callback);
+
+app.get('/discord/serverList', cors(corsOptions), verifyToken, discordRest.serverList);
+app.get('/discord/userInfo', cors(corsOptions), verifyToken, discordRest.userInfo);
+
 
 // Private API routing
 // app.post('/api/login', authRouter.login);

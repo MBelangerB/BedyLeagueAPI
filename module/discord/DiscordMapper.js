@@ -3,39 +3,61 @@ const { CDN } = require('../../module/discord/cdn');
 
 class DiscordMapper {
 
-    castServerDataList(data) {
+    /**
+     * Cast info to FrontEnd
+     * @param {*} data 
+     * @param {*} adminOnly 
+     * @returns 
+     */
+    castServerDataList(botGuild, datas, adminOnly) {
         const cdn = new CDN();
         const serverlist = [];
 
-        data.forEach(server => {
+        datas.forEach(server => {
             const data = {
                 id: server.id,
                 name: server.name,
+                shortName: this.#getShortName(server.name),
+                hasIcon: (server.icon != null),
                 icon: {
-                   xSmall: cdn.icon(server.id, server.icon, {size: CDN.SIZES[16]} ) || server.icon, 
-                   small: cdn.icon(server.id, server.icon, {size: CDN.SIZES[32]} ) || server.icon, 
-                   medium: cdn.icon(server.id, server.icon, {size: CDN.SIZES[64]} ) || server.icon, 
-                }, 
+                    xSmall: cdn.icon(server.id, server.icon, { size: CDN.SIZES[16] }) || null,
+                    small: cdn.icon(server.id, server.icon, { size: CDN.SIZES[32] }) || null,
+                    medium: cdn.icon(server.id, server.icon, { size: CDN.SIZES[64] }) || null,
+                    large: cdn.icon(server.id, server.icon, { size: CDN.SIZES[128] }) || null,
+                },
                 owner: server.owner,
                 permissions: server.permissions,
-                canManage: this.#canAddBot(server),
+                canManage: this.canAddBot(server),
+                isPresent: botGuild.filter(f => f.id === server.id).length > 0,
             }
             serverlist.push(data);
         });
 
-        const sortedList = serverlist.sort(function (a, b) {
-            return (a.owner > b.owner || (a.canManage > b.canManage));
-        });
+        let sortedList;
+        if (adminOnly) {
+            sortedList = serverlist.filter(f => f.owner || f.canManage);
+            sortedList = sortedList.sort(function (a, b) {
+                return a.name.localeCompare(b.name);
+                // if(a.firstname < b.firstname) { return -1; }
+                // if(a.firstname > b.firstname) { return 1; }
+                // return 0;
+            });
+        } else {
+            sortedList = serverlist.sort(function (a, b) {
+                return (a.owner > b.owner || (a.canManage > b.canManage));
+            });
+        }
 
         return sortedList;
     }
 
 
-    #canAddBot(server) {
+    canAddBot(server) {
         if (server.owner == true) {
             return true;
         }
-        if (this.#isAdmin(server.permissions)) {
+        // if (this.#isAdmin(server.permissions)) {
+        if (this.#isAdmin(server.permissions_new)) {
             return true;
         }
 
@@ -43,22 +65,46 @@ class DiscordMapper {
     }
 
     #isAdmin(permissions) {
-      //  return permissions & this.PermissionFlagsBits.ADMINISTRATOR == this.PermissionFlagsBits.ADMINISTRATOR;
-      const permBit = this.#bnToHex(DiscordMapper.PermissionFlagsBits.Administrator, true);
-      return ((permissions & permBit) == permBit);
+        //  return permissions & this.PermissionFlagsBits.ADMINISTRATOR == this.PermissionFlagsBits.ADMINISTRATOR;
+        const permBit = this.#bnToHex(DiscordMapper.PermissionFlagsBits.Administrator, true);
+        return ((permissions & permBit) == permBit);
     }
 
     #bnToHex(bn, withZero = false) {
         var base = 16;
         var hex = BigInt(bn).toString(base);
         if (hex.length % 2) {
-          hex = '0' + hex;
+            hex = '0' + hex;
         }
         if (hex && withZero) {
-          return '0x' + hex;
+            return '0x' + hex;
         }
         return hex;
-      }
+    }
+
+    #getShortName(serverName) {
+        //TODO: Keep de -
+        const regex = /\b[a-zA-Z]/gi;
+
+        // Alternative syntax using RegExp constructor
+        // const regex = new RegExp('\\b[a-zA-Z]', 'gm')
+        let m;
+        let value = '';
+
+        while ((m = regex.exec(serverName)) !== null) {
+            // This is necessary to avoid infinite loops with zero-width matches
+            if (m.index === regex.lastIndex) {
+                regex.lastIndex++;
+            }
+
+            // The result can be accessed through the `m`-variable.
+            m.forEach((match, groupIndex) => {
+                value += match;
+            });
+        }
+
+        return value;
+    }
 
 }
 

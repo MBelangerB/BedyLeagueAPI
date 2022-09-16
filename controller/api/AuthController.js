@@ -20,33 +20,33 @@ class AuthController {
     //      res.status(500).json({ 'error': err });
 
     /**
-     * Get User DB by payload
+     * [DB] Get User DB by payload
      * @param {*} payload 
      * @returns 
      */
     static async getUserByPayload(payload) {
         try {
-            return await API_Users.findOne({ where: { id: payload.userid, username: payload.username, email: payload.email } });
+            return await API_Users.getUserByPayload(payload);
         } catch (error) {
             return console.error('A error occured in AuthController.getUserByPayload.', error);
         }
     }
 
     /**
-     * Get User DB by UserId
+     * [DB] Get User DB by UserId
      * @param {*} userId 
      * @returns 
      */
-    static async getUserById(userId) {
+    static async getUserByExternalId(externalUserId) {
         try {
-            return await API_Users.findOne({ where: { id: userId } });
+            return await API_Users.getApiUserByExternalId(externalUserId);
         } catch (error) {
-            return console.error('A error occured in AuthController.getUserById.', error);
+            return console.error('A error occured in AuthController.getUserByExternalId.', error);
         }
     }
 
     /**
-     * Call Discord API for get AccessToken
+     * [REST] Call Discord API for get AccessToken
      * @returns 
      */
     static async getDiscordAccessToken(code) {
@@ -85,7 +85,7 @@ class AuthController {
     }
 
     /**
-     * Revoke the Discord Token
+     * [REST] Revoke the Discord Token
      * @param {*} accessToken 
      * @returns 
      */
@@ -120,7 +120,7 @@ class AuthController {
     }
 
     /**
-     * Create or Load the API User
+     * [DB] Create or Load the API User
      * @param {*} userData 
      * @param {*} source 
      * @param {*} createUserIfNotExist 
@@ -130,58 +130,40 @@ class AuthController {
         try {
             const data = {
                 isNew: false,
-                user: await API_Users.findOne({ where: { username: userData.username, email: userData.email, source: source }, include: [API_Tokens] }),
+                user: await API_Users.getApiUserByUserInfo(userData.username, userData.email, source, true),
                 payload: {}
             }
-
+     
             if (createUserIfNotExist && data.user == null) {
                 data.isNew = true;
 
                 data.user = await API_Users.create({
-                    id: userData.id,
+                    externalId: userData.id,
                     username: userData.username,
                     source: source,
                     avatar: userData.avatar,
                     discriminator: userData.discriminator,
                     email: userData.email,
                 });
-                // https://discord.com/developers/docs/reference#image-formatting
-                // UserId / AvatarId
-                // https://cdn.discordapp.com/avatars/272021553745625088/9ad4cb425b89a545db549a7acec8dbfc
-
-                // Server Icon
-                // ServerId (351056134985220098) / iconId (a_e18def95a4827163cbcc4557627569d5)
-                // https://cdn.discordapp.com/icons/351056134985220098/a_e18def95a4827163cbcc4557627569d5.webp?size=96
-
-                // Perm lvl : 2147483647  (admin ??)
 
             } else if (data.user) {
-                // Refresh User
-                data.user.set({
-                    username: userData.username,
-                    avatar: userData.avatar,
-                });
-                await data.user.save();
+                data.user.updateUserInfo(userData.username,userData.avatar);
 
                 // Prepare Data
                 const cdnInfo = new CDN();
-
-                // const avatarUrl = `https://cdn.discordapp.com/avatars/${data.user.id}/${data.user.avatar}`;  
                 data.payload = {
                     token_type: data.user.API_Token?.token_type,
                     access_token: data.user.API_Token?.access_token,
                     refresh_token: data.user.API_Token?.refresh_token,
                     username: data.user.username,
-                    userid: data.user.id,
+                    userId: data.user.externalId,
                     avatar: {
-                        xSmall: cdnInfo.avatar(data.user.id, userData?.avatar, data.user.discriminator, {size: CDN.SIZES[16]} ) || server.icon, 
-                        small:  cdnInfo.avatar(data.user.id, userData?.avatar, data.user.discriminator, {size: CDN.SIZES[32]} ) || server.icon, 
-                        medium: cdnInfo.avatar(data.user.id, userData?.avatar, data.user.discriminator, {size: CDN.SIZES[64]} ) || server.icon, 
-                        large: cdnInfo.avatar(data.user.id, userData?.avatar, data.user.discriminator, {size: CDN.SIZES[128]} ) || server.icon,
-                    }, 
-                    // avatar: cdnInfo.avatar(data.user.id, userData?.avatar, data.user.discriminator) || userData?.avatar,
+                        xSmall: cdnInfo.avatar(data.user.externalId, userData?.avatar, data.user.discriminator, { size: CDN.SIZES[16] }) || server.icon,
+                        small: cdnInfo.avatar(data.user.externalId, userData?.avatar, data.user.discriminator, { size: CDN.SIZES[32] }) || server.icon,
+                        medium: cdnInfo.avatar(data.user.externalId, userData?.avatar, data.user.discriminator, { size: CDN.SIZES[64] }) || server.icon,
+                        large: cdnInfo.avatar(data.user.externalId, userData?.avatar, data.user.discriminator, { size: CDN.SIZES[128] }) || server.icon,
+                    },
                 }
-
             }
 
             return data;
@@ -194,42 +176,53 @@ class AuthController {
     }
 
     /**
-     * Get the API Token
+     * [DB] Get the API Token
      * @param {*} token 
      * @param {*} source 
      * @returns 
      */
     static async getUserToken(token, source) {
         try {
-            return await API_Tokens.findOne({ where: { accessToken: token, source: source } });
+            return await API_Tokens.getTokenByAccessToken(token, source);
         } catch (error) {
             return console.error('A error occured in AuthController.getUserToken.', error);
         }
     }
 
     /**
-     * Create the API Token on DB
+     * [DB] Create the API Token on DB
+     * @param {*} apiUser 
+     * @param {*} source 
+     * @param {*} accessTokenInfo 
+     * @returns 
      */
-    static async createOrLoadApiToken(apiUser, source, access_Token, refresh_token, token_type, createUserIfNotExist = true) {
+    static async createOrLoadApiToken(apiUser, source, accessTokenInfo) {
         try {
-            const apiToken = await API_Tokens.findOne({ where: { userId: apiUser.id } });
+            let apiToken = await API_Tokens.getTokenByExternalUserId(apiUser.externalId);
+           
+            if (apiUser && !apiToken) {
+                // Token user doesn't exist in DB. We create it
+                apiToken = await API_Tokens.create({
+                    apiUserId: apiUser.externalId,
+                    accessToken: accessTokenInfo.access_token,
+                    refreshToken: accessTokenInfo.refresh_token,
+                    tokenType: accessTokenInfo.token_type,
+                    scope: accessTokenInfo.scope,
+                    expireAt: this.getExpireAt(accessTokenInfo.expires_in),
+                    source: source,
+                });
 
-                if (apiUser && !apiToken) {
-                    apiToken = await API_Tokens.create({
-                        userId: apiUser.id,
-                        accessToken: access_Token,
-                        refreshToken: refresh_token,
-                        tokenType: token_type,
-                        source: source,
-                    });
-                } else if (apiUser && apiToken) {
-                    apiToken.set({
-                        accessToken: access_Token,
-                        refreshToken: refresh_token,
-                        tokenType: token_type,
-                    });
-                    await apiToken.save();
-                }
+            } else if (apiUser && apiToken) {
+                // Token exist, we update id
+                apiToken.set({
+                    accessToken: accessTokenInfo.access_token,
+                    refreshToken: accessTokenInfo.refresh_token,
+                    scope: accessTokenInfo.scope,
+                    expireAt: this.getExpireAt(accessTokenInfo.expires_in),
+                    tokenType: accessTokenInfo.token_type,
+                });
+                await apiToken.save();
+            }
 
             return apiToken;
         } catch (error) {
@@ -240,6 +233,11 @@ class AuthController {
         }
     }
 
+    /**
+     * Compute the expirate date 
+     * @param {*} expires_in 
+     * @returns 
+     */
     static getExpireAt(expires_in) {
         const expiresAt = moment().add(expires_in, 'seconds');
         return expiresAt;
@@ -250,6 +248,14 @@ class AuthController {
         // expireDate = new Date(expireDate.getTime() + (1000 * (expireIn - 30)));
     }
 
+    /**
+     * Build the JWT Token
+     * @param {*} res 
+     * @param {*} payload 
+     * @param {*} expireDelay 
+     * @param {*} access_token 
+     * @returns 
+     */
     static BuildJWT(res, payload, expireDelay, access_token) {
         // Save JWT
         const defaultInterval = (process.env.TOKEN_LIFE + process.env.TOKEN_INTERVAL);
@@ -268,7 +274,6 @@ class AuthController {
             }
         });
     }
-
     // TODO: Pour les catch error de Sequelize, il faudrait  retourne une erreur pour interrompre le traitement
 
 }

@@ -1,12 +1,26 @@
 const { AuthController } = require('../../controller/api/AuthController');
-const { DiscordRestController } = require('../../controller/discord/RestDiscordController');
+const { DiscordRestController } = require('../../controller/discord/DiscordRestController');
 const { DiscordMapper } = require('../../module/discord/DiscordMapper');
-const jwt = require('jsonwebtoken');
+// const jwt = require('jsonwebtoken');
 const { CDN } = require('../../module/discord/cdn');
 
 require('dotenv').config();
 
 const discordAuth = {
+
+    /**
+     * Callback when we install the bot
+     * @param {*} req 
+     * @param {*} res 
+     * @param {*} next 
+     * @returns 
+     */
+    async callback_auth(req, res, next) {
+        console.log(req.body);
+
+        res.send('OK')
+        return
+    },
 
     /**
      * Use the Code in Query param for get the AccessToken and create a JWT.
@@ -35,14 +49,13 @@ const discordAuth = {
                             access_token: accessTokenInfo.data.access_token,
                             refresh_token: accessTokenInfo.data.refresh_token,
                             username: userInfo.data.username,
-                            userid: userInfo.data.id,
-                       //     avatar: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar, userInfo.data.discriminator) || userInfo.data?.avatar,
+                            userId: userInfo.data.id,
                             avatar: {
-                                xSmall: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar,  userInfo.data.discriminator, {size: CDN.SIZES[16]} ) || userInfo.data?.avatar,
-                                small:  cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar,  userInfo.data.discriminator, {size: CDN.SIZES[32]} ) || userInfo.data?.avatar,
-                                medium: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar,  userInfo.data.discriminator, {size: CDN.SIZES[64]} ) || userInfo.data?.avatar,
-                                large:   cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar, userInfo.data.discriminator, {size: CDN.SIZES[128]} ) ||userInfo.data?.avatar,
-                            }, 
+                                xSmall: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar, userInfo.data.discriminator, { size: CDN.SIZES[16] }) || userInfo.data?.avatar,
+                                small: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar, userInfo.data.discriminator, { size: CDN.SIZES[32] }) || userInfo.data?.avatar,
+                                medium: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar, userInfo.data.discriminator, { size: CDN.SIZES[64] }) || userInfo.data?.avatar,
+                                large: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar, userInfo.data.discriminator, { size: CDN.SIZES[128] }) || userInfo.data?.avatar,
+                            },
                             email: userInfo.data.email,
                         }
 
@@ -50,11 +63,9 @@ const discordAuth = {
                         const dbApiUser = await AuthController.createOrLoadApiUser(userInfo.data, AuthController.TokenSource.DISCORD, true);
                         // If process is success
                         if (dbApiUser && dbApiUser.user) {
-                            await AuthController.createOrLoadApiToken(dbApiUser.user, AuthController.TokenSource.DISCORD,
-                                accessTokenInfo.data.access_token, accessTokenInfo.data.refresh_token, accessTokenInfo.data.token_type);
-
-                            // Save JWT
+                            await AuthController.createOrLoadApiToken(dbApiUser.user, AuthController.TokenSource.DISCORD, accessTokenInfo.data);
                             AuthController.BuildJWT(res, payload, null, accessTokenInfo.data.access_token);
+
                         } else {
                             const result = {
                                 code: 0,
@@ -75,15 +86,20 @@ const discordAuth = {
                 const dbToken = await AuthController.getUserToken(token, AuthController.TokenSource.DISCORD);
 
                 if (dbToken) {
-                    const dbUser = await AuthController.getUserById(dbToken.userId);
+                    const dbUser = await AuthController.getUserByExternalId(dbToken.userId);
 
                     const payload = {
                         token_type: dbToken.tokenType,
                         access_token: dbToken.accessToken,
                         refresh_token: dbToken.refreshToken,
                         username: dbUser.username,
-                        userid: dbUser.id,
-                        avatar: cdnInfo.avatar(dbUser.id, dbUser.avatar, dbUser.discriminator) || dbUser?.avatar,
+                        userId: dbUser.externalId,
+                        avatar: {
+                            xSmall: cdnInfo.avatar(dbUser.externalId, dbUser.avatar, dbUser.discriminator, { size: CDN.SIZES[16] }) || null,
+                            small: cdnInfo.avatar(dbUser.externalId, dbUser.avatar, dbUser.discriminator, { size: CDN.SIZES[32] }) || null,
+                            medium: cdnInfo.avatar(dbUser.externalId, dbUser.avatar, dbUser.discriminator, { size: CDN.SIZES[64] }) || null,
+                            large: cdnInfo.avatar(dbUser.externalId, dbUser.avatar, dbUser.discriminator, { size: CDN.SIZES[128] }) || null,
+                        },
                         email: dbUser.email,
                     }
 
@@ -145,92 +161,6 @@ const discordAuth = {
         }
     },
 
-
-    async userInfo(req, res, next) {
-        const fragment = new URLSearchParams(req.query);
-        const [token] = [fragment.get('token')];
-
-        try {
-            // We have accessToken we try to call Discord API for get UserInfo
-            const userInfo = await DiscordRestController.getDiscordUserInfo('Bearer', token);
-            if (userInfo && userInfo.OK) {        
-                return res.status(200).json({
-                    data : userInfo.data,
-                    OK: true,
-                });
-            } else {
-                res.status(400).send({
-                    OK: false,
-                    msg: 'An error occured. Token is not revoked.'
-                });      
-            }
-        } catch (ex) {
-            console.error('A error occured in DiscordAuth.userInfo')
-            console.error(ex);
-            res.status(400).send({
-                OK: false,
-                msg: 'A error occured. Please try again.'
-            })
-        }
-    },
-
-    async serverList(req, res, next) {
-        const fragment = new URLSearchParams(req.query);
-        const [token] = [fragment.get('token')];
-
-        try {
-            const guildInfo = await DiscordRestController.getGuilds('Bearer', token);
-            if (guildInfo && guildInfo.OK) {
-                const mapper = new DiscordMapper();
-                const frontData = mapper.castServerDataList(guildInfo.data);
-                if (frontData && frontData.length > 0) {
-                    res.status(200).send({
-                        OK: true,
-                        data: frontData
-                    });      
-                } else {
-                    res.status(400).send({
-                        OK: false,
-                        msg: 'An error occured. Cant obtains data'
-                    });   
-                }     
-            } else {
-                res.status(400).send({
-                    OK: false,
-                    msg: 'An error occured. Cant obtains data'
-                });      
-            }
-            
-        } catch (ex) {
-            console.error('A error occured in DiscordAuth.serverList')
-            console.error(ex);
-            res.status(400).send({
-                OK: false,
-                msg: 'A error occured. Please try again.'
-            })
-        }
-    },
-
-
-
-    // BuildJWT(res, payload, expireDelay, access_token) {
-    //     // Save JWT
-    //     const defaultInterval = (process.env.TOKEN_LIFE + process.env.TOKEN_INTERVAL);
-    //     return jwt.sign({ payload }, process.env.SECRET, { expiresIn: (expireDelay || defaultInterval) }, (err, token) => {
-    //         if (err) {
-    //             console.warn(err);
-    //             return res.status(403);
-    //         } else {
-    //             console.info(token);
-    //             return res.status(200).json({
-    //                 jwt: token,
-    //                 accessToken: access_token,
-    //                 expiresIn: (expireDelay || process.env.TOKEN_LIFE),
-    //                 OK: true,
-    //             });
-    //         }
-    //     });
-    // }
 }
 
 module.exports = { discordAuth }
