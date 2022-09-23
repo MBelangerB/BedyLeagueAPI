@@ -24,6 +24,7 @@ const discordAuth = {
 
     /**
      * Use the Code in Query param for get the AccessToken and create a JWT.
+     * Or use the JWT to auth the user.
      * @param {*} req 
      * @param {*} res 
      * @param {*} next 
@@ -32,7 +33,6 @@ const discordAuth = {
     async accessToken(req, res, next) {
         const fragment = new URLSearchParams(req.query);
         const [code, token] = [fragment.get('code'), fragment.get('token')];
-        const cdnInfo = new CDN();
 
         try {
             if (code) {
@@ -44,23 +44,11 @@ const discordAuth = {
                     const userInfo = await DiscordRestController.getDiscordUserInfo(accessTokenInfo.data.token_type, accessTokenInfo.data.access_token);
 
                     if (userInfo && userInfo.OK) {
-                        const payload = {
-                            token_type: accessTokenInfo.data.token_type,
-                            access_token: accessTokenInfo.data.access_token,
-                            refresh_token: accessTokenInfo.data.refresh_token,
-                            username: userInfo.data.username,
-                            userId: userInfo.data.id,
-                            avatar: {
-                                xSmall: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar, userInfo.data.discriminator, { size: CDN.SIZES[16] }) || userInfo.data?.avatar,
-                                small: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar, userInfo.data.discriminator, { size: CDN.SIZES[32] }) || userInfo.data?.avatar,
-                                medium: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar, userInfo.data.discriminator, { size: CDN.SIZES[64] }) || userInfo.data?.avatar,
-                                large: cdnInfo.avatar(userInfo.data.id, userInfo.data?.avatar, userInfo.data.discriminator, { size: CDN.SIZES[128] }) || userInfo.data?.avatar,
-                            },
-                            email: userInfo.data.email,
-                        }
-
+                        // Prepare the payload
+                        const payload = AuthController.callbackToPayload(accessTokenInfo.data, userInfo.data);
                         // Save User on db
                         const dbApiUser = await AuthController.createOrLoadApiUser(userInfo.data, AuthController.TokenSource.DISCORD, true);
+
                         // If process is success
                         if (dbApiUser && dbApiUser.user) {
                             await AuthController.createOrLoadApiToken(dbApiUser.user, AuthController.TokenSource.DISCORD, accessTokenInfo.data);
@@ -86,22 +74,10 @@ const discordAuth = {
                 const dbToken = await AuthController.getUserToken(token, AuthController.TokenSource.DISCORD);
 
                 if (dbToken) {
+                    // Get DB User
                     const dbUser = await AuthController.getUserByExternalId(dbToken.userId);
-
-                    const payload = {
-                        token_type: dbToken.tokenType,
-                        access_token: dbToken.accessToken,
-                        refresh_token: dbToken.refreshToken,
-                        username: dbUser.username,
-                        userId: dbUser.externalId,
-                        avatar: {
-                            xSmall: cdnInfo.avatar(dbUser.externalId, dbUser.avatar, dbUser.discriminator, { size: CDN.SIZES[16] }) || null,
-                            small: cdnInfo.avatar(dbUser.externalId, dbUser.avatar, dbUser.discriminator, { size: CDN.SIZES[32] }) || null,
-                            medium: cdnInfo.avatar(dbUser.externalId, dbUser.avatar, dbUser.discriminator, { size: CDN.SIZES[64] }) || null,
-                            large: cdnInfo.avatar(dbUser.externalId, dbUser.avatar, dbUser.discriminator, { size: CDN.SIZES[128] }) || null,
-                        },
-                        email: dbUser.email,
-                    }
+                    // Prepare the payload
+                    const payload = AuthController.callbackToPayload(dbToken, dbUser, "db");
 
                     AuthController.BuildJWT(res, payload, null, payload.access_token);
                 } else {
@@ -140,6 +116,7 @@ const discordAuth = {
 
             const result = await AuthController.revokeAccessToken(accessToken);
             if (result && result.OK) {
+                //TODO: Remove from database
                 res.status(200).send({
                     OK: true,
                     msg: 'Token is revoked.'

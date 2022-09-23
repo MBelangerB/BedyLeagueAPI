@@ -131,10 +131,10 @@ app.get('/:lang?/lol/rank/:region/:summonerName', cors(), rankRouter.rank);
 app.get('/:lang?/ow/rank', overwatchRouter.rank);
 app.get('/:lang?/ow/rank/:region/:platform/:tag', overwatchRouter.rank);
 
-// Discord route
-app.post('/discord/callback_auth', discordAuth.callback_auth);
+// Discord Authentification route
 app.post('/discord/accessToken', cors(corsOptions), discordAuth.accessToken);
 app.post('/discord/revokeToken', cors(corsOptions), verifyToken, discordAuth.revokeToken);
+app.post('/discord/callback_auth', discordAuth.callback_auth);
 
 app.get('/discord/serverList', cors(corsOptions), verifyToken, discordRest.serverList);
 app.get('/discord/userInfo', cors(corsOptions), verifyToken, discordRest.userInfo);

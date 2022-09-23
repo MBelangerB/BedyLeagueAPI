@@ -40,6 +40,13 @@ const discordRest = {
         }
     },
 
+    /**
+     * Get the current user Server list
+     * @param {*} req 
+     * @param {*} res 
+     * @param {*} next 
+     * @returns 
+     */
     async serverList(req, res, next) {
         const fragment = new URLSearchParams(req.query);
         const [token, adminOnly] = [fragment.get('token'), fragment.get('adminOnly')];
@@ -61,6 +68,8 @@ const discordRest = {
                     let datas = guildInfo.data;
                     if (adminOnly) {
                         datas = guildInfo.data.filter(f => f.owner || mapper.canAddBot(f));
+                        // Trier ceux ou il est deja installé en premier. Ensuite des bouton pour le 
+                        // trie (Deja Installé / Non installé) devront être mis en Front
                     }
 
                     // We persist data in DB

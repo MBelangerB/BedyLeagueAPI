@@ -133,37 +133,16 @@ class AuthController {
                 user: await API_Users.getApiUserByUserInfo(userData.username, userData.email, source, true),
                 payload: {}
             }
-     
+
             if (createUserIfNotExist && data.user == null) {
                 data.isNew = true;
-
-                data.user = await API_Users.create({
-                    externalId: userData.id,
-                    username: userData.username,
-                    source: source,
-                    avatar: userData.avatar,
-                    discriminator: userData.discriminator,
-                    email: userData.email,
-                });
+                data.user = await API_Users.addUser(userData.id, userData.username, userData.avatar, source, userData.discriminator, userData.email);
 
             } else if (data.user) {
-                data.user.updateUserInfo(userData.username,userData.avatar);
+                await data.user.updateUserInfo(userData.username, userData.avatar);
 
                 // Prepare Data
-                const cdnInfo = new CDN();
-                data.payload = {
-                    token_type: data.user.API_Token?.token_type,
-                    access_token: data.user.API_Token?.access_token,
-                    refresh_token: data.user.API_Token?.refresh_token,
-                    username: data.user.username,
-                    userId: data.user.externalId,
-                    avatar: {
-                        xSmall: cdnInfo.avatar(data.user.externalId, userData?.avatar, data.user.discriminator, { size: CDN.SIZES[16] }) || server.icon,
-                        small: cdnInfo.avatar(data.user.externalId, userData?.avatar, data.user.discriminator, { size: CDN.SIZES[32] }) || server.icon,
-                        medium: cdnInfo.avatar(data.user.externalId, userData?.avatar, data.user.discriminator, { size: CDN.SIZES[64] }) || server.icon,
-                        large: cdnInfo.avatar(data.user.externalId, userData?.avatar, data.user.discriminator, { size: CDN.SIZES[128] }) || server.icon,
-                    },
-                }
+                data.payload = AuthController.callbackToPayload(data.user.API_Token, data.user, 'hybrid');
             }
 
             return data;
@@ -183,7 +162,7 @@ class AuthController {
      */
     static async getUserToken(token, source) {
         try {
-            return await API_Tokens.getTokenByAccessToken(token, source);
+            return await API_Tokens.findTokenByToken(token, source);
         } catch (error) {
             return console.error('A error occured in AuthController.getUserToken.', error);
         }
@@ -198,30 +177,15 @@ class AuthController {
      */
     static async createOrLoadApiToken(apiUser, source, accessTokenInfo) {
         try {
-            let apiToken = await API_Tokens.getTokenByExternalUserId(apiUser.externalId);
-           
+            let apiToken = await API_Tokens.findTokenByUserId(apiUser.id); 
+
             if (apiUser && !apiToken) {
-                // Token user doesn't exist in DB. We create it
-                apiToken = await API_Tokens.create({
-                    apiUserId: apiUser.externalId,
-                    accessToken: accessTokenInfo.access_token,
-                    refreshToken: accessTokenInfo.refresh_token,
-                    tokenType: accessTokenInfo.token_type,
-                    scope: accessTokenInfo.scope,
-                    expireAt: this.getExpireAt(accessTokenInfo.expires_in),
-                    source: source,
-                });
+                // Token user doesn't exist in DB. We create it        
+                apiToken = await API_Tokens.addAccessToken(apiUser.id, accessTokenInfo.access_token,  accessTokenInfo.refresh_token,        accessTokenInfo.token_type,  accessTokenInfo.scope, this.getExpireAt(accessTokenInfo.expires_in), source)
 
             } else if (apiUser && apiToken) {
-                // Token exist, we update id
-                apiToken.set({
-                    accessToken: accessTokenInfo.access_token,
-                    refreshToken: accessTokenInfo.refresh_token,
-                    scope: accessTokenInfo.scope,
-                    expireAt: this.getExpireAt(accessTokenInfo.expires_in),
-                    tokenType: accessTokenInfo.token_type,
-                });
-                await apiToken.save();
+                // Token exist, we update it  
+                await updateAccessToken.updateAccessToken(accessTokenInfo.access_token, accessTokenInfo.refresh_token,accessTokenInfo.token_type, accessTokenInfo.scope, this.getExpireAt(accessTokenInfo.expires_in))
             }
 
             return apiToken;
@@ -241,11 +205,6 @@ class AuthController {
     static getExpireAt(expires_in) {
         const expiresAt = moment().add(expires_in, 'seconds');
         return expiresAt;
-
-        // Remove 30sec for processing
-        // const expireDelay = null; // (expireIn - 30) + 's'
-        // var expireDate = new Date();
-        // expireDate = new Date(expireDate.getTime() + (1000 * (expireIn - 30)));
     }
 
     /**
@@ -276,6 +235,64 @@ class AuthController {
     }
     // TODO: Pour les catch error de Sequelize, il faudrait  retourne une erreur pour interrompre le traitement
 
+    
+    /**
+     * Cast the AccessToken calllback and User info callback on payload
+     * @param {*} tokenCallback 
+     * @param {*} userCallback 
+     * @param {*} source 
+     * @returns 
+     */
+     static callbackToPayload(tokenCallback, userCallback, source = "callback") {
+        const cdnInfo = new CDN();
+        if (source == "callback") {
+            return {
+                token_type: tokenCallback?.token_type,
+                access_token: tokenCallback?.access_token,
+                refresh_token: tokenCallback?.refresh_token,
+                username: userCallback.username,
+                userId: userCallback.id,
+                avatar: {
+                    xSmall: cdnInfo.avatar(userCallback.id, userCallback?.avatar, userCallback.discriminator, { size: CDN.SIZES[16] }) || '',
+                    small: cdnInfo.avatar(userCallback.id, userCallback?.avatar, userCallback.discriminator, { size: CDN.SIZES[32] }) || '',
+                    medium: cdnInfo.avatar(userCallback.id, userCallback?.avatar, userCallback.discriminator, { size: CDN.SIZES[64] }) || '',
+                    large: cdnInfo.avatar(userCallback.id, userCallback?.avatar, userCallback.discriminator, { size: CDN.SIZES[128] }) || '',
+                },
+                email: userCallback.email,
+            };
+
+        } else if (source == "db") {
+            return {
+                token_type: tokenCallback.tokenType,
+                access_token: tokenCallback.accessToken,
+                refresh_token: tokenCallback.refreshToken,
+                username: userCallback.username,
+                userId: userCallback.externalId,
+                avatar: {
+                    xSmall: cdnInfo.avatar(userCallback.externalId, userCallback?.avatar, userCallback.discriminator, { size: CDN.SIZES[16] }) || '',
+                    small: cdnInfo.avatar(userCallback.externalId, userCallback?.avatar, userCallback.discriminator, { size: CDN.SIZES[32] }) || '',
+                    medium: cdnInfo.avatar(userCallback.externalId, userCallback?.avatar, userCallback.discriminator, { size: CDN.SIZES[64] }) || '',
+                    large: cdnInfo.avatar(userCallback.externalId, userCallback?.avatar, userCallback.discriminator, { size: CDN.SIZES[128] }) || '',
+                },
+                email: userCallback.email,
+            };
+        } else if (source == "hybrid") {
+            return {
+                token_type: tokenCallback?.token_type,
+                access_token: tokenCallback?.access_token,
+                refresh_token: tokenCallback?.refresh_token,
+                username: userCallback.username,
+                userId: userCallback.externalId,
+                avatar: {
+                    xSmall: cdnInfo.avatar(userCallback.externalId, userCallback?.avatar, userCallback.discriminator, { size: CDN.SIZES[16] }) || '',
+                    small: cdnInfo.avatar(userCallback.externalId, userCallback?.avatar, userCallback.discriminator, { size: CDN.SIZES[32] }) || '',
+                    medium: cdnInfo.avatar(userCallback.externalId, userCallback?.avatar, userCallback.discriminator, { size: CDN.SIZES[64] }) || '',
+                    large: cdnInfo.avatar(userCallback.externalId, userCallback?.avatar, userCallback.discriminator, { size: CDN.SIZES[128] }) || '',
+                },
+                email: userCallback.email,
+            };      
+        }
+    }
 }
 
 AuthController.TokenSource = {

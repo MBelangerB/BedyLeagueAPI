@@ -50,13 +50,9 @@ class DiscordRestController {
         }
 
         // {
-        //     "id": "",
-        //     "name": "",
-        //     "icon": "",
-        //     "owner": false,
-        //     "permissions": 104320577,
-        //     "features": [],
-        //     "permissions_new": "1071698660929"
+        //     "id": "", "name": "", "icon": "",
+        //     "owner": false, "permissions": 0,
+        //     "features": [], "permissions_new": "0"
         // },
         return await RequestManager.ExecuteRequest(userInfoUrl + staticInfo.discord.routes.user.userGuild, headers, null, 'get').then(function (guilds) {
             const result = {
@@ -82,21 +78,13 @@ class DiscordRestController {
      */
     static async createOrLoadGuild(guildInfo, updateData = false) {
         try {
-            let apiGuild = await API_Guilds.getApiGuildByGuildId(guildInfo.id);
+            let apiGuild = await API_Guilds.findGuildByGuildId(guildInfo.id);
 
             if (!apiGuild) {
-                apiGuild = await API_Guilds.create({
-                    guildId: guildInfo.id,
-                    name: guildInfo.name,
-                    icon: guildInfo.icon,
-                });
+                apiGuild = await API_Guilds.addGuild(guildInfo.id, guildInfo.name, guildInfo.icon);
 
             } else if (apiGuild && updateData) {
-                apiGuild.set({
-                    name: guildInfo.name,
-                    icon: guildInfo.icon,
-                });
-                await apiGuild.save();
+                await apiGuild.updateGuildInfo(guildInfo.name, guildInfo.icon);
             }
 
             return apiGuild;
@@ -117,37 +105,25 @@ class DiscordRestController {
      */
     static async persistGuildPermission(guildInfo, apiGuild, userId) {
         try {
-            const apiUser = await API_Users.getApiUserByExternalId(userId);
-            let apiGuildPermissions = await API_GuildUserPermissions.getUserPermissionByUserId(apiGuild.id, userId);
+            const dbUser = await API_Users.findUserByExternalId(userId);
+            let dbGuildPermissions = await API_GuildUserPermissions.getUserPermissionByUserId(apiGuild.id, userId);
 
-            if (!apiGuild && !apiUser) {
+            if (!apiGuild && !dbUser) {
                 return {
                     OK: false,
                     msg: 'User or Guild doesn\'t exist'
                 }
             }
 
-            if (!apiGuildPermissions) {
-                apiGuildPermissions = await API_GuildUserPermissions.create({
-                    userId: userId,
-                    guildId: apiGuild.guildId,
-                    permissions: guildInfo.permissions,
-                    permissionsNew: guildInfo.permissions_new,
-                    isOwner: guildInfo.owner,
-                });
+            if (!dbGuildPermissions) {
+                dbGuildPermissions = await API_GuildUserPermissions.addGuildUserPermission(dbUser.id, apiGuild.id, guildInfo.owner, 
+                                                                                            guildInfo.permissions, guildInfo.permissions_new)
 
-            } else if (apiGuildPermissions) {
-                apiGuildPermissions.set({
-                    permissions: guildInfo.permissions,
-                    permissionsNew: guildInfo.permissions_new,
-                    isOwner: guildInfo.owner,
-                    ts: Date.now()
-                });
-                await apiGuildPermissions.save();
+            } else if (dbGuildPermissions) {
+                dbGuildPermissions.updateGuildUserPermission(guildInfo.owner, guildInfo.permissions, guildInfo.permissions_new);
             }
 
-            return apiGuildPermissions;
-
+            return dbGuildPermissions;
         } catch (error) {
             if (error.name === 'SequelizeUniqueConstraintError') {
                 return console.error('That Guild User Permissions already exists.', error);
@@ -156,8 +132,6 @@ class DiscordRestController {
         }
     }
 
-
-
     /**
      * [DB] Load Guild Permission in database
      * @param {*} guild 
@@ -165,23 +139,21 @@ class DiscordRestController {
      */
     static async loadGuilds(userId) {
         try {
-            let apiGuildPermissions = await API_GuildUserPermissions.getAllPermissionUserByUserId(userId, true);
+            let dbUser = await API_Users.findUserByExternalId(userId);
+            let apiGuildPermissions = await API_GuildUserPermissions.getAllPermissionUserByUserId(dbUser.id, true);
 
             if (apiGuildPermissions) {
-                // Return Data with discord format
+                // Return the data using the discord format.
                 // {
-                //     "id": "",
-                //     "name": "",
-                //     "icon": "",
-                //     "owner": false,
-                //     "permissions": 104320577,
-                //     "features": [],
-                //     "permissions_new": "1071698660929"
+                //     "id": "", "name": "", "icon": "",
+                //     "owner": false, "permissions": 0,
+                //     "features": [], "permissions_new": "0"
                 // },
                 const tmpData = [];
+
                 apiGuildPermissions.forEach(guildPerm => {
                     tmpData.push({
-                        id: guildPerm.API_Guild.guildId,
+                        id: guildPerm.API_Guild.discordGuildId,
                         name: guildPerm.API_Guild.name,
                         icon: guildPerm.API_Guild.icon,
                         owner: guildPerm.isOwner,
@@ -220,6 +192,7 @@ class DiscordRestController {
             return console.error('A error occured in DiscordRestController.loadBotGuild.', error);
         }
     }
+
 }
 
 module.exports = {
