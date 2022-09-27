@@ -81,7 +81,7 @@ const discordAuth = {
 
                     AuthController.BuildJWT(res, payload, null, payload.access_token);
                 } else {
-                    return res.status(401);
+                    return res.status(401).send('No token');
                 }
 
             } else {

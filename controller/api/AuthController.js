@@ -136,10 +136,11 @@ class AuthController {
 
             if (createUserIfNotExist && data.user == null) {
                 data.isNew = true;
-                data.user = await API_Users.addUser(userData.id, userData.username, userData.avatar, source, userData.discriminator, userData.email);
+                data.user = await API_Users.addDiscordUser(userData, source);
 
             } else if (data.user) {
-                await data.user.updateUserInfo(userData.username, userData.avatar);
+                await data.user.updateUserInfo(userData.username, false);
+                await data.user.updateDiscordUserInfo(userData);
 
                 // Prepare Data
                 data.payload = AuthController.callbackToPayload(data.user.API_Token, data.user, 'hybrid');
@@ -177,15 +178,15 @@ class AuthController {
      */
     static async createOrLoadApiToken(apiUser, source, accessTokenInfo) {
         try {
-            let apiToken = await API_Tokens.findTokenByUserId(apiUser.id); 
+            let apiToken = await API_Tokens.findTokenByUserId(apiUser.id);
 
             if (apiUser && !apiToken) {
                 // Token user doesn't exist in DB. We create it        
-                apiToken = await API_Tokens.addAccessToken(apiUser.id, accessTokenInfo.access_token,  accessTokenInfo.refresh_token,        accessTokenInfo.token_type,  accessTokenInfo.scope, this.getExpireAt(accessTokenInfo.expires_in), source)
+                apiToken = await API_Tokens.addAccessToken(apiUser.id, accessTokenInfo.access_token, accessTokenInfo.refresh_token, accessTokenInfo.token_type, accessTokenInfo.scope, this.getExpireAt(accessTokenInfo.expires_in), source)
 
             } else if (apiUser && apiToken) {
                 // Token exist, we update it  
-                await updateAccessToken.updateAccessToken(accessTokenInfo.access_token, accessTokenInfo.refresh_token,accessTokenInfo.token_type, accessTokenInfo.scope, this.getExpireAt(accessTokenInfo.expires_in))
+                await apiToken.updateAccessToken(accessTokenInfo.access_token, accessTokenInfo.refresh_token, accessTokenInfo.token_type, accessTokenInfo.scope, this.getExpireAt(accessTokenInfo.expires_in))
             }
 
             return apiToken;
@@ -235,7 +236,7 @@ class AuthController {
     }
     // TODO: Pour les catch error de Sequelize, il faudrait  retourne une erreur pour interrompre le traitement
 
-    
+
     /**
      * Cast the AccessToken calllback and User info callback on payload
      * @param {*} tokenCallback 
@@ -243,7 +244,7 @@ class AuthController {
      * @param {*} source 
      * @returns 
      */
-     static callbackToPayload(tokenCallback, userCallback, source = "callback") {
+    static callbackToPayload(tokenCallback, userCallback, source = "callback") {
         const cdnInfo = new CDN();
         if (source == "callback") {
             return {
@@ -290,7 +291,7 @@ class AuthController {
                     large: cdnInfo.avatar(userCallback.externalId, userCallback?.avatar, userCallback.discriminator, { size: CDN.SIZES[128] }) || '',
                 },
                 email: userCallback.email,
-            };      
+            };
         }
     }
 }

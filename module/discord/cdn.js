@@ -20,6 +20,14 @@ class CDN {
             return this.defaultAvatar(discriminator);
         }
     }
+    banner(id, bannerHash, options) {
+        if (bannerHash) {
+            return this.dynamicMakeURL(`/banners/${id}/${bannerHash}`, bannerHash, options);
+        } else {
+            return '';
+        }
+
+    }
     channelIcon(channelId, iconHash, options) {
         return this.makeURL(`/channel-icons/${channelId}/${iconHash}`, options);
     }
@@ -69,14 +77,14 @@ class CDN {
 }
 
 CDN.SIZES = {
-    "16": 16, 
-    "32": 32, 
-    "64": 64, 
-    "128": 128, 
-    "256": 256, 
-    "512": 512, 
-    "1024": 1024, 
-    "2048": 2048, 
+    "16": 16,
+    "32": 32,
+    "64": 64,
+    "128": 128,
+    "256": 256,
+    "512": 512,
+    "1024": 1024,
+    "2048": 2048,
     "4096": 4096
 };
 

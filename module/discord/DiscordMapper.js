@@ -51,7 +51,40 @@ class DiscordMapper {
         return sortedList;
     }
 
+    /**
+     * Cast UserInfo to profile format
+     * @param {*} userInfo 
+     * @returns 
+     */
+    castUserInfo(userInfo) {
+        const cdn = new CDN();
+        return {
+            username: userInfo.username,
+            discriminator: userInfo.discriminator,
+            avatar: {
+                xSmall: cdn.avatar(userInfo.id, userInfo?.avatar, userInfo.discriminator, { size: CDN.SIZES[16] }) || '',
+                small: cdn.avatar(userInfo.id, userInfo?.avatar, userInfo.discriminator, { size: CDN.SIZES[32] }) || '',
+                medium: cdn.avatar(userInfo.id, userInfo?.avatar, userInfo.discriminator, { size: CDN.SIZES[64] }) || '',
+                large: cdn.avatar(userInfo.id, userInfo?.avatar, userInfo.discriminator, { size: CDN.SIZES[128] }) || '',
+            },
+            banner: {
+                small: cdn.banner(userInfo.id, userInfo?.banner, { size: CDN.SIZES[512] }) || '',
+                medium: cdn.banner(userInfo.id, userInfo?.banner, { size: CDN.SIZES[1024] }) || '',
+                normal: cdn.banner(userInfo.id, userInfo?.banner, { size: CDN.SIZES[2048] }) || '',
+                large: cdn.banner(userInfo.id, userInfo?.banner, { size: CDN.SIZES[4096] }) || '',
+            },
+            bannerColor: (userInfo.banner_color),
+            accenColor: this.#bnToHex(userInfo.accent_color),
+            verified: userInfo.verified,
+            locale: userInfo.locale
+        }    
+    }
 
+    /**
+     * Check if user has a permission for add the bot
+     * @param {*} server 
+     * @returns 
+     */
     canAddBot(server) {
         if (server.owner == true) {
             return true;
@@ -64,12 +97,23 @@ class DiscordMapper {
         return false;
     }
 
+    /**
+     * Check if user has ADMIN permission flag
+     * @param {*} permissions 
+     * @returns 
+     */
     #isAdmin(permissions) {
         //  return permissions & this.PermissionFlagsBits.ADMINISTRATOR == this.PermissionFlagsBits.ADMINISTRATOR;
         const permBit = this.#bnToHex(DiscordMapper.PermissionFlagsBits.Administrator, true);
         return ((permissions & permBit) == permBit);
     }
 
+    /**
+     * Cast the value at Hex (base 16)
+     * @param {*} bn 
+     * @param {*} withZero 
+     * @returns 
+     */
     #bnToHex(bn, withZero = false) {
         var base = 16;
         var hex = BigInt(bn).toString(base);
@@ -82,9 +126,14 @@ class DiscordMapper {
         return hex;
     }
 
+    /**
+     * Cast the guild name at short value
+     * @param {*} serverName 
+     * @returns 
+     */
     #getShortName(serverName) {
         //TODO: Keep de -
-        const regex = /\b[a-zA-Z]/gi;
+        const regex = /\b[-a-zA-Z]/gi;
 
         // Alternative syntax using RegExp constructor
         // const regex = new RegExp('\\b[a-zA-Z]', 'gm')

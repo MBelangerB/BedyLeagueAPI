@@ -139,7 +139,7 @@ class DiscordRestController {
      */
     static async loadGuilds(userId) {
         try {
-            let dbUser = await API_Users.findUserByExternalId(userId);
+            let dbUser = await API_Users.findUserByExternalId(userId, false);
             let apiGuildPermissions = await API_GuildUserPermissions.getAllPermissionUserByUserId(dbUser.id, true);
 
             if (apiGuildPermissions) {

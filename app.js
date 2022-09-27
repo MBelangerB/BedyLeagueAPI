@@ -19,7 +19,7 @@ const leagueRouter = require('./routes/lol/league');
 const summonerRouter = require('./routes/lol/summoner');
 
 /* API Route */
-const { authRouter, verifyToken } = require('./routes/api/auth');
+const { verifyToken } = require('./routes/api/auth');
 const emailRouter = require('./routes/api/email');
 const validateCaptchaRouter = require('./routes/api/validateCaptcha');
 

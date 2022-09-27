@@ -7,6 +7,13 @@ require('dotenv').config();
 
 const discordRest = {
 
+    /**
+     * Get User information
+     * @param {*} req 
+     * @param {*} res 
+     * @param {*} next 
+     * @returns 
+     */
     async userInfo(req, res, next) {
         const fragment = new URLSearchParams(req.query);
         const [token] = [fragment.get('token')];
@@ -16,18 +23,31 @@ const discordRest = {
             if (!payload) {
                 return res.sendStatus(401);
             }
+            const userId = payload.payload.userId;
+            const mapper = new DiscordMapper();
 
             // We have accessToken we try to call Discord API for get UserInfo
             const userInfo = await DiscordRestController.getDiscordUserInfo('Bearer', token);
-            if (userInfo && userInfo.OK) {
+            const guildData = await DiscordRestController.loadGuilds(userId);
+
+            // We get updated info, we update DB user
+            if ((userInfo && userInfo.OK) && (guildData && guildData.length > 0)) {
+                const returnData = {
+                    guild: {
+                        owner: guildData.filter(f => f.owner).length || 0,
+                        manager: guildData.filter(f => mapper.canAddBot(f)).length || 0,
+                    },
+                    user: mapper.castUserInfo(userInfo.data)
+                }
+
                 return res.status(200).json({
-                    data: userInfo.data,
+                    data: returnData,
                     OK: true,
                 });
             } else {
-                res.status(400).send({
+                res.status(401).send({
                     OK: false,
-                    msg: 'An error occured. Token is not revoked.'
+                    msg: 'An error occured. Token is is invalid or revoked.'
                 });
             }
         } catch (ex) {
@@ -106,46 +126,6 @@ const discordRest = {
                     msg: 'An error occured. Cant obtains data'
                 });
             }
-
-            // const guildInfo = await DiscordRestController.getGuilds('Bearer', token);
-            // if (guildInfo && guildInfo.OK) {
-            //     let datas = guildInfo.data;
-            //     // if (adminOnly) {
-            //     //     datas = guildInfo.data.filter(f => f.owner || f.canManage);
-            //     // }
-
-            //     await datas.reduce(async (oldGuild, guild) => {
-            // 		await oldGuild;
-
-            //         const dbGuild = await DiscordRestController.createOrLoadGuild(guild, false);
-            //         if (dbGuild) {
-            //             await DiscordRestController.persistGuildPermission(guild,dbGuild, userId);
-            //         }           
-            // 	}, Promise.resolve());
-
-
-
-            //     // TODO: Put Data in database
-            //     const mapper = new DiscordMapper();
-            //     const frontData = mapper.castServerDataList(guildInfo.data, adminOnly);
-            //     if (frontData && frontData.length > 0) {
-            //         res.status(200).send({
-            //             OK: true,
-            //             data: frontData
-            //         });      
-            //     } else {
-            //         res.status(400).send({
-            //             OK: false,
-            //             msg: 'An error occured. Cant obtains data'
-            //         });   
-            //     }  
-            // } else {
-            //     res.status(400).send({
-            //         OK: false,
-            //         msg: 'An error occured. Cant obtains data'
-            //     });      
-            // }
-
 
         } catch (ex) {
             console.error('A error occured in DiscordAuth.serverList')
