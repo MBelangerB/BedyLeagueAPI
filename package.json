@@ -3,12 +3,14 @@
   "version": "2022.8.1",
   "private": true,
   "description": "BedyBot - API. Api for get summoner info, summoner rank and another information.",
-  "main": "./bin/www",
+  "main": "./src/bin/www",
   "scripts": {
-    "start": "node ./bin/www",
+    "start": "node ./src/bin/www",
     "eslint": "eslint .",
     "eslintFix": "eslint . --fix",
-    "cleanState": "npm ci",
+    "npm:cleanState": "npm ci",
+    "npm:outdated": "npm outdated",
+    "npm:refreshLock": "npm i --package-lock-only",
     "test": "mocha ./tests/*.spec.js --timeout 5000"
   },
   "dependencies": {
@@ -16,10 +18,9 @@
     "compression": "^1.7.4",
     "cookie-parser": "~1.4.6",
     "cors": "^2.8.5",
-    "crypto": "^1.0.1",
     "crypto-js": "^4.1.1",
     "debug": "~4.3.4",
-    "express": "~4.18.1",
+    "express": "^4.18.2",
     "fs": "0.0.1-security",
     "helmet": "^6.0.0",
     "http-errors": "^2.0.0",
@@ -28,18 +29,18 @@
     "moment": "^2.29.4",
     "morgan": "~1.10.0",
     "node-cache": "^5.1.2",
-    "nodemailer": "^6.7.8",
+    "nodemailer": "^6.8.0",
     "qs": "^6.11.0",
-    "sequelize": "^6.19.0",
-    "sqlite3": "^5.0.5",
+    "sequelize": "^6.25.0",
+    "sqlite3": "^5.1.2",
     "util": "^0.12.4",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
     "chai": "^4.3.6",
     "chai-http": "^4.3.0",
-    "dotenv": "^16.0.1",
-    "eslint": "^8.23.0",
+    "dotenv": "^16.0.3",
+    "eslint": "^8.25.0",
     "mocha": "^10.0.0"
   }
 }

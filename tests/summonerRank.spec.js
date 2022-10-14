@@ -4,7 +4,7 @@ process.env.NODE_ENV = 'test';
 let chai = require('chai');
 let chaiHttp = require('chai-http');
 const assert = require('assert');
-let server = require('../app');
+let server = require('../src/app');
 let should = chai.should();
 chai.use(chaiHttp);
 

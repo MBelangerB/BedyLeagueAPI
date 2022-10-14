@@ -1,3 +1,4 @@
-[submodule "BedyBot-db"]
-	path = db
+[submodule "src/db"]
+	path = src/db
 	url = git@github.com:MBelangerB/BedyBot-db.git
+	branch = dev

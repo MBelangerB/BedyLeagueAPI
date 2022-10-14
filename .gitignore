@@ -9,25 +9,21 @@
 # Vs Code
 # /.vscode
 
-# Old version
-# /V1.3/
-
 # Dependency directories
 /node_modules/
 /jspm_packages/
 
 # Dragon Data
-/static/_dragon/
-/static/dragon/
-/static/en-us/*.json
-/static/fr_fr/*.json
-/dragon/*
+**/static/dragon/
+**/static/en)us/*.json
+**/static/fr_fr/*.json
+**/dragon/*
 
 # Public (autorize)
 !/web/*.txt
 
 # Disabled JSON (config)
-/config/*.json
+**/config/*.json
 
 # Disable SSL
 /ssl/*
@@ -41,5 +37,5 @@
 
 
 # Dist
-db/dist
-dist/*
+**/db/dist
+**/dist/*
