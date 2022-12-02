@@ -62,7 +62,7 @@ class RequestManager {
                 if (error.response.status === 404 || error.response.status === 403) {
                     reject(error.response);
                 } else {
-                    console.error(`An error occured in (base static) RequestManager.ExecuteRequest(url, token).\n ${error}`);
+                    console.error(`An error occured in (base ExecuteTokenRequest) RequestManager.ExecuteRequest(url, token).\n ${error}`);
                     reject(error);
                 }
             });
@@ -105,7 +105,7 @@ class RequestManager {
                 if (error.response.status === 404) {
                     reject(error.response);
                 } else {
-                    console.error(`An error occured in (Axios static) RequestManager.ExecuteRequest(url).\n ${error}`);
+                    console.error(`An error occured in (Axios ExecuteBasicRequest) RequestManager.ExecuteRequest(url).\n ${error}`);
                     reject(error);
                 }
             });
@@ -149,7 +149,7 @@ class RequestManager {
                     if (error.response?.status >= 400  && error.response?.status <= 403) {
                         reject(error.response);
                     } else {
-                        console.error(`An error occured in (base static) RequestManager.ExecuteRequest(url, token).\n ${error}`);
+                        console.error(`An error occured in (base ExecuteRequest) RequestManager.ExecuteRequest(url, token).\n ${error}`);
                         console.error(error?.stack);
                         reject(error);
                     }

@@ -146,7 +146,6 @@ app.get('/discord/userInfo', cors(corsOptions), verifyToken, discordRest.userInf
 // app.get('/api/profile', verifyToken, authRouter.profile);
 
 
-
 // app.options('/api/sendEmail', cors())
 app.options('*', cors()); // include before other routes
 app.post('/api/sendEmail', cors(corsOptions), emailRouter.sendMail);

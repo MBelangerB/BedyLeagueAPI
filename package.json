@@ -6,12 +6,16 @@
   "main": "./src/bin/www",
   "scripts": {
     "start": "node ./src/bin/www",
+    "start:nodemon": "nodemon ./src/bin/www",
     "eslint": "eslint .",
     "eslintFix": "eslint . --fix",
     "npm:cleanState": "npm ci",
     "npm:outdated": "npm outdated",
     "npm:refreshLock": "npm i --package-lock-only",
-    "test": "mocha ./tests/*.spec.js --timeout 5000"
+    "test": "mocha ./tests/*.spec.js --timeout 5000",
+    "migrate:up": "npx sequelize-cli db:migrate",
+    "migrate:undo": "npx sequelize-cli db:migrate:undo",
+    "migrate:create": "npx sequelize-cli migration:generate --name="
   },
   "dependencies": {
     "axios": "^0.27.2",

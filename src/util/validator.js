@@ -97,7 +97,7 @@ validator.lol = {
                 if (this.requireArguments(params)) {
                     this.validateRegion(params.region);
 
-                    this.convertToRealRegion(params?.region);
+                    this.convertToRealRegion(params);
                 }
                 break;
 
@@ -107,7 +107,7 @@ validator.lol = {
                     this.validateRegion(params.region);
                     this.validateSummonerName((params.summonerName || params.summonername));
 
-                    this.convertToRealRegion(params?.region);
+                    this.convertToRealRegion(params);
                 }
                 break;
 
@@ -118,7 +118,7 @@ validator.lol = {
                     this.validateSummonerName((params.summonerName || params.summonername));
                     this.validateQueueType(params.queuetype);
 
-                    this.convertToRealRegion(params?.region);
+                    this.convertToRealRegion(params);
                     this.convertToRealQueueType(params);
                 }
                 break;
@@ -275,8 +275,8 @@ validator.lol = {
             return false;
         }
     },
-    convertToRealRegion: function(regionParam) {
-        const region = regionParam?.toUpperCase();
+    convertToRealRegion: function(params) {
+        const region = params?.region.toUpperCase();
 
         const regionData = {
             // BR1
@@ -315,6 +315,7 @@ validator.lol = {
             this.errors.push('La paramètre \'region\' est invalide.');
             return null;
         } else {
+            params.region = realRegion;
             return realRegion;
         }     
     },

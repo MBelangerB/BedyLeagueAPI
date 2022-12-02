@@ -109,13 +109,14 @@ module.exports = {
                     await summonerCache.getAsyncB(key).then(async function (resultData) {
                         // Vérifie si les données sont déjà en cache, si OUI on utilise la cache
                         if (typeof resultData === 'undefined') {
+                            // Todo: a quoi sert le parametre result ici
                             const data = await self._querySummonerInfo(RequestManager, result);
-                            if (data) {
+                            if (data && !data.err) {
                                 summonerCache.setCacheValue(key, data);
                                 return data;
                             } else {
-                                reject(result);
-                                return;
+                                reject(data);
+                                return data;
                             }
                         } else {
                             // L'information est présente dans la cache

@@ -1,22 +1,28 @@
-FROM node:lts-alpine3.16 as nodeAlpine
+ # as XXXX => target Name
+FROM node:lts-alpine3.16 as nodeBedyApi
 
 # Create app directory
-RUN mkdir -p /usr/src/app
-RUN mkdir -p /usr/src/db
+RUN mkdir -p /usr/src/api
+RUN mkdir -p /usr/db
+
+# Install sqlite
+# RUN apk update 
 
 # Volume DB folder
-VOLUME /usr/src/db
+# VOLUME /usr/db
 
 # Create app directory
-WORKDIR /usr/src/app
+WORKDIR /usr/src/api
 
 # Install global dependancy
+# RUN npm install pm2 -g
 RUN npm install sqlite3@5.0.5 -g
 RUN npm install sequelize-cli@6.4.1 -g
 
 # Copy files
-COPY .env /usr/src/app/
-COPY docker/config.json /usr/src/app/db/config/
+COPY docker/config.json /usr/src/api/src/db/config/
+COPY .env               /usr/src/api/
+COPY .sequelizerc       /usr/src/api/
 
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
@@ -28,7 +34,12 @@ RUN npm install
 # RUN npm ci --only=production
 
 # Bundle app source
-COPY . .
+# COPY . .
+COPY src/ /usr/src/api/src/
+
+# Copy entrypoint et donne les permission (local)
+COPY docker/node/docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # ONBUILD RUN npm run migrate:up
 # RUN npm run migrate:up
@@ -36,4 +47,6 @@ COPY . .
 EXPOSE 8081
 
 # Run server
-CMD ["node", "./bin/www" ]
+ENTRYPOINT [ "docker-entrypoint.sh" ]
+CMD ["node", "src/bin/www" ]
+# CMD ["pm2-runtime", "src/bin/www"]

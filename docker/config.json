@@ -3,14 +3,14 @@
       "host": "localhost",
       "dialect": "sqlite",
       "database": "database_development",
-      "storage": "/usr/src/db/docker_bedybot.db",
+      "storage": "/usr/db/docker_bedybot.db",
       "logging": false
     },
     "production": {
       "host": "localhost",
       "dialect": "sqlite",
       "database": "database_prod",
-      "storage": "/usr/src/db/docker_mkbot_prod.db"
+      "storage": "/usr/db/docker_mkbot_prod.db"
     }
 }
   
