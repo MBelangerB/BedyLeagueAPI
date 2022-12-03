@@ -1,6 +1,9 @@
 const jwt = require('jsonwebtoken');
 const { AuthController } = require('../../controller/api/AuthController');
 
+// Obsolet route, dont use ATP
+// Trying for custom Login/JWT
+
 const tokenList = {}
 // https://github.com/DInuwan97/REACT_Login_RegistartionDummy_App/blob/master/Routes/api/users.js
 // https://www.npmjs.com/package/jsonwebtoken
@@ -27,7 +30,7 @@ const authRouter = {
                 if (userInfo.user.validatePassword(passwd)) {
                     const user = userInfo.jwtUser;
 
-                    jwt.sign({ user }, process.env.SECRET, { expiresIn: process.env.TOKEN_LIFE }, (err, token) => {
+                    jwt.sign({ user }, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_LIFE }, (err, token) => {
                         if (err) {
                             console.warn(err);
                             return res.status(403);
@@ -72,13 +75,13 @@ const authRouter = {
             if (payload) {
                 // let userInfo = await AuthController.getUserByPayload(payload);
 
-                let data = jwt.verify(token, process.env.SECRET);
+                let data = jwt.verify(token, process.env.JWT_SECRET);
                 delete data.iat;
                 delete data.exp;
                 delete data.nbf;
                 delete data.jti;
 
-                jwt.sign({ payload }, process.env.SECRET, { expiresIn: process.env.TOKEN_LIFE }, (err, token) => {
+                jwt.sign({ payload }, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_LIFE }, (err, token) => {
                     if (err) {
                         console.warn(err);
                         return res.status(403);
@@ -112,7 +115,7 @@ const authRouter = {
     async profile(req, res, next) {
         try {
             // Soluce 1
-            // jwt.verify(req.token, process.env.SECRET, (err, authData) => {
+            // jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
             //     if (err) {
             //         console.warn(err.message);
             //         res.status(403).send('403 - Forbidden');
@@ -157,7 +160,7 @@ function verifyToken(req, res, next) {
         const tokenType = bearer[0].toLowerCase();
         const token = bearer[1];
         if (tokenType == 'jwt') {
-            jwt.verify(token, process.env.SECRET, (err, payload) => {
+            jwt.verify(token, process.env.JWT_SECRET, (err, payload) => {
                 if (err) {
                     console.warn(err.message);
                     res.status(401).json({

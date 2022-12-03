@@ -1,6 +1,12 @@
 const info = require('../../static/info.json');
 const RequestManager = require('../../util/RequestManager');
 
+/**
+ * validateReCAPTCHA function used by frontend
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.validateReCAPTCHA = async function (req, res) {
     try {
         console.log('Enter in validateReCAPTCHA');

@@ -219,7 +219,7 @@ class AuthController {
     static BuildJWT(res, payload, expireDelay, access_token) {
         // Save JWT
         const defaultInterval = (process.env.TOKEN_LIFE + process.env.TOKEN_INTERVAL);
-        return jwt.sign({ payload }, process.env.SECRET, { expiresIn: (expireDelay || defaultInterval) }, (err, token) => {
+        return jwt.sign({ payload }, process.env.JWT_SECRET, { expiresIn: (expireDelay || defaultInterval) }, (err, token) => {
             if (err) {
                 console.warn(err);
                 return res.status(403);

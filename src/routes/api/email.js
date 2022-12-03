@@ -29,6 +29,13 @@ function initTransporter() {
     }
 }
 
+/**
+ * SendMail routing function
+ * Used by contact us front end
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.sendMail = async function (req, res) {
     try {
         console.log('Enter in SendMail');
