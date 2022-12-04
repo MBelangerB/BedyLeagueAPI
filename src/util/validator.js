@@ -138,7 +138,10 @@ validator.lol = {
     validateRotateParams: function (params) {
         this.errors = [];
         this.validateRegion(params?.region);
-        params.region = this.convertToRealRegion(params?.region);
+        if (this.errors && this.errors.length > 0) {
+            return this.errors;
+        }
+        params.region = this.convertToRealRegion(params);
         return this.errors;
     },
 

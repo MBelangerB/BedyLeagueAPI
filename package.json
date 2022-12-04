@@ -12,7 +12,7 @@
     "npm:cleanState": "npm ci",
     "npm:outdated": "npm outdated",
     "npm:refreshLock": "npm i --package-lock-only",
-    "test": "mocha ./tests/*.spec.js --timeout 5000",
+    "test": "mocha ./test/*.spec.js --timeout 5000",
     "migrate:up": "npx sequelize-cli db:migrate",
     "migrate:undo": "npx sequelize-cli db:migrate:undo",
     "migrate:create": "npx sequelize-cli migration:generate --name="
@@ -26,7 +26,7 @@
     "debug": "~4.3.4",
     "express": "^4.18.2",
     "fs": "0.0.1-security",
-    "helmet": "^6.0.0",
+    "helmet": "^6.0.1",
     "http-errors": "^2.0.0",
     "https": "^1.0.0",
     "jsonwebtoken": "^8.5.1",
@@ -35,16 +35,17 @@
     "node-cache": "^5.1.2",
     "nodemailer": "^6.8.0",
     "qs": "^6.11.0",
-    "sequelize": "^6.25.0",
+    "sequelize": "^6.26.0",
     "sqlite3": "^5.1.2",
-    "util": "^0.12.4",
+    "util": "^0.12.5",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "chai": "^4.3.6",
+    "chai": "^4.3.7",
     "chai-http": "^4.3.0",
     "dotenv": "^16.0.3",
-    "eslint": "^8.25.0",
-    "mocha": "^10.0.0"
+    "eslint": "^8.29.0",
+    "mocha": "^10.1.0",
+    "nyc": "^15.1.0"
   }
 }

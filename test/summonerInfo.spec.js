@@ -5,6 +5,8 @@ let chai = require('chai');
 let chaiHttp = require('chai-http');
 let server = require('../src/app');
 let should = chai.should();
+// let assert = chai.assert;
+// let expect = chai.expect;
 chai.use(chaiHttp);
 
 require('dotenv').config();
@@ -18,7 +20,10 @@ describe('Test /lol', () => {
       chai.request(server)
         .get('/lol/summonerInfo/NA1/BedyApiTest')
         .end((err, res) => {
-          res.should.have.status(404);
+          res.should.have.status(200); // 400
+          res.should.to.be.html;
+          res.text.should.be.match(/^[a-zA-Z0-9 -]+$/gi);  
+
           done();
         });
     });
