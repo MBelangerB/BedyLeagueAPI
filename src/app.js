@@ -19,9 +19,13 @@ const leagueRouter = require('./routes/lol/league');
 const summonerRouter = require('./routes/lol/summoner');
 
 /* API Route */
-const { authRouter, verifyToken } = require('./routes/api/auth');
+const { verifyToken } = require('./routes/api/auth');
 const emailRouter = require('./routes/api/email');
 const validateCaptchaRouter = require('./routes/api/validateCaptcha');
+
+/* Discourd Route */
+const { discordAuth } = require('./routes/discord/auth');
+const { discordRest } = require('./routes/discord/rest');
 
 /* OW Route */
 const overwatchRouter = require('./routes/ow/rank');
@@ -127,16 +131,19 @@ app.get('/:lang?/lol/rank/:region/:summonerName', cors(), rankRouter.rank);
 app.get('/:lang?/ow/rank', overwatchRouter.rank);
 app.get('/:lang?/ow/rank/:region/:platform/:tag', overwatchRouter.rank);
 
-// Temporary redirection
-// TODO: Remove
-app.get('/rank', rankRouter.rankRework);
-app.get('/v2/rank', rankRouter.rankRework);
+// Discord Authentification route
+app.post('/discord/accessToken', cors(corsOptions), discordAuth.accessToken);
+app.post('/discord/revokeToken', cors(corsOptions), verifyToken, discordAuth.revokeToken);
+app.post('/discord/callback_auth', discordAuth.callback_auth);
+
+app.get('/discord/serverList', cors(corsOptions), verifyToken, discordRest.serverList);
+app.get('/discord/userInfo', cors(corsOptions), verifyToken, discordRest.userInfo);
+
 
 // Private API routing
-app.post('/api/login', authRouter.login);
-app.post('/api/refreshToken', verifyToken, authRouter.refreshToken);
-app.get('/api/profile', verifyToken, authRouter.profile);
-
+// app.post('/api/login', authRouter.login);
+// app.post('/api/refreshToken', verifyToken, authRouter.refreshToken);
+// app.get('/api/profile', verifyToken, authRouter.profile);
 
 
 // app.options('/api/sendEmail', cors())

@@ -62,7 +62,7 @@ class RequestManager {
                 if (error.response.status === 404 || error.response.status === 403) {
                     reject(error.response);
                 } else {
-                    console.error(`An error occured in (base static) RequestManager.ExecuteRequest(url, token).\n ${error}`);
+                    console.error(`An error occured in (base ExecuteTokenRequest) RequestManager.ExecuteRequest(url, token).\n ${error}`);
                     reject(error);
                 }
             });
@@ -73,7 +73,7 @@ class RequestManager {
      * Execute une requête AXIOS
      * @param {string} requestUrl
      */
-    static async ExecuteRequest(requestUrl, method = 'get', responseType = 'json') {
+    static async ExecuteBasicRequest(requestUrl, method = 'get', responseType = 'json') {
         return new Promise(function (resolve, reject) {
 
             axios({
@@ -105,12 +105,57 @@ class RequestManager {
                 if (error.response.status === 404) {
                     reject(error.response);
                 } else {
-                    console.error(`An error occured in (Axios static) RequestManager.ExecuteRequest(url).\n ${error}`);
+                    console.error(`An error occured in (Axios ExecuteBasicRequest) RequestManager.ExecuteRequest(url).\n ${error}`);
                     reject(error);
                 }
             });
         });
     }
+
+
+        /*
+            Methode base pour executer Query.
+        */
+        static async ExecuteRequest(requestUrl, headers, bodyData, method = 'get', responseType = 'json') {
+            // console.info(requestUrl);
+
+            return new Promise(function (resolve, reject) {
+
+                axios({
+                    url: encodeURI(requestUrl),
+                    method: method,
+                    headers: headers,
+                    data: bodyData,
+                    responseType: responseType,
+                    transformResponse: [function (data) {
+                        try {
+                            if (data && data.isJSON()) {
+                                // Do whatever you want to transform the data
+                                return JSON.parse(data);
+                            }
+                        } catch (ex) {
+                            return data;
+                        }
+                        return data;
+                    }],
+                }).then(response => {
+                    if (response.status === 200 && response.statusText === 'OK') {
+                        resolve(response.data);
+    
+                    } else if (response.status === 404) {
+                        reject(response);
+                    }
+                }).catch(error => {
+                    if (error.response?.status >= 400  && error.response?.status <= 403) {
+                        reject(error.response);
+                    } else {
+                        console.error(`An error occured in (base ExecuteRequest) RequestManager.ExecuteRequest(url, token).\n ${error}`);
+                        console.error(error?.stack);
+                        reject(error);
+                    }
+                });
+            });
+        }
 }
 
 module.exports = RequestManager;

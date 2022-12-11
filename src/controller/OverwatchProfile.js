@@ -36,7 +36,7 @@ class OverwatchProfilStatsController {
         const url = this.url;
 
         // Le SummonerInfo n'est pas présent dans la cache
-        await requestManager.ExecuteRequest(url).then(function (res) {
+        await requestManager.ExecuteBasicRequest(url).then(function (res) {
             data = res;
         }, function (error) {
             result.err = {

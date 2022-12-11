@@ -1,6 +1,9 @@
 const jwt = require('jsonwebtoken');
 const { AuthController } = require('../../controller/api/AuthController');
 
+// Obsolet route, dont use ATP
+// Trying for custom Login/JWT
+
 const tokenList = {}
 // https://github.com/DInuwan97/REACT_Login_RegistartionDummy_App/blob/master/Routes/api/users.js
 // https://www.npmjs.com/package/jsonwebtoken
@@ -8,7 +11,14 @@ const tokenList = {}
 // https://github.com/codeforgeek/node-refresh-token/blob/master/app.js
 // https://codeforgeek.com/refresh-token-jwt-nodejs-authentication/
 const authRouter = {
-    // login = async function (req, res, next) {
+
+    /**
+     * Personnal login - JWT Test
+     * @param {*} req 
+     * @param {*} res 
+     * @param {*} next 
+     * @returns 
+     */
     async login(req, res, next) {
         try {
             console.log('Enter in Login');
@@ -20,7 +30,7 @@ const authRouter = {
                 if (userInfo.user.validatePassword(passwd)) {
                     const user = userInfo.jwtUser;
 
-                    jwt.sign({ user }, process.env.SECRET, { expiresIn: process.env.TOKEN_LIFE }, (err, token) => {
+                    jwt.sign({ user }, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_LIFE }, (err, token) => {
                         if (err) {
                             console.warn(err);
                             return res.status(403);
@@ -49,6 +59,13 @@ const authRouter = {
         }
     },
 
+    /**
+     * Not OK - Not availabled in jwt
+     * @param {*} req 
+     * @param {*} res 
+     * @param {*} next 
+     * @returns 
+     */
     async refreshToken(req, res, next) {
         try {
             console.log('Enter in Login');
@@ -56,15 +73,15 @@ const authRouter = {
             let { token } = req.body;
 
             if (payload) {
-                let userInfo = await AuthController.getUser(payload);
+                // let userInfo = await AuthController.getUserByPayload(payload);
 
-                let data = jwt.verify(token, process.env.SECRET);
+                let data = jwt.verify(token, process.env.JWT_SECRET);
                 delete data.iat;
                 delete data.exp;
                 delete data.nbf;
                 delete data.jti;
-                
-                jwt.sign({ payload }, process.env.SECRET, { expiresIn: process.env.TOKEN_LIFE }, (err, token) => {
+
+                jwt.sign({ payload }, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_LIFE }, (err, token) => {
                     if (err) {
                         console.warn(err);
                         return res.status(403);
@@ -82,7 +99,7 @@ const authRouter = {
                 // Pas acccès
                 return res.status(401).send('Le compte n\'existe pas.')
             }
- 
+
         } catch (ex) {
             console.error('An error occured in /api/refreshToken')
             console.error(ex);
@@ -98,7 +115,7 @@ const authRouter = {
     async profile(req, res, next) {
         try {
             // Soluce 1
-            // jwt.verify(req.token, process.env.SECRET, (err, authData) => {
+            // jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
             //     if (err) {
             //         console.warn(err.message);
             //         res.status(403).send('403 - Forbidden');
@@ -138,23 +155,31 @@ const authRouter = {
 function verifyToken(req, res, next) {
     const bearerHeader = req.headers['authorization'];
     if (typeof bearerHeader !== 'undefined') {
-
         // Soluce 2
         const bearer = bearerHeader.split(' ');
+        const tokenType = bearer[0].toLowerCase();
         const token = bearer[1];
-        jwt.verify(token, process.env.SECRET, (err, payload) => {
-            if (err) {
-                console.warn(err.message);
-                res.status(401).json({
-                    error: true,
-                    message: 'Unauthorized access.'
-                });
-            } else {
-                req.token = token;
-                req.payload = payload;
-                next();
-            }
-        });
+        if (tokenType == 'jwt') {
+            jwt.verify(token, process.env.JWT_SECRET, (err, payload) => {
+                if (err) {
+                    console.warn(err.message);
+                    res.status(401).json({
+                        error: true,
+                        message: 'Unauthorized access.'
+                    });
+                } else {
+                    req.token = token;
+                    req.payload = payload;
+                    next();
+                }
+            });
+        } else {
+            res.status(403).json({
+                error: true,
+                message: 'Invalid tokem type.'
+            });
+        }
+
 
     } else {
         res.status(403).json({

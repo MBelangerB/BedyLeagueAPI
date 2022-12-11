@@ -1,6 +1,12 @@
 const info = require('../../static/info.json');
 const RequestManager = require('../../util/RequestManager');
 
+/**
+ * validateReCAPTCHA function used by frontend
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.validateReCAPTCHA = async function (req, res) {
     try {
         console.log('Enter in validateReCAPTCHA');
@@ -11,8 +17,8 @@ exports.validateReCAPTCHA = async function (req, res) {
         baseUrl = baseUrl.replace('{SECRET}', process.env.RECAPTCHA_V3);
         baseUrl = baseUrl.replace('{RESPONSE}', token);
 
-        await RequestManager.ExecuteRequest(baseUrl, 'post').then(function (queryRes) {
-            console.log(queryRes);
+        await RequestManager.ExecuteBasicRequest(baseUrl, 'post').then(function (queryRes) {
+            // console.log(queryRes);
             if (queryRes && queryRes.success && queryRes.score >= 0.5) {
                 return res.status(200).json({
                     msg: 'Token is validate for' + action,

@@ -8,4 +8,4 @@ Dockerfile*
 docker-compose*
 README.md
 LICENSE
-src
+/src/db/config/config.json

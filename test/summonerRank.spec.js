@@ -4,7 +4,7 @@ process.env.NODE_ENV = 'test';
 let chai = require('chai');
 let chaiHttp = require('chai-http');
 const assert = require('assert');
-let server = require('../app');
+let server = require('../src/app');
 let should = chai.should();
 chai.use(chaiHttp);
 
@@ -19,14 +19,14 @@ describe('Test /lol', () => {
       chai.request(server)
         .get('/lol/rank?summonerName=BoheTest&region=NA1&json=1')
         .end((err, res) => {
-          res.should.have.status(404);
+          res.should.have.status(400); // 404
           done();
         });
     });
  
     it('The summoner is not ranked', (done) => {
       chai.request(server)
-        .get('/lol/rank?summonerName=LeModoDeBohe&region=NA1&json=1')
+        .get('/lol/rank?summonerName=Elmat90&region=NA1&json=1')
         .end((err, res) => {
           res.should.have.status(200);
           res.should.to.be.json;

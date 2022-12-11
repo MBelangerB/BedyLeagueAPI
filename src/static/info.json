@@ -100,5 +100,22 @@
         "routes": {
             "validation": "https://www.google.com/recaptcha/api/siteverify?secret={SECRET}&response={RESPONSE}"
         }
+    },
+    "discord": {
+        "routes": {
+            "api": "https://discord.com/api",
+            "version": "/v10",
+            "auth": {
+                "getToken": "/oauth2/token",
+                "revokeToken": "/oauth2/token/revoke"
+            },
+            "user": {
+                "currentUser": "/users/@me",
+                "userGuild": "/users/@me/guilds"
+            }
+        },
+        "cdn": {
+            "url": "https://cdn.discordapp.com"
+        }
     }
 }
