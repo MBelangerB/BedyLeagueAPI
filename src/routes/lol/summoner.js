@@ -7,6 +7,13 @@
 const validator = require('../../util/validator');
 const staticFunc = require('../../util/staticFunction');
 
+require('dotenv').config();
+const culture = (process.env.culture || 'fr');
+
+const moment = require('moment');
+moment.locale(culture);
+
+const { RiotSummonerController } = require('../../controller/riot/RiotSummonerController');
 const { SummonerInfo, SummonerMasteries } = require('../../module/lol/summoner');
 
 /* GET summonerInfo. */
@@ -41,26 +48,61 @@ exports.summonerInfo = async function (req, res) {
         }
         validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters, validator.lol.METHOD_ENUM.SUMMONER_INFO);
 
-        const summonerInfo = new SummonerInfo(queryParameters);
+        /*
+            On call le RiotSummoner controller qui vérifie si l'information est dans la BD
+            Si oui, on utilise cette information.
+            Si non, on call API de Riot et on ajoutes l'item en BD.
 
-        await summonerInfo.getSummonerInfo().then(async function(infoResult) {
-            if (infoResult.code === 200) {
-                await summonerInfo.getReturnValue().then(result => {
-                    if (summonerInfo.getJson && summonerInfo.getJson == true) {
-                        res.json(result);
-                    } else {
-                        res.send(result);
-                    }
-                });
-            } else if (infoResult.code === 403 || infoResult.code === 404) {
-                res.status(infoResult.code).send(`The summoner ${summonerInfo?.summonerName} doesn't exist.`);  
+            Si l'information est présente en BD, on valide qu'elle soit a jours (1 update au 12 heures)
+        */
+        let result = await RiotSummonerController.findSummoner(queryParameters).then(async success => {
+            let data;
+            if (success && success.code == 200 && success.summonerInfo) {
+                // Call Riot API for get SummonerInfo and create SummonerInfo in DB
+                data = await RiotSummonerController.createOrUpdateSummoner(success.summonerInfo, success.region, null);
+
+            } else if (success && success.code == 200 && success.summoner) {
+                const lastUpdate = moment(success.summoner.updateAt);
+                // TODO: hours
+                if (moment().diff(lastUpdate, 'hours') >= 12) {
+                    // Update
+                    let updatedResult = await RiotSummonerController.getSummonerInfo(success, queryParameters).then(summonerInfo => {
+                        return summonerInfo.data;
+                    }).catch(err => {
+                        throw err;
+                    });
+                    data = await RiotSummonerController.createOrUpdateSummoner(updatedResult, success.region, success.summoner);
+                } else {
+                    data = success.summoner;
+                }
             }
-            return;
+            return data;
 
-        }).catch(error => {
-            res.send(`${error.code} - ${error.err.statusMessage}`);
-            return;
+        }).then(dbCreate => {
+            return dbCreate;
+
+        }).catch(ex => {
+            console.error(ex);
+            if (ex.code == 404 && ex.error.message != '') {
+                res.status(404).send(ex.error.message);
+            } else if (ex.error.stack) {
+                res.status(500).send(ex.error.stack);
+            } else {
+                res.status(500).send(ex);
+            }
         });
+
+        if (result) {
+            // TODO: Voir a remove SummonerInfo et utilisé directement JSON ?
+            // TODO: Switch la structure JSON pour avoir le même retour qu'avant (ou si JSON tjs faire un call a API naah ?)
+            const summonerInfo = new SummonerInfo(queryParameters);
+            if (summonerInfo.getJson && summonerInfo.getJson == true) {
+                res.json(result);
+            } else {
+                res.send(await result.getSummonerInfo());
+            }
+        }
+        return;
 
     } catch (ex) {
         console.error(ex);
@@ -102,25 +144,25 @@ exports.topMasteries = async function (req, res) {
         /*
             Obtenir initiale le summoner pour avoir EncryptedAccountID
         */
-       const summoner = new SummonerInfo(queryParameters);
+        const summoner = new SummonerInfo(queryParameters);
 
-       await summoner.getSummonerInfo().then(async function(result) {
-           if (result.code !== 200) {
-               res.send('An error occured during getSummonerInfo');
-           } else {
-               return result.data;
-           }
-           return;
+        await summoner.getSummonerInfo().then(async function (result) {
+            if (result.code !== 200) {
+                res.send('An error occured during getSummonerInfo');
+            } else {
+                return result.data;
+            }
+            return;
 
-       }).catch(error => {
-           res.send(`${error.code} - ${error.err.statusMessage}`);
-           return;
-       });
-       queryParameters.id = summoner.summonerInfo.id;
+        }).catch(error => {
+            res.send(`${error.code} - ${error.err.statusMessage}`);
+            return;
+        });
+        queryParameters.id = summoner.summonerInfo.id;
 
-       const masteries = new SummonerMasteries(queryParameters);
+        const masteries = new SummonerMasteries(queryParameters);
 
-        await masteries.getSummonerMasteries().then(async function(masteriesResult) {
+        await masteries.getSummonerMasteries().then(async function (masteriesResult) {
             if (masteriesResult.code === 200) {
                 await masteries.getReturnValue().then(result => {
                     if (masteries.getJson && masteries.getJson == true) {

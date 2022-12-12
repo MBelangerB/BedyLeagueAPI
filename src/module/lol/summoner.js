@@ -61,17 +61,24 @@ module.exports = {
                 data = await requestManager.ExecuteTokenRequest(this.getUrlBySummonerName(), this.gameType).then(function (summonerDTO) {
                     return summonerDTO;
                 }, function (error) {
-                    if (error.response) {
+                    // response
+                    if (error && error.data) {
                         result.err = {
-                            statusCode: error.response.status,
-                            statusMessage: error.response.statusText,
-                            stack: error.stack,
+                            statusCode: error.data.status.status_code,
+                            statusMessage: error.data.status.message,
+                            stack:(error.stack || ''),
+                        };      
+                    } else if (error && error.status) {
+                        result.err = {
+                            statusCode: error.status,
+                            statusMessage: error.statusText,
+                            stack: (error.stack || ''),
                         };
                     } else {
                         result.err = {
                             statusCode: 404,
                             statusMessage: error.message,
-                            stack: error.stack,
+                            stack: (error.stack || ''),
                         };
                     }
 
@@ -137,6 +144,7 @@ module.exports = {
 
                         } else {
                             result.code = resultQry.err.statusCode;
+                            result.message = resultQry.err.statusMessage;
                         }
 
                     });
