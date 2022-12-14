@@ -25,7 +25,6 @@ module.exports = {
             this.summonerName = (params.summonername || params.summonerName);
             this.region = params.region;
             this.queueType = params.queuetype;
-           // this.url = this.getUrlBySummonerName();
 
             this.gameType = RequestManager.TokenType.LOL;
             if (this.queueType?.toLowerCase() === 'tft') {
@@ -36,9 +35,19 @@ module.exports = {
             this.getJson = ((params.json === 1) || (params.json === true));
         }
 
+        //#region Cache
         getCacheKey() {
             return `SummonerInfo-${this.summonerName}-${this.region}-${this.queueType}`;
         }
+        //#endregion
+
+        /**
+         * Build URL
+         * @param {*} summonerName 
+         * @param {*} region 
+         * @param {*} queueType 
+         * @returns {string} URL to call
+         */
         getUrlBySummonerName(summonerName, region, queueType) {
             if (!summonerName) { summonerName = this.summonerName; }
             if (!region) { region = this.region; }
@@ -54,14 +63,22 @@ module.exports = {
             return baseUrl;
         }
 
+        /**
+         * [PRIVATE] Call Riot API
+         * @param {*} requestManager 
+         * @param {*} result 
+         * @returns 
+         */
         async _querySummonerInfo(requestManager, result) {
-            let data;
             try {
                 // Le SummonerInfo n'est pas présent dans la cache
-                data = await requestManager.ExecuteTokenRequest(this.getUrlBySummonerName(), this.gameType).then(function (summonerDTO) {
-                    return summonerDTO;
+                return await requestManager.ExecuteTokenRequest(this.getUrlBySummonerName(), this.gameType).then(function (summonerDTO) {
+                    result.data = summonerDTO;
+                    return result;
+
                 }, function (error) {
                     // response
+                    result.code = 400;
                     if (error && error.data) {
                         result.err = {
                             statusCode: error.data.status.status_code,
@@ -82,11 +99,13 @@ module.exports = {
                         };
                     }
 
+                    // If error we return result
                     return result;
                 });
 
             } catch (ex) {
                 console.error(ex);
+                result.code = 400;
                 result.err = {
                     statusCode: 400,
                     statusMessage: ex.message,
@@ -94,17 +113,19 @@ module.exports = {
                 };
                 return result;
             }
-            return data;
         }
 
-
         /**
-         * Méthode principale
+         * [PUBLIC] Main method
+         * Check if summoner rank information exist in cache, if true and if data isn't expired then return cache data.
+         * Else call RIOT API for obtains the rank
+         * @returns 
          */
         async getSummonerInfo() {
             const result = {
-                'code': 0,
-                'err': {},
+                data: {},
+                code: 200,
+                err: null,
             };
             this.summonerInfo = new SummonerDTO();
 
@@ -116,14 +137,16 @@ module.exports = {
                     await summonerCache.getAsyncB(key).then(async function (resultData) {
                         // Vérifie si les données sont déjà en cache, si OUI on utilise la cache
                         if (typeof resultData === 'undefined') {
-                            // Todo: a quoi sert le parametre result ici
-                            const data = await self._querySummonerInfo(RequestManager, result);
-                            if (data && !data.err) {
-                                summonerCache.setCacheValue(key, data);
-                                return data;
+                            const summonerData = await self._querySummonerInfo(RequestManager, result);
+
+                            // If we have DATA we add in cache
+                            if (summonerData && summonerData.code == 200 && summonerData.data) {
+                                summonerCache.setCacheValue(key, summonerData.data);
+                                return summonerData.data;
+
                             } else {
-                                reject(data);
-                                return data;
+                                reject(summonerData);
+                                return summonerData;
                             }
                         } else {
                             // L'information est présente dans la cache
@@ -131,7 +154,7 @@ module.exports = {
                         }
 
                     }).then(async resultQry => {
-                        // On traite le Resut
+                        // If we have Summoner info we init SummonerDTO
                         if (resultQry && typeof resultQry.err === 'undefined') {
                             // On convertie le data
                             self.summonerInfo.init(resultQry);
@@ -139,7 +162,7 @@ module.exports = {
                             result.code = 200;
 
                         } else if (resultQry && typeof resultQry.err != 'undefined' && resultQry.err.statusCode === '200-1') {
-                            // Erreur normal (pas classé, invocateur n'Existe pas)
+                            // Erreur normal (pas classé ou invocateur n'existe pas)
                             result.code = 201;
 
                         } else {

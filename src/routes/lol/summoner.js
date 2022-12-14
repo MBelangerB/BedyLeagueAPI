@@ -55,31 +55,8 @@ exports.summonerInfo = async function (req, res) {
 
             Si l'information est présente en BD, on valide qu'elle soit a jours (1 update au 12 heures)
         */
-        let result = await RiotSummonerController.findSummoner(queryParameters).then(async success => {
-            let data;
-            if (success && success.code == 200 && success.summonerInfo) {
-                // Call Riot API for get SummonerInfo and create SummonerInfo in DB
-                data = await RiotSummonerController.createOrUpdateSummoner(success.summonerInfo, success.region, null);
-
-            } else if (success && success.code == 200 && success.summoner) {
-                const lastUpdate = moment(success.summoner.updateAt);
-                // TODO: hours
-                if (moment().diff(lastUpdate, 'hours') >= 12) {
-                    // Update
-                    let updatedResult = await RiotSummonerController.getSummonerInfo(success, queryParameters).then(summonerInfo => {
-                        return summonerInfo.data;
-                    }).catch(err => {
-                        throw err;
-                    });
-                    data = await RiotSummonerController.createOrUpdateSummoner(updatedResult, success.region, success.summoner);
-                } else {
-                    data = success.summoner;
-                }
-            }
-            return data;
-
-        }).then(dbCreate => {
-            return dbCreate;
+        let result = await RiotSummonerController.findSummoner(queryParameters).then(success => {
+            return success;
 
         }).catch(ex => {
             console.error(ex);
@@ -92,7 +69,7 @@ exports.summonerInfo = async function (req, res) {
             }
         });
 
-        if (result) {
+         if (result) {
             // TODO: Voir a remove SummonerInfo et utilisé directement JSON ?
             // TODO: Switch la structure JSON pour avoir le même retour qu'avant (ou si JSON tjs faire un call a API naah ?)
             const summonerInfo = new SummonerInfo(queryParameters);
@@ -105,6 +82,7 @@ exports.summonerInfo = async function (req, res) {
         return;
 
     } catch (ex) {
+        console.error('A error occured in GetSummonerInfo');
         console.error(ex);
         res.status(500).send(ex);
     }
