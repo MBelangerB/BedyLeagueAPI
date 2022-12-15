@@ -69,7 +69,7 @@ exports.summonerInfo = async function (req, res) {
             }
         });
 
-         if (result) {
+        if (result) {
             // TODO: Voir a remove SummonerInfo et utilisé directement JSON ?
             // TODO: Switch la structure JSON pour avoir le même retour qu'avant (ou si JSON tjs faire un call a API naah ?)
             const summonerInfo = new SummonerInfo(queryParameters);
@@ -120,43 +120,49 @@ exports.topMasteries = async function (req, res) {
         validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters, validator.lol.METHOD_ENUM.MASTERIES);
 
         /*
-            Obtenir initiale le summoner pour avoir EncryptedAccountID
+            On call le RiotSummoner controller qui vérifie si l'information est dans la BD
+            Si oui, on utilise cette information.
+            Si non, on call API de Riot et on ajoutes l'item en BD.
+
+            Si l'information est présente en BD, on valide qu'elle soit a jours (1 update au 12 heures)
         */
-        const summoner = new SummonerInfo(queryParameters);
+        let result = await RiotSummonerController.findSummoner(queryParameters).then(success => {
+            return success;
 
-        await summoner.getSummonerInfo().then(async function (result) {
-            if (result.code !== 200) {
-                res.send('An error occured during getSummonerInfo');
+        }).catch(ex => {
+            console.error(ex);
+            if (ex.code == 404 && ex.error.message != '') {
+                res.status(404).send(ex.error.message);
+            } else if (ex.error.stack) {
+                res.status(500).send(ex.error.stack);
             } else {
-                return result.data;
+                res.status(500).send(ex);
             }
-            return;
-
-        }).catch(error => {
-            res.send(`${error.code} - ${error.err.statusMessage}`);
-            return;
-        });
-        queryParameters.id = summoner.summonerInfo.id;
-
-        const masteries = new SummonerMasteries(queryParameters);
-
-        await masteries.getSummonerMasteries().then(async function (masteriesResult) {
-            if (masteriesResult.code === 200) {
-                await masteries.getReturnValue().then(result => {
-                    if (masteries.getJson && masteries.getJson == true) {
-                        res.json(result);
-                    } else {
-                        res.send(result);
-                    }
-                });
-            }
-            return;
-
-        }).catch(error => {
-            res.send(`${error.code} - ${error.err.statusMessage}`);
-            return;
         });
 
+        if (result) {
+            //TODO: Voir si on peut améliorer la structure du code
+            queryParameters.id = result.riotId; 
+
+            const masteries = new SummonerMasteries(queryParameters);
+    
+            await masteries.getSummonerMasteries().then(async function (masteriesResult) {
+                if (masteriesResult.code === 200) {
+                    await masteries.getReturnValue().then(result => {
+                        if (masteries.getJson && masteries.getJson == true) {
+                            res.json(result);
+                        } else {
+                            res.send(result);
+                        }
+                    });
+                }
+                return;
+    
+            }).catch(error => {
+                res.send(`${error.code} - ${error.err.statusMessage}`);
+                return;
+            });
+        }
 
     } catch (ex) {
         console.error(ex);
@@ -164,6 +170,7 @@ exports.topMasteries = async function (req, res) {
     }
 };
 
+//TODO: Not availabled
 exports.liveGame = async function (req, res) {
     try {
         const { query, params } = req;

@@ -2,6 +2,7 @@
 const validator = require('../../util/validator');
 const staticFunc = require('../../util/staticFunction');
 
+const { RiotSummonerController } = require('../../controller/riot/RiotSummonerController');
 const { SummonerInfo } = require('../../module/lol/summoner');
 const LeagueEntry = require('../../module/lol/rank');
 
@@ -44,48 +45,59 @@ exports.rank = async function (req, res) {
         validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters, validator.lol.METHOD_ENUM.RANK);
 
         /*
-            Obtenir initiale le summoner pour avoir EncryptedAccountID
+            On call le RiotSummoner controller qui vérifie si l'information est dans la BD
+            Si oui, on utilise cette information.
+            Si non, on call API de Riot et on ajoutes l'item en BD.
+
+            Si l'information est présente en BD, on valide qu'elle soit a jours (1 update au 12 heures)
         */
-        const summoner = new SummonerInfo(queryParameters);
+        let result = await RiotSummonerController.findSummoner(queryParameters).then(success => {
+            return success;
 
-        await summoner.getSummonerInfo().then(async function (result) {
-            if (result.code === 200) {
-                return result.data;
-            } else if (result.code === 403 || result.code === 404) {
-                return res.status(result.code).send(`The summoner ${summoner?.summonerName} doesn't exist.`);  
+        }).catch(ex => {
+            console.error(ex);
+            if (ex.code == 404 && ex.error.message != '') {
+                res.status(404).send(ex.error.message);
+            } else if (ex.error.stack) {
+                res.status(500).send(ex.error.stack);
+            } else {
+                res.status(500).send(ex);
             }
-        }).catch(error => {
-            console.error('An error occured during getSummonerInfo');
-            console.error(`${error.code} - ${error.err.statusMessage}`);
-            res.status(400).send('A error occured, please try again');
-            return;
         });
-        queryParameters.summoner = summoner.summonerInfo;
 
-        if (res.statusCode === 200 && queryParameters.summoner.id !== '') {
-            const leagueEntries = new LeagueEntry(queryParameters);
-            await leagueEntries.getLeagueRank().then(async function (rankResult) {
-                if (rankResult.code === 200) {
-                    await leagueEntries.getReturnValue().then(result => {
-                        if (leagueEntries.getJson && leagueEntries.getJson == true) {
-                            res.json(result);
-                        } else {
-                            res.send(result);
-                        }
-                    });
-                }
-                return;
-    
-            }).catch(error => {
-                console.error('An error occured during getLeagueRank');
-                console.error(`${error.code} - ${error.err.statusMessage}`);
-                res.status(400).send('A error occured, please try again');
-                return;
-            });
+        if (result) {
+            queryParameters.dbSummoner = result;
+
+            if (res.statusCode === 200 && result.riotId !== '') {
+                const leagueEntries = new LeagueEntry(queryParameters);
+                await leagueEntries.getLeagueRank().then(async function (rankResult) {
+                    if (rankResult.code === 200) {
+                        await leagueEntries.getReturnValue().then(result => {
+                            if (leagueEntries.getJson && leagueEntries.getJson == true) {
+                                res.json(result);
+                            } else {
+                                res.send(result);
+                            }
+                        });
+                    }
+                    return;
+        
+                }).catch(error => {
+                    console.error('An error occured during getLeagueRank');
+                    console.error(`${error.code} - ${error.err.statusMessage}`);
+                    res.status(400).send('A error occured, please try again');
+                    return;
+                });
+            }
         }
+
     } catch (ex) {
-        console.error('Error in GetRank');
+        console.error('A error occured in GetRank');
         console.error(ex);
-        res.status(500).send('A error occured, please try again');
+        res.status(500).send(ex);
+
+        // console.error('Error in GetRank');
+        // console.error(ex);
+        // res.status(500).send('A error occured, please try again');
     }
 };

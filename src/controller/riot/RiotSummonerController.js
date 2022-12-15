@@ -175,7 +175,7 @@ class RiotSummonerController {
             if (dbSummoner) {
                 // If summonerName has change
                 if (dbSummoner.riotSummonerName !== summonerDTO.name) {
-                    await RIOT_SummonerHistory.addSummonerHistory(dbSummoner.id, summonerDTO.name, summonerDTO.summonerLevel);
+                    await RIOT_SummonerHistory.addSummonerHistory(dbSummoner.id, dbSummoner.riotSummonerName, dbSummoner.summonerLevel);
                 }
 
                 await dbSummoner.updateSummonerInfo(summonerDTO.name, summonerDTO.summonerLevel, summonerDTO.profileIconId);
