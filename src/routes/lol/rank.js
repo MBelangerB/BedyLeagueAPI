@@ -3,7 +3,6 @@ const validator = require('../../util/validator');
 const staticFunc = require('../../util/staticFunction');
 
 const { RiotSummonerController } = require('../../controller/riot/RiotSummonerController');
-const { SummonerInfo } = require('../../module/lol/summoner');
 const LeagueEntry = require('../../module/lol/rank');
 
 /* GET Rank. */
@@ -20,29 +19,20 @@ exports.rank = async function (req, res) {
         validator.parameters.validateCulture(params);
 
         // Gestion des paramètres
-        let queryParameters;
-        const queryString = staticFunc.request.lowerQueryString(query);
-        console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
+        const urlParameters = staticFunc.request.parseUrlParameters(params, query);
+        console.log(`UrlParameters: ${JSON.stringify(urlParameters)}`);
 
         /*
-            On effectue initialement la validation des Params (region/platform/tag).
+            On effectue initialement la validation des Params (region/SummonerName).
             Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
             en QueryString
         */
-        let validationErrors = [];
-        if (params && Object.keys(params).length > 1) {
-            validationErrors = validator.lol.validateParams(params, validator.lol.METHOD_ENUM.RANK);
-            queryParameters = params;
-        } else {
-            validationErrors = validator.lol.validateParams(queryString, validator.lol.METHOD_ENUM.RANK);
-            queryParameters = queryString;
-        }
+        let validationErrors = validator.lol.validateParams(urlParameters, validator.lol.METHOD_ENUM.RANK);
         if (validationErrors && validationErrors.length > 0) {
-            console.error('Error in validationErrors');
-            console.error(validationErrors);
-            return res.status(400).send('Invalid parameters, please try again');
+            res.send(validationErrors);
+            return;
         }
-        validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters, validator.lol.METHOD_ENUM.RANK);
+        validator.lol.fixOptionalParams(urlParameters, validator.lol.METHOD_ENUM.RANK);
 
         /*
             On call le RiotSummoner controller qui vérifie si l'information est dans la BD
@@ -51,7 +41,7 @@ exports.rank = async function (req, res) {
 
             Si l'information est présente en BD, on valide qu'elle soit a jours (1 update au 12 heures)
         */
-        let result = await RiotSummonerController.findSummoner(queryParameters).then(success => {
+        let result = await RiotSummonerController.findSummoner(urlParameters).then(success => {
             return success;
 
         }).catch(ex => {
@@ -66,10 +56,10 @@ exports.rank = async function (req, res) {
         });
 
         if (result) {
-            queryParameters.dbSummoner = result;
+            urlParameters.dbSummoner = result;
 
             if (res.statusCode === 200 && result.riotId !== '') {
-                const leagueEntries = new LeagueEntry(queryParameters);
+                const leagueEntries = new LeagueEntry(urlParameters);
                 await leagueEntries.getLeagueRank().then(async function (rankResult) {
                     if (rankResult.code === 200) {
                         await leagueEntries.getReturnValue().then(result => {
@@ -95,9 +85,5 @@ exports.rank = async function (req, res) {
         console.error('A error occured in GetRank');
         console.error(ex);
         res.status(500).send(ex);
-
-        // console.error('Error in GetRank');
-        // console.error(ex);
-        // res.status(500).send('A error occured, please try again');
     }
 };

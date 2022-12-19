@@ -7,46 +7,39 @@
 const validator = require('../../util/validator');
 const staticFunc = require('../../util/staticFunction');
 
-require('dotenv').config();
-const culture = (process.env.culture || 'fr');
-
-const moment = require('moment');
-moment.locale(culture);
-
 const { RiotSummonerController } = require('../../controller/riot/RiotSummonerController');
-const { SummonerInfo, SummonerMasteries } = require('../../module/lol/summoner');
+const { SummonerMasteries } = require('../../module/lol/summoner');
 
 /* GET summonerInfo. */
 exports.summonerInfo = async function (req, res) {
     try {
+        /*
+            Params => Paramètre de URL : /en/lol/summonerInfo/NA/Bohe
+                - Path : lol/summonerInfo (not a params)
+                - Culture : EN 
+                - Region : NA
+                - SummonerName : Bohe
+        */
         const { query, params } = req;
 
         // Gestion de la culture
         validator.parameters.validateCulture(params);
 
         // Gestion des paramètres
-        let queryParameters;
-        const queryString = staticFunc.request.lowerQueryString(query);
-        console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
+        const urlParameters = staticFunc.request.parseUrlParameters(params, query);
+        console.log(`UrlParameters: ${JSON.stringify(urlParameters)}`);
 
         /*
-            On effectue initialement la validation des Params (region/platform/tag).
+            On effectue initialement la validation des Params (region/SummonerName).
             Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
             en QueryString
         */
-        let validationErrors = [];
-        if (params && Object.keys(params).length > 1) {
-            validationErrors = validator.lol.validateParams(params, validator.lol.METHOD_ENUM.SUMMONER_INFO);
-            queryParameters = params;
-        } else {
-            validationErrors = validator.lol.validateParams(queryString, validator.lol.METHOD_ENUM.SUMMONER_INFO);
-            queryParameters = queryString;
-        }
+        let validationErrors = validator.lol.validateParams(urlParameters, validator.lol.METHOD_ENUM.SUMMONER_INFO);
         if (validationErrors && validationErrors.length > 0) {
             res.send(validationErrors);
             return;
         }
-        validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters, validator.lol.METHOD_ENUM.SUMMONER_INFO);
+        validator.lol.fixOptionalParams(urlParameters, validator.lol.METHOD_ENUM.SUMMONER_INFO);
 
         /*
             On call le RiotSummoner controller qui vérifie si l'information est dans la BD
@@ -55,7 +48,7 @@ exports.summonerInfo = async function (req, res) {
 
             Si l'information est présente en BD, on valide qu'elle soit a jours (1 update au 12 heures)
         */
-        let result = await RiotSummonerController.findSummoner(queryParameters).then(success => {
+        let result = await RiotSummonerController.findSummoner(urlParameters).then(success => {
             return success;
 
         }).catch(ex => {
@@ -70,10 +63,7 @@ exports.summonerInfo = async function (req, res) {
         });
 
         if (result) {
-            // TODO: Voir a remove SummonerInfo et utilisé directement JSON ?
-            // TODO: Switch la structure JSON pour avoir le même retour qu'avant (ou si JSON tjs faire un call a API naah ?)
-            const summonerInfo = new SummonerInfo(queryParameters);
-            if (summonerInfo.getJson && summonerInfo.getJson == true) {
+            if (urlParameters.json && urlParameters.json == true) {
                 res.json(result);
             } else {
                 res.send(await result.getSummonerInfo());
@@ -96,28 +86,21 @@ exports.topMasteries = async function (req, res) {
         validator.parameters.validateCulture(params);
 
         // Gestion des paramètres
-        let queryParameters;
-        const queryString = staticFunc.request.lowerQueryString(query);
-        console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
+        const urlParameters = staticFunc.request.parseUrlParameters(params, query);
+        console.log(`UrlParameters: ${JSON.stringify(urlParameters)}`);
 
         /*
-            On effectue initialement la validation des Params (region/platform/tag).
+            On effectue initialement la validation des Params (region/SummonerName).
             Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
             en QueryString
         */
-        let validationErrors = [];
-        if (params && Object.keys(params).length > 1) {
-            validationErrors = validator.lol.validateParams(params, validator.lol.METHOD_ENUM.MASTERIES);
-            queryParameters = params;
-        } else {
-            validationErrors = validator.lol.validateParams(queryString, validator.lol.METHOD_ENUM.MASTERIES);
-            queryParameters = queryString;
-        }
+        let validationErrors = validator.lol.validateParams(urlParameters, validator.lol.METHOD_ENUM.MASTERIES);
         if (validationErrors && validationErrors.length > 0) {
             res.send(validationErrors);
             return;
         }
-        validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters, validator.lol.METHOD_ENUM.MASTERIES);
+        validator.lol.fixOptionalParams(urlParameters, validator.lol.METHOD_ENUM.MASTERIES);
+
 
         /*
             On call le RiotSummoner controller qui vérifie si l'information est dans la BD
@@ -126,7 +109,7 @@ exports.topMasteries = async function (req, res) {
 
             Si l'information est présente en BD, on valide qu'elle soit a jours (1 update au 12 heures)
         */
-        let result = await RiotSummonerController.findSummoner(queryParameters).then(success => {
+        let result = await RiotSummonerController.findSummoner(urlParameters).then(success => {
             return success;
 
         }).catch(ex => {
@@ -142,10 +125,10 @@ exports.topMasteries = async function (req, res) {
 
         if (result) {
             //TODO: Voir si on peut améliorer la structure du code
-            queryParameters.id = result.riotId; 
+            urlParameters.id = result.riotId;
 
-            const masteries = new SummonerMasteries(queryParameters);
-    
+            const masteries = new SummonerMasteries(urlParameters);
+
             await masteries.getSummonerMasteries().then(async function (masteriesResult) {
                 if (masteriesResult.code === 200) {
                     await masteries.getReturnValue().then(result => {
@@ -157,7 +140,7 @@ exports.topMasteries = async function (req, res) {
                     });
                 }
                 return;
-    
+
             }).catch(error => {
                 res.send(`${error.code} - ${error.err.statusMessage}`);
                 return;
@@ -169,69 +152,3 @@ exports.topMasteries = async function (req, res) {
         res.send(ex);
     }
 };
-
-//TODO: Not availabled
-exports.liveGame = async function (req, res) {
-    try {
-        const { query, params } = req;
-
-        // Gestion de la culture
-        validator.parameters.validateCulture(params);
-
-        // Gestion des paramètres
-        let queryParameters;
-        const queryString = staticFunc.request.lowerQueryString(query);
-        console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
-
-        /*
-            On effectue initialement la validation des Params (region/platform/tag).
-            Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
-            en QueryString
-        */
-        let validationErrors = [];
-        if (params && Object.keys(params).length > 1) {
-            validationErrors = validator.lol.validateRotateParams(params);
-            queryParameters = params;
-        } else {
-            validationErrors = validator.lol.validateRotateParams(queryString);
-            queryParameters = queryString;
-        }
-        if (validationErrors && validationErrors.length > 0) {
-            res.send(validationErrors);
-            return;
-        }
-        validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters);
-
-        // var championRotate = new ChampionRotations(queryParameters, generateUrl(queryParameters));
-
-        // await championRotate.getLeagueRotate().then(async function(result) {
-        //     if (result.code === 200) {
-        //         await championRotate.getReturnValue().then(result => {
-        //             if (championRotate.getJson && championRotate.getJson == true) {
-        //                 res.json(result);
-        //             } else {
-        //                 res.send(result);
-        //             }
-        //         });
-        //     }
-        //     return;
-
-        // }).catch(error => {
-        //     res.send(`${error.code} - ${error.err.statusMessage}`);
-        //     return;
-        // });
-
-    } catch (ex) {
-        console.error(ex);
-        res.send(ex);
-    }
-};
-
-
-// function generateUrl(queryParameters) {
-//     let baseUrl = routeInfo.lol.routes.champion.v3.championRotation;
-//     baseUrl = baseUrl.replace("{region}", queryParameters.region)
-
-//     return baseUrl;
-// }
-

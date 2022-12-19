@@ -1,7 +1,5 @@
 'use strict';
 
-const SummonerDTO = require('../../entity/riot/Summoner-v4/summonerDTO');
-
 const { sequelize } = require('../../db/dbSchema');
 const { RIOT_Summoner, RIOT_SummonerHistory } = sequelize.models;
 
@@ -157,16 +155,13 @@ class RiotSummonerController {
 
     /**
      * [DB] Add Riot Summoner info on DB
-     * @param {*} summonerInfo 
+     * @param {*} summonerInfo Information actuel provenant de API de Riot
      * @returns 
      */
     static async createOrUpdateSummoner(summonerInfo, region, dbSummoner = null) {
         try {
-            let summonerDTO = new SummonerDTO();
-            summonerDTO.init(summonerInfo);
-
             // Check if RiotID exist, occured if a summoner change his SummonerName
-            let tmpSummoner = await RIOT_Summoner.findSummonerByRiotId(summonerDTO.id);
+            let tmpSummoner = await RIOT_Summoner.findSummonerByRiotId(summonerInfo.id);
             if (tmpSummoner) {
                 // We need update data
                 dbSummoner = tmpSummoner;
@@ -174,14 +169,14 @@ class RiotSummonerController {
 
             if (dbSummoner) {
                 // If summonerName has change
-                if (dbSummoner.riotSummonerName !== summonerDTO.name) {
-                    await RIOT_SummonerHistory.addSummonerHistory(dbSummoner.id, dbSummoner.riotSummonerName, dbSummoner.summonerLevel);
+                if (dbSummoner.riotSummonerName !== summonerInfo.name) {
+                    await RIOT_SummonerHistory.addSummonerHistory(dbSummoner.id, dbSummoner.riotSummonerName, dbSummoner.riotSummonerLevel);
                 }
 
-                await dbSummoner.updateSummonerInfo(summonerDTO.name, summonerDTO.summonerLevel, summonerDTO.profileIconId);
+                await dbSummoner.updateSummonerInfo(summonerInfo.name, summonerInfo.summonerLevel, summonerInfo.profileIconId);
             } else {
-                dbSummoner = await RIOT_Summoner.addSummoner(summonerDTO.id, summonerDTO.accountId, summonerDTO.puuid,
-                    summonerDTO.name, summonerDTO.summonerLevel, summonerDTO.profileIconId, region);
+                dbSummoner = await RIOT_Summoner.addSummoner(summonerInfo.id, summonerInfo.accountId, summonerInfo.puuid,
+                    summonerInfo.name, summonerInfo.summonerLevel, summonerInfo.profileIconId, region);
             }
 
             return dbSummoner;

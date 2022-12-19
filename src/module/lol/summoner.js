@@ -119,6 +119,7 @@ module.exports = {
          * [PUBLIC] Main method
          * Check if summoner rank information exist in cache, if true and if data isn't expired then return cache data.
          * Else call RIOT API for obtains the rank
+         * TODO: Ramener ailleur ? Class SUmmonerInfo soit inutile
          * @returns 
          */
         async getSummonerInfo() {
@@ -184,27 +185,6 @@ module.exports = {
                     return;
                 }
             });
-        }
-
-        // Return
-        async getReturnValue() {
-            let returnValue = '';
-
-            const summonerInfo = this.summonerInfo;
-            const jsonReturn = this.getJson;
-
-            return new Promise(async function (resolve) {
-                if (jsonReturn) {
-                    resolve(summonerInfo);
-
-                } else {
-                    returnValue = `${summonerInfo.name} (Niv. ${summonerInfo.summonerLevel})`;
-                    returnValue = returnValue.trimEnd();
-
-                    resolve(returnValue.trim());
-                }
-            });
-
         }
     },
 
@@ -395,7 +375,6 @@ module.exports = {
                     resolve(returnValue.trim());
                 }
             });
-
         }
 
     },
