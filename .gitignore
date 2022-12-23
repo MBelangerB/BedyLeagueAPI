@@ -39,3 +39,5 @@
 # Dist
 **/db/dist
 **/dist/*
+**/backup/*
+.env_2.exemple
