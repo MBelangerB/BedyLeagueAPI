@@ -19,8 +19,6 @@ dotenv.config();
 import mainRouter from './routes/main';
 import dragonRouter from './routes/global/dragon-routes';
 
-// const env = process.env.NODE_ENV;
-
 // **** Init express **** //
 const app = express();
 

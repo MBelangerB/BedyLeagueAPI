@@ -46,10 +46,8 @@ class FileService {
                     });
 
                     console.info(`The folder ${folderPath} has been created.`);
+                    resolve(`The folder ${folderPath} has been created.`);
                 }
-
-                // resolve(true);
-                resolve(`The folder ${folderPath} has been created.`);
 
             } catch (ex) {
                 console.error(errors.errCreateFolder);
@@ -69,7 +67,6 @@ class FileService {
                 }
         
                 console.info(`The file ${filePath} has been created or updated.`);
-                // resolve(true);
                 resolve(`The file ${filePath} has been created or updated.`);
 
             } catch (ex) {
@@ -86,22 +83,10 @@ class FileService {
 
 // https://www.geeksforgeeks.org/node-js-fs-readfilesync-method/
 async function readInternalFile(filePath: string, fileEncoding: BufferEncoding = "utf8", flag: string = "r") {
-    // try {
         const rawdata = readFileSync(filePath, { encoding: fileEncoding, flag: flag });
         const data = JSON.parse(rawdata);
         return data;
-    // } catch (ex: any) {
-    //     if (ex && ex?.message == "Unexpected end of JSON input") {
-    //         return "";
-    //     }
-    //     throw ex;
-    // }
-
 }
-
-// function checkFileExists(filePath: string): boolean {
-//     return fs.existsSync(filePath);
-// }
 
 function castDataToJSON(data: any) {
     return JSON.stringify(data, null, 2);
@@ -151,53 +136,11 @@ async function downloadExternalFile(requestUrl: string, responseType: ResponseTy
     });
 }
 
-
-
-// async function writeTextFile(filePath: string, fileContent: string) {
-//     return new Promise(async (resolve, reject) => {
-//         try {
-//             await util.promisify(fs.writeFile)(filePath, fileContent);
-//             resolve(true);
-//         } catch (ex) {
-//             console.error(errors.errWriteFile);
-//             console.error(ex);
-//             reject(ex);
-//         }
-
-//     });
-// }
-
-// async function writeJsonFile(filePath: string, fileContent: string) {
-//     return new Promise(async (resolve, reject) => {
-//         try {
-//             // if (checkFileExists(filePath)) {
-//             await fs.promises.writeFile(filePath, castDataToJSON(fileContent), {
-//                 encoding: "utf8",
-//                 flag: "w",
-//                 mode: 0o666
-//             },)
-//             // await util.promisify(fs.writeFile)(filePath, castDataToJSON(fileContent), );
-
-//             // }
-//             resolve(true);
-//         } catch (ex) {
-//             console.error(errors.errWriteFile);
-//             console.error(ex);
-//             reject(ex);
-//         }
-
-//     });
-// }
-
-
 export default {
     basicPath,
     errors,
     FileService,
     readInternalFile,
-    // checkFileExists,
     downloadExternalFile,
-    // writeTextFile,
-    // writeJsonFile,
     castDataToJSON
 } as const;

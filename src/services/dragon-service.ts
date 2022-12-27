@@ -1,9 +1,8 @@
 import path, { basename } from 'path';
 import services from './file-service';
-import infoData from '../static/info.json'; // assert { type: "json" };
+import infoData from '../static/info.json';
 import dragonModel, { IDragonData } from '../models/Dragon/dragon-model';
 import { DragonCulture } from '../declarations/enum';
-import { version } from 'os';
 
 // **** Variables **** //
 

@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-// import express, { Express } from 'express';
-
 // Module dependencies.
 import app from '../index';
 import debug from 'debug';
@@ -101,12 +99,12 @@ function onStart() {
 
   if (host === "::") { host = "localhost"; }
 
-  console.log(BedyBot.logType.VERBOSE, 'Ceci est un message classique.');
-  console.log(BedyBot.logType.INFORMATION, 'Ceci est message d\'info avec argument pour "%s".', 'toto');
-  console.debug('Ceci est un message de debug.');
-  console.info('Ceci est un message d\'info.');
-  console.warn('Ceci est un message de warn.');
-  console.error('Ceci est un message d\'erreur.');
+  // console.log(BedyBot.logType.VERBOSE, 'Ceci est un message classique.');
+  // console.log(BedyBot.logType.INFORMATION, 'Ceci est message d\'info avec argument pour "%s".', 'toto');
+  // console.debug('Ceci est un message de debug.');
+  // console.info('Ceci est un message d\'info.');
+  // console.warn('Ceci est un message de warn.');
+  // console.error('Ceci est un message d\'erreur.');
 
 
   console.log(BedyBot.logType.SERVER, `Démarrage du serveur BedyAPI (HTTP) le '${new Date().toString()}' sur: '${host}' Server : '${port}'`);
