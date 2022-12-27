@@ -1,0 +1,283 @@
+import path, { basename } from 'path';
+import services from './file-service';
+import infoData from '../static/info.json'; // assert { type: "json" };
+import dragonModel, { IDragonData } from '../models/Dragon/dragon-model';
+import { DragonCulture } from '../declarations/enum';
+import { version } from 'os';
+
+// **** Variables **** //
+
+// Errors
+export const errors = {
+    unauth: 'Unauthorized',
+    uninitialized: 'The \'Dragon\' files have not been initialized. Please initialize it first.',
+    errGetDragonVersion: 'An error occured in DragonService.getDragonVersion',
+} as const;
+
+// Dragon file path
+export const dragonPath = {
+    basePath: path.join(`${__dirname}`, '/..'),
+    staticFolder: path.join(`${__dirname}`, '/..', '/static/'),
+    dragonStaticFolder: path.join(`${__dirname}`, '/..', '/static/dragon'),
+    versionFilePath: path.join(`${__dirname}`, '/..', '/static/dragon', 'version.json'),
+} as const;
+
+// Class
+export class DragonService {
+
+    /**
+     * Retourne la localisation complète du répetoire «Dragon»
+     * @param {string} culture Culture @default DragonCulture.fr_fr
+     * @param fileName file to open
+     * @returns File path
+     */
+    static getDragonFullPath(culture?: DragonCulture, fileName: string = ""): string {
+        if (!culture) {
+            return dragonPath.dragonStaticFolder;
+
+        } else {
+            if (!fileName || fileName.length == 0) {
+                return path.join(`${dragonPath.dragonStaticFolder}`, culture);
+            } else {
+                return path.join(`${dragonPath.dragonStaticFolder}`, culture, fileName);
+            }
+        }
+
+    }
+
+    /**
+     * Returns the base path for dragon folder
+     * @returns {string} Path des fichiers statics
+     */
+    private static getDragonBasePath(): string {
+        return dragonPath.dragonStaticFolder;
+    }
+
+    /**
+     * Return dragon version path location
+     * @returns {string}
+     */
+    private static getDragonVersionPath(): string {
+        return dragonPath.versionFilePath;
+    }
+
+    /**
+     * Read Dragon Version file for check last version
+     * @returns 
+     */
+    static getDragonVersion(): Promise<IDragonData> {
+        let data: IDragonData = {
+            currentVersion: null,
+            errorMsg: null,
+        };
+
+        return new Promise(async (resolve: any, reject: any) => {
+            try {
+                // Check if Dragon file and dragon version exists
+                if (await !services.FileService.checkFileExists(this.getDragonBasePath()) ||
+                    await !services.FileService.checkFileExists(this.getDragonVersionPath())) {
+                    data.errorMsg = errors.uninitialized;
+                    resolve(data);
+                    return;
+                }
+
+                // Read version file if exists
+                let tmpData!: any[];
+                let invalidFile: boolean = false;
+               await services.readInternalFile(this.getDragonVersionPath()).then(fileContent => {
+                    if (typeof (fileContent) !== 'string') {
+                        tmpData = fileContent;
+                    } else {
+                        tmpData = JSON.parse(fileContent)
+                    }
+
+                }).catch(err => {
+                    if (err && err?.message == "Unexpected end of JSON input") {
+                        invalidFile = true;
+                        return;
+                    } else {
+                        throw err;
+                    }
+
+                });
+
+                if (invalidFile) {
+                    data.errorMsg = errors.uninitialized;
+                    resolve(data);
+                    return;           
+                }
+
+                if (typeof tmpData !== 'undefined' && tmpData.length > 0) {
+                    data.currentVersion = tmpData[0];
+                }
+
+            } catch (ex) {
+                data.errorMsg = errors.errGetDragonVersion;
+
+                console.error(errors.errGetDragonVersion);
+                console.error(ex);
+
+                reject(data);
+                return;
+            }
+
+            resolve(data);
+        });
+    }
+
+    /**
+     * Prepare dragon file tree
+     */
+    static async prepareTree(dragonCulture: DragonCulture, dataDragon: IDragonData) {
+        if (!dataDragon.message) {
+            dataDragon.message = new Array<string>;
+        }
+
+        if (!services.FileService.checkFileExists(dragonPath.dragonStaticFolder)) {
+            dataDragon.message.push(await services.FileService.createFolder(dragonPath.dragonStaticFolder));
+        }
+
+        let cultureFolder: string = DragonService.getDragonFullPath(dragonCulture);
+        if (!services.FileService.checkFileExists(cultureFolder)) {
+            dataDragon.message.push(await services.FileService.createFolder(cultureFolder));
+        }
+
+        cultureFolder = DragonService.getDragonFullPath(dragonCulture);
+        if (!services.FileService.checkFileExists(cultureFolder)) {
+            dataDragon.message.push(await services.FileService.createFolder(cultureFolder));
+        }
+    }
+
+    /**
+     * Download dragon file (not for version.json)
+     * @param url 
+     * @param dragonCulture 
+     * @returns 
+     */
+    static async downloadDragonFile(url: string, dragonCulture: DragonCulture, dataDragon: IDragonData) {
+        return new Promise(async (resolve: any, reject: any) => {
+            await services.downloadExternalFile(url).then(async fileContent => {
+
+                let filename = basename(url);
+                let filePath: string = DragonService.getDragonFullPath(dragonCulture, filename);
+                let message: string = await services.FileService.writeFile(filePath, fileContent);
+
+                if (message && message.length > 0) {
+                    dataDragon.message?.push(message);
+                }
+
+                resolve(true);
+
+            }).catch(err => {
+                reject(err);
+            });
+        });
+    }
+
+    static async downloadDragonVersionFile(dataDragon: IDragonData, previousVersion: number): Promise<boolean> {
+        return new Promise(async (resolve: any, reject: any) => {
+            let requiredUpdate: boolean = false;
+            try {
+                let versionUrl = infoData.dragon.version;
+
+                await services.downloadExternalFile(versionUrl).then(async fileContent => {
+                    let newVersion: number = previousVersion;
+
+                    if (typeof fileContent !== 'undefined' && fileContent.length > 0) {
+                        newVersion = dragonModel.castToNumber(fileContent[0]);
+                        dataDragon.currentVersion = fileContent[0];
+                    }
+
+                    requiredUpdate = (previousVersion < newVersion);
+                    if (requiredUpdate) {
+                        let message: string = await services.FileService.writeFile(dragonPath.versionFilePath, fileContent);
+                        if (message && message.length > 0) {
+                            dataDragon.message?.push(message);
+                        }
+                    }
+
+                }).catch(err => {
+                    throw err;
+                });
+
+                resolve(requiredUpdate);
+
+            } catch (ex) {
+                reject(ex);
+            }
+            return requiredUpdate;
+        });
+
+    }
+
+}
+
+// **** Functions **** //
+
+/**
+ * Call to get the current version of the dragon files.
+ * @returns 
+ */
+async function getVersion(): Promise<IDragonData> {
+    return await DragonService.getDragonVersion();
+}
+
+/**
+ * Call to update dragons files. Does nothing if the files are already up to date.
+ * TODO: Vérifier les fichiers en fonction de la culture. Si on passe une autre culture on reçoit « deja a jour »
+ */
+async function updateDragon(forceUpdate: boolean = false, dragonCulture: DragonCulture): Promise<IDragonData> {
+    // Get current version
+    let oldestVersion: number = 0;
+
+    const dataDragon: IDragonData = await DragonService.getDragonVersion();
+    if (!forceUpdate && dataDragon.currentVersion && typeof dataDragon.currentVersion !== "undefined") {
+        oldestVersion = dragonModel.castToNumber(dataDragon.currentVersion as string);
+    }
+    dataDragon.previousVersion = (dataDragon.currentVersion || "0");
+
+    // If the oldest version is 0. Maybe the path folder doesn't exist.
+    if (oldestVersion == 0) {
+        await DragonService.prepareTree(dragonCulture, dataDragon);
+    }
+
+    // Read new version file to validate if update is required
+    let needUpdate: boolean = false;
+    await DragonService.downloadDragonVersionFile(dataDragon, dragonModel.castToNumber(dataDragon.previousVersion)).then(requiredUpdate => {
+        needUpdate = requiredUpdate;
+    }).catch(err => {
+        console.error(err);
+    });
+
+    dataDragon.message = new Array<string>;
+    if (needUpdate) {
+        let dragonChampionUrl = infoData.dragon.champions.replace('{version}', dataDragon.currentVersion as string).replace('{lang}', dragonCulture);
+        let dragonProfileIconsUrl = infoData.dragon.profileIcons.replace('{version}', dataDragon.currentVersion as string).replace('{lang}', dragonCulture);
+
+        await DragonService.downloadDragonFile(dragonChampionUrl, dragonCulture, dataDragon).then(state => {
+            return true;
+        }).catch(err => {
+            console.error(err);
+        });
+
+        await DragonService.downloadDragonFile(dragonProfileIconsUrl, dragonCulture, dataDragon).then(state => {
+            return true;
+        }).catch(err => {
+            console.error(err);
+        });
+
+    } else {
+        dataDragon.message?.push("Les fichiers sont déjà à jour.");      
+    }
+
+    return dataDragon;
+}
+
+
+// **** Export default **** //
+
+export default {
+    dragonPath,
+    getVersion,
+    updateDragon
+} as const;

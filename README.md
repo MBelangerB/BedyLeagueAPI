@@ -54,3 +54,8 @@ Permet d'obtenir les 5 champions avec le plus de points de maitrises
 |||||
 |nb|Non|Nombre de données a afficher (5 par défaut)|||
 
+
+# Note for me
+nodemon --inspect src/bin/www.ts 
+
++ VS Code Attach 

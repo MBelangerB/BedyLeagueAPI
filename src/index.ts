@@ -16,8 +16,8 @@ import { BedyBot } from './lib/logger';
 dotenv.config();
 
 // Importer router
-import indexRouter from './routes/index';
-import dragonRouter from './routes/global/dragon';
+import mainRouter from './routes/main';
+import dragonRouter from './routes/global/dragon-routes';
 
 // const env = process.env.NODE_ENV;
 
@@ -91,15 +91,9 @@ if (EnvVars.nodeEnv === NodeEnvs.Production) {
     app.use(helmet());
 }
 
-
 // **** Add API routes **** //3
-
-app.get('/', (req: Request, res: Response) => {
-    res.send('Express + TypeScript Server');
-});
-
-app.use(dragonRouter.paths.HOME, dragonRouter.router);
-app.use('/a', indexRouter);
+app.use('/', mainRouter.homeRouter);
+app.use(dragonRouter.modulePath, mainRouter.dragonRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res) {
@@ -125,18 +119,6 @@ app.use(function (err : any, req : Request, res : Response) {
         res.send(returnMessage);
     }
 });
-
-// app.listen(port, () => {
-//     console.log(BedyBot.logType.VERBOSE, 'Ceci est un message classique.');
-//     console.log(BedyBot.logType.INFORMATION, 'Ceci est un %s message classique.', 'toto');
-//     console.debug('Ceci est un message de debug.');
-//     console.info('Ceci est un message d\'info.');
-//     console.warn('Ceci est un message de warn.');
-//     console.error('Ceci est un message d\'erreur.');
-
-//     console.log(BedyBot.logType.SERVER, `⚡️: Server is running at https://localhost:${port}`);
-// });
-
 
 // **** Export default **** //
 export default app;

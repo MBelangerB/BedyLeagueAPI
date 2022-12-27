@@ -5,3 +5,8 @@ export enum NodeEnvs {
     Production = 'production'
   }
   
+
+  export enum DragonCulture {
+    fr_fr = 'fr_FR',
+    en_us = 'en_us'
+  }

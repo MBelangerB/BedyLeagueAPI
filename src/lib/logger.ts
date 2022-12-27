@@ -180,7 +180,8 @@ export namespace BedyBot {
         ERROR,
         API,
         DB,
-        SERVER
+        SERVER,
+        BUILD
     };
 }
 
@@ -215,6 +216,7 @@ const logPrefix = {
     api: fontColor.chalkGreen('[API]'.padEnd(10, ' ')),
     db: fontColor.chalkGreen('[DB]'.padEnd(10, ' ')),
     server: chalk.magenta('[SERVER]'.padEnd(10, ' ')),
+    build: chalk.magenta('[BUILD]'.padEnd(10, ' ')),
 };
 
 const getCurrentDateFormat = function () {

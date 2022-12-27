@@ -1,0 +1,96 @@
+{
+    "lol": {
+        "queue": [
+            "RANKED_SOLO_5x5",
+            "RANKED_TFT",
+            "RANKED_FLEX_SR"
+        ],
+        "region": [
+            "BR1", "EUN1", "EUW1", "JP1",
+            "KR", "LA1","LA2",  "NA1",
+            "OC1", "TR1", "RU"
+        ],
+        "routes": {
+            "v2": {
+                "liveGame": {
+                    "getCurrentGameInfoBySummoner": "https://{region}.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/{encryptedSummonerId}"
+                },
+                "matchHistory": {
+                    "getMatchListByChampionAndQueue": "https://{region}.api.riotgames.com/lol/match/v4/matchlists/by-account/{encryptedAccountId}?champion={championId}&queue={queueId}&season={seasonId}",
+                    "getMatchlist": "https://{region}.api.riotgames.com/lol/match/v4/matchlists/by-account/{encryptedAccountId}?endIndex={end}&beginIndex={begin}"
+                }
+            },
+            "league": {
+                "v4": {
+                    "getLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/lol/league/v4/entries/by-summoner/{encryptedSummonerId}"
+                }
+            },
+            "championMastery": {
+                "v4": {
+                    "getChampionMasteriesBySummoner": "https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{encryptedSummonerId}",
+                    "getChampionMasteriesBySummonerAndChampionId": "https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{encryptedSummonerId}/by-champion/{championId}"
+                }
+            },
+            "champion": {
+                "v3": {
+                    "championRotation": "https://{region}.api.riotgames.com/lol/platform/v3/champion-rotations"
+                }
+            },
+            "summoner": {
+                "v4": {
+                    "getBySummonerName": "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}",
+                    "getByPuuid": "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
+                }
+            },
+            "tft_summoner": {
+                "v1": {
+                    "getBySummonerName": "https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{summonerName}",
+                    "getByPuuid": "https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-puuid/{puuid}"
+                }
+            },
+            "tft_league": {
+                "v1": {
+                    "getTFTLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{encryptedSummonerId}"
+                }
+            }
+        }
+    },
+    "dragon": {
+        "version": "https://ddragon.leagueoflegends.com/api/versions.json",
+        "queues": "http://static.developer.riotgames.com/docs/lol/queues.json",
+        "seasons": "http://static.developer.riotgames.com/docs/lol/seasons.json",
+        "champions": "http://ddragon.leagueoflegends.com/cdn/{version}/data/{lang}/champion.json",
+        "profileIcons": "http://ddragon.leagueoflegends.com/cdn/{version}/data/{lang}/profileicon.json",
+        "summonerSpells": "http://ddragon.leagueoflegends.com/cdn/{version}/data/{lang}/summoner.json",
+        "runesReforged": "http://ddragon.leagueoflegends.com/cdn/{version}/data/{lang}/runesReforged.json",
+        "championIcon": "http://ddragon.leagueoflegends.com/cdn/{version}/img/champion/{name}.png"
+    },
+    "api": {
+        "culture": [
+            "fr",
+            "en"
+        ]
+    },
+    "google": {
+        "routes": {
+            "validation": "https://www.google.com/recaptcha/api/siteverify?secret={SECRET}&response={RESPONSE}"
+        }
+    },
+    "discord": {
+        "routes": {
+            "api": "https://discord.com/api",
+            "version": "/v10",
+            "auth": {
+                "getToken": "/oauth2/token",
+                "revokeToken": "/oauth2/token/revoke"
+            },
+            "user": {
+                "currentUser": "/users/@me",
+                "userGuild": "/users/@me/guilds"
+            }
+        },
+        "cdn": {
+            "url": "https://cdn.discordapp.com"
+        }
+    }
+}
