@@ -13,7 +13,7 @@ export namespace BedyBot {
         DB,
         SERVER,
         BUILD
-    };
+    }
 }
 
 const showPrefix = (process.env.showPrefix || true);
@@ -99,7 +99,7 @@ const prefixMessage = function (prefix: string, message: string) {
     if (showPrefix) {
         const currentDateTime = getCurrentDateFormat();
         const newArgs = [];
-    
+
         if (typeof message === 'string') {
             newArgs.unshift(formatString(message));
             newArgs.unshift(currentDateTime);
@@ -116,7 +116,7 @@ const prefixMessage = function (prefix: string, message: string) {
         const searchRegExp = new RegExp(search, 'gi'); // Throws SyntaxError
         const replaceWith = '';
 
-        return newArgs.toString().replace(searchRegExp, replaceWith);     
+        return newArgs.toString().replace(searchRegExp, replaceWith);
     }
     return '';
 };

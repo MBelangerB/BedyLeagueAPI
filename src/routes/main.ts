@@ -37,16 +37,22 @@ lolRouter.get(lol_routes.routes.RANK, cors(), function (req, res) {
   return lol_routes.getRank(req, res);
 });
 
-lolRouter.get(lol_routes.routes.ROTATE_PARAMS, 
-            validate(['region', 'string', 'params']), 
+lolRouter.get(lol_routes.routes.ROTATE_PARAMS,
+            validate(['region', 'string', 'params']),
             function (req, res) {
   return lol_routes.getRotate(req, res);
 });
 
+lolRouter.get(lol_routes.routes.ROTATE,
+  validate(['region', 'string', 'query']),
+  function (req, res) {
+return lol_routes.getRotate(req, res);
+});
+
 
 // **** Export default **** //
-export default { 
+export default {
     homeRouter,
     dragonRouter,
-    lolRouter
-}
+    lolRouter,
+};

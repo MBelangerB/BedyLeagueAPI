@@ -1,21 +1,20 @@
-
 import HttpStatusCodes from '../../declarations/major/HttpStatusCodes';
-import dragonService from "../../services/dragon-service";
-import { Request, Response } from "express";
+import dragonService from '../../services/dragon-service';
+import { Request, Response } from 'express';
 import { IDragonData } from '../../models/dragon/dragon-model';
 import { DragonCulture } from '../../declarations/enum';
 
-const modulePath: string = '/dragon';
+const modulePath = '/dragon';
 
 const routes = {
     HOME: '/',
     GET_VERSION: '/version',
-    UPDATE: '/update'
+    UPDATE: '/update',
 } as const;
 
 /**
  * Get full routes path
- * @param routes Routes name 
+ * @param routes Routes name
  * @returns Full path route (module/routes)
  */
 function getPath(routes: string) {
@@ -24,17 +23,17 @@ function getPath(routes: string) {
 
 /**
  * Get current dragon module version
- * @param req 
- * @param response 
- * @returns 
+ * @param req
+ * @param response
+ * @returns
  */
 async function getCurrentVersion(req: Request, response: Response) {
     try {
         const data: IDragonData = await dragonService.getVersion();
-        if (data.currentVersion && typeof data.currentVersion !== "undefined") {
+        if (data.currentVersion && typeof data.currentVersion !== 'undefined') {
             return response.status(HttpStatusCodes.OK).send(data.currentVersion);
         } else {
-            return response.status(HttpStatusCodes.OK).send(data.errorMsg); 
+            return response.status(HttpStatusCodes.OK).send(data.errorMsg);
         }
     } catch (ex) {
         return response.status(HttpStatusCodes.BAD_REQUEST).send(ex);
@@ -43,31 +42,31 @@ async function getCurrentVersion(req: Request, response: Response) {
 
 /**
  * Performs the update of the dragons files
- * @param req 
- * @param response 
- * @returns 
+ * @param req
+ * @param response
+ * @returns
  */
 async function updateDragon(req: Request, response: Response) {
     try {
         let { forceUpdate } = req.body;
         let { culture } = req.query; // req.params;
 
-        if (typeof forceUpdate == "undefined") {
+        if (typeof forceUpdate == 'undefined') {
             forceUpdate = false;
         }
 
-        let dragonCulture : DragonCulture = DragonCulture.fr_fr;
-        if (typeof culture !== "undefined" && culture == "en") {
+        const dragonCulture : DragonCulture = DragonCulture.fr_fr;
+        if (typeof culture !== 'undefined' && culture == 'en') {
             culture = DragonCulture.en_us;
 
-        } else if (typeof culture !== "undefined" && (culture !== "fr" && culture !== "en")) {
-            return response.status(HttpStatusCodes.BAD_REQUEST).send('Culture invalid');  
+        } else if (typeof culture !== 'undefined' && (culture !== 'fr' && culture !== 'en')) {
+            return response.status(HttpStatusCodes.BAD_REQUEST).send('Culture invalid');
         }
-           
+
 
         const data: IDragonData = await dragonService.updateDragon(forceUpdate, dragonCulture);
         if (data) {
-            return response.status(HttpStatusCodes.OK).send(data.currentVersion);
+            return response.status(HttpStatusCodes.OK).send(data.message);
         }
 
     } catch (ex) {
@@ -82,5 +81,5 @@ export default {
     modulePath,
     getPath,
     getCurrentVersion,
-    updateDragon
+    updateDragon,
 } as const;

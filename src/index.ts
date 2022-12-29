@@ -97,7 +97,7 @@ app.use(leagueRouter.modulePath, mainRouter.lolRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res) {
-    console.log(BedyBot.logType.SERVER, "Route '%s' has not found.", req?.url);
+    console.log(BedyBot.logType.SERVER, 'Route \'%s\' has not found.', req?.url);
     res.status(404).send('404 - Not found');
 });
 

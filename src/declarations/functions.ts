@@ -7,7 +7,7 @@
  * @param baseString initial string
  * @param search char to replaced
  * @param replaceWith new value
- * @returns 
+ * @returns
  */
 export function replaceAll(baseString: string, search: string, replaceWith: string) {
   const searchRegExp = new RegExp(search, 'gi'); // Throws SyntaxError

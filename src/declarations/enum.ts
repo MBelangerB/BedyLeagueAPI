@@ -1,10 +1,9 @@
-
 export enum NodeEnvs {
     Dev = 'development',
     Staging = 'staging',
     Production = 'production'
   }
-  
+
 
   export enum DragonCulture {
     fr_fr = 'fr_FR',
@@ -15,5 +14,3 @@ export enum NodeEnvs {
     LOL = 'LOL',
     TFT = 'TFT',
   }
-
-  

@@ -18,7 +18,7 @@ main.app.set('port', port);
 /**
  * Create HTTP server.
  */
-var server: Server = http.createServer(main.app);
+const server: Server = http.createServer(main.app);
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -55,7 +55,7 @@ function onError(error: any) {
     throw error;
   }
 
-  var bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
+  const bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
@@ -79,8 +79,8 @@ function onError(error: any) {
  */
 
 function onListening() {
-  var addr = server.address();
-  var bind = typeof addr === 'string'
+  const addr = server.address();
+  const bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr?.port;
 
@@ -92,12 +92,12 @@ function onListening() {
  * Event listerner OnStart
  */
 function onStart() {
-  var addr: any = server.address();
+  const addr: any = server.address();
 
-  var host = addr?.address;
-  var port = addr?.port;
+  let host = addr?.address;
+  const port = addr?.port;
 
-  if (host === "::") { host = "localhost"; }
+  if (host === '::') { host = 'localhost'; }
 
   // console.log(BedyBot.logType.VERBOSE, 'Ceci est un message classique.');
   // console.log(BedyBot.logType.INFORMATION, 'Ceci est message d\'info avec argument pour "%s".', 'toto');
