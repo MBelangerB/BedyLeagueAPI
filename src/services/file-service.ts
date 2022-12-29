@@ -1,6 +1,6 @@
 import fs, { readFileSync } from 'fs';
-import axios, { isCancel, AxiosError, ResponseType } from 'axios';
-import path, { basename } from 'path';
+import axios, { ResponseType } from 'axios';
+import path from 'path';
 import util from 'util';
 
 // **** Variables **** //
@@ -8,7 +8,6 @@ export const basicPath = {
     basePath: path.join(`${__dirname}`, '/..'),
     staticFolder: path.join(`${__dirname}`, '/..', '/static/'),
 } as const;
-
 
 
 // Errors
@@ -25,23 +24,24 @@ class FileService {
 
     /**
      * Check if a file or directory exists
-     * @param filePath 
-     * @returns 
+     * @param filePath
+     * @returns
      */
     static checkFileExists(filePath: string): boolean {
         return fs.existsSync(filePath);
     }
 
     /**
-     * Create folder recursively 
-     * @param folderPath 
-     * @returns 
+     * Create folder recursively
+     * @param folderPath
+     * @returns
      */
-    static async createFolder(folderPath: string) : Promise<string> {
-        return new Promise(async (resolve, reject) => {
+    static async createFolder(folderPath: string): Promise<string> {
+        const folder = new Promise<string>((resolve, reject) => {
             try {
                 if (!FileService.checkFileExists(folderPath)) {
-                    await fs.promises.mkdir(folderPath, { recursive: true }).catch((err: any) => {
+                    /* eslint-disable @typescript-eslint/no-explicit-any */
+                    fs.promises.mkdir(folderPath, { recursive: true }).catch((err: any) => {
                         if (err) reject(err);
                     });
 
@@ -55,17 +55,19 @@ class FileService {
                 reject(ex);
             }
         });
+
+        return Promise.resolve(folder);
     }
 
-    static async writeFile(filePath: string, fileContent: string) : Promise<string> {
-        return new Promise(async (resolve, reject) => {
+    static async writeFile(filePath: string, fileContent: string): Promise<string> {
+        const file = new Promise<string>((resolve, reject) => {
             try {
                 if (typeof (fileContent) !== 'string') {
-                    await util.promisify(fs.writeFile)(filePath, castDataToJSON(fileContent));
+                    util.promisify(fs.writeFile)(filePath, castDataToJSON(fileContent));
                 } else {
-                    await util.promisify(fs.writeFile)(filePath, fileContent);
+                    util.promisify(fs.writeFile)(filePath, fileContent);
                 }
-        
+
                 console.info(`The file ${filePath} has been created or updated.`);
                 resolve(`The file ${filePath} has been created or updated.`);
 
@@ -74,29 +76,32 @@ class FileService {
                 console.error(ex);
                 reject(ex);
             }
-    
         });
+
+        return Promise.resolve(file);
     }
 
 
 }
 
 // https://www.geeksforgeeks.org/node-js-fs-readfilesync-method/
-async function readInternalFile(filePath: string, fileEncoding: BufferEncoding = "utf8", flag: string = "r") {
-        const rawdata = readFileSync(filePath, { encoding: fileEncoding, flag: flag });
-        const data = JSON.parse(rawdata);
-        return data;
+async function readInternalFile(filePath: string, fileEncoding: BufferEncoding = 'utf8', flag = 'r') {
+    const rawdata = readFileSync(filePath, { encoding: fileEncoding, flag: flag });
+    const data = JSON.parse(rawdata);
+    return data;
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function castDataToJSON(data: any) {
     return JSON.stringify(data, null, 2);
 }
 
-async function downloadExternalFile(requestUrl: string, responseType: ResponseType = "json"): Promise<any> {
-    return new Promise(async function (resolve, reject) {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+async function downloadExternalFile(requestUrl: string, responseType: ResponseType = 'json'): Promise<any> {
+    const downloadResult = new Promise<any>(function (resolve, reject) {
         try {
             console.info(`Downloading the '${requestUrl}' file`);
-            await axios(encodeURI(requestUrl),
+            axios(encodeURI(requestUrl),
                 {
                     method: 'GET',
                     responseType: responseType,
@@ -134,6 +139,8 @@ async function downloadExternalFile(requestUrl: string, responseType: ResponseTy
             reject(ex);
         }
     });
+
+    return Promise.resolve(downloadResult);
 }
 
 export default {
@@ -142,5 +149,5 @@ export default {
     FileService,
     readInternalFile,
     downloadExternalFile,
-    castDataToJSON
+    castDataToJSON,
 } as const;

@@ -97,10 +97,10 @@ export class RiotService {
     static async callRiotAPI(requestUrl: string, tokenType: RiotTokenType, responseType: ResponseType = 'json'): Promise<any> {
         const token = RiotService.getToken(tokenType);
 
-        return new Promise(async function (resolve, reject) {
+        const axiosQuery = new Promise(function (resolve, reject) {
             try {
                 console.info(`Call Riot API with '${requestUrl}'`);
-                await axios(encodeURI(requestUrl),
+                axios(encodeURI(requestUrl),
                     {
                         method: 'GET',
                         responseType: responseType,
@@ -132,6 +132,8 @@ export class RiotService {
                 reject(ex);
             }
         });
+
+        return Promise.resolve(axiosQuery);
     }
 
     /**
@@ -140,13 +142,12 @@ export class RiotService {
      * @returns
      */
     static async getRotate(rotate: IChampionInfo): Promise<ChampionInfoExt> {
-        let rotateResult: ChampionInfoExt = new ChampionInfoExt();
+        const dragonChampionData: Array<IChampion> = await DragonService.readDragonChampionFile(DragonCulture.fr_fr);
 
-        return new Promise(async function (resolve, reject) {
+        const process = new Promise<ChampionInfoExt>(function (resolve: any, reject: any) {
+            const rotateResult: ChampionInfoExt = new ChampionInfoExt();
+
             try {
-                let dragonChampionData: Array<IChampion>;
-                dragonChampionData = await DragonService.readDragonChampionFile(DragonCulture.fr_fr);
-
                 rotate.freeChampionIds.forEach(function (championId) {
                     try {
                         const dragonChamp = dragonChampionData.find(e => e.id === championId.toString());
@@ -175,6 +176,8 @@ export class RiotService {
 
             resolve(rotateResult);
         });
+
+        return Promise.resolve(process);
     }
 }
 
