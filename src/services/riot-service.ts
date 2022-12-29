@@ -1,13 +1,12 @@
 import infoData from '../static/info.json';
-import axios, { isCancel, AxiosError, ResponseType } from 'axios';
+import axios, { AxiosError, ResponseType } from 'axios';
 import { DragonCulture, RiotTokenType } from '../declarations/enum';
 import EnvVars from '../declarations/major/EnvVars';
 import { RegionRegionData } from '../declarations/types';
 import { RouteError } from '../declarations/classes';
 import HttpStatusCodes from '../declarations/major/HttpStatusCodes';
-import { IChampion, IChampionInfo, IChampionInfoExt, ChampionInfoExt } from '../models/riot/ChampionInfo';
-import dragon, { DragonService } from './dragon-service';
-import { IChampionData } from '../models/dragon/dragon-model';
+import { IChampion, IChampionInfo, ChampionInfoExt } from '../models/riot/ChampionInfo';
+import { DragonService } from './dragon-service';
 
 // **** Variables **** //
 
@@ -16,12 +15,12 @@ export const errors = {
     unauth: 'Unauthorized',
     invalidRegion: (region: string) => `Region parameters "${region}" is invalid.`,
     errInFunction: (functionName: string) => `An error occured in "RiotService.${functionName}"`,
-    errChampionNotExist: (list: string, championId: string) => `Cannot add ${championId} in ${list}. Champion doesn't exists, please try to update dragon file.`
+    errChampionNotExist: (list: string, championId: string) => `Cannot add ${championId} in ${list}. Champion doesn't exists, please try to update dragon file.`,
 } as const;
 
 export class RiotService {
 
-    static autorizedRegion = ['BR1', 'EUN1', 'EUW1', 'JP1', 'KR', 'LA1', 'LA2', 'NA1', 'OC1', 'TR1', 'RU']
+    static autorizedRegion = ['BR1', 'EUN1', 'EUW1', 'JP1', 'KR', 'LA1', 'LA2', 'NA1', 'OC1', 'TR1', 'RU'];
     static regionDataMapping: RegionRegionData = {
         // BR1
         'BR': 'BR1',
@@ -56,13 +55,13 @@ export class RiotService {
 
     /**
      * Convert region parameters to riot region
-     * @param region 
-     * @returns 
+     * @param region
+     * @returns
      */
     static convertToRealRegion(region: string) {
         const realRegion: string = RiotService.regionDataMapping[region.toUpperCase()];
         if (!RiotService.autorizedRegion.includes(realRegion)) {
-            throw new RouteError(HttpStatusCodes.BAD_REQUEST, errors.invalidRegion(region))
+            throw new RouteError(HttpStatusCodes.BAD_REQUEST, errors.invalidRegion(region));
         } else {
             return realRegion;
         }
@@ -70,8 +69,8 @@ export class RiotService {
 
     /**
      * Get Riot API Token
-     * @param tokenType 
-     * @returns 
+     * @param tokenType
+     * @returns
      */
     static getToken(tokenType: RiotTokenType) {
         let token;
@@ -89,13 +88,14 @@ export class RiotService {
 
     /**
      * Call Riot API to obtains information
-     * @param requestUrl 
-     * @param tokenType 
-     * @param responseType 
-     * @returns 
+     * @param requestUrl
+     * @param tokenType
+     * @param responseType
+     * @returns
      */
-    static async callRiotAPI(requestUrl: string, tokenType: RiotTokenType, responseType: ResponseType = "json"): Promise<any> {
-        let token = RiotService.getToken(tokenType);
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    static async callRiotAPI(requestUrl: string, tokenType: RiotTokenType, responseType: ResponseType = 'json'): Promise<any> {
+        const token = RiotService.getToken(tokenType);
 
         return new Promise(async function (resolve, reject) {
             try {
@@ -136,22 +136,23 @@ export class RiotService {
 
     /**
      * Read Dragon file and initialize IChampionInfoExt
-     * @param rotate 
-     * @returns 
+     * @param rotate
+     * @returns
      */
     static async getRotate(rotate: IChampionInfo): Promise<ChampionInfoExt> {
         let rotateResult: ChampionInfoExt = new ChampionInfoExt();
 
         return new Promise(async function (resolve, reject) {
             try {
-                const dragonChampionData: Array<IChampion> = await DragonService.readDragonChampionFile(DragonCulture.fr_fr);
-                           
+                let dragonChampionData: Array<IChampion>;
+                dragonChampionData = await DragonService.readDragonChampionFile(DragonCulture.fr_fr);
+
                 rotate.freeChampionIds.forEach(function (championId) {
                     try {
                         const dragonChamp = dragonChampionData.find(e => e.id === championId.toString());
-                        if (dragonChamp) { 
+                        if (dragonChamp) {
                             rotateResult.freeChampion.push(dragonChamp);
-                        }         
+                        }
                     } catch (ex) {
                         console.warn(errors.errChampionNotExist('freeChampions', championId.toString()));
                     }
@@ -160,9 +161,9 @@ export class RiotService {
                 rotate.freeChampionIdsForNewPlayers.forEach(function (championId) {
                     try {
                         const dragonChamp = dragonChampionData.find(e => e.id === championId.toString());
-                        if (dragonChamp) { 
+                        if (dragonChamp) {
                             rotateResult.freeChampionForNewPlayers.push(dragonChamp);
-                        }         
+                        }
                     } catch (ex) {
                         console.warn(errors.errChampionNotExist('freeChampionsForNewPlayers', championId.toString()));
                     }
@@ -181,17 +182,14 @@ export class RiotService {
 
 /**
  * Function called by API for prepare the data
- * @param region 
- * @param json 
- * @returns 
+ * @param region
+ * @param json
+ * @returns
  */
-async function getRiotRotate(region: string, json: boolean): Promise<ChampionInfoExt> {
-    let RotateUrl = infoData.lol.routes.champion.v3.championRotation.replace('{region}', region);
+async function getRiotRotate(region: string): Promise<ChampionInfoExt> {
+    const RotateUrl = infoData.lol.routes.champion.v3.championRotation.replace('{region}', region);
     let rotate: IChampionInfo | null = null;
-    let rotateResult: ChampionInfoExt = new ChampionInfoExt(); /* {
-        freeChampion: new Array<IChampion>,
-        freeChampionForNewPlayers: new Array<IChampion>
-    };*/
+    let rotateResult: ChampionInfoExt = new ChampionInfoExt();
 
     // Step 1 : Get Rotate Info
     // TODO: Cache for Riot Info
@@ -199,9 +197,16 @@ async function getRiotRotate(region: string, json: boolean): Promise<ChampionInf
         rotate = result;
 
     }).catch(err => {
-        // AxiosError
+        // TODO: Est-ce que le retour devrait être un type avec : code, errMessage, data (ChampionInfoExt)
         console.error(errors.errInFunction('getRiotRotate'));
-        console.error(err);
+
+        if (err instanceof AxiosError) {
+            console.error(err.message);
+        } else {
+            console.error(err);
+        }
+
+        throw err;
     });
 
     if (rotate) {
@@ -227,5 +232,5 @@ async function getRiotRotate(region: string, json: boolean): Promise<ChampionInf
 export default {
     errors,
     RiotService,
-    getRiotRotate
+    getRiotRotate,
 } as const;

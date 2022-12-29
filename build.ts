@@ -24,7 +24,7 @@ import './src/lib/logger';
     // Copy back-end files
     await exec('tsc --build tsconfig.prod.json', './');
 
-    
+
     // Create basic folder
     // await createFolder('./dist/static');
     // await copy('./src/static/info.json', './dist/static/info.json');
@@ -41,7 +41,7 @@ import './src/lib/logger';
 function remove(loc: string): Promise<void> {
   return new Promise((res, rej) => {
     return fs.remove(loc, (err) => {
-      return (!!err ? rej(err) : res());
+      return (err ? rej(err) : res());
     });
   });
 }
@@ -49,10 +49,11 @@ function remove(loc: string): Promise<void> {
 /**
  * Create Folder
  */
- function createFolder(loc: string): Promise<void> {
+/* eslint-disable @typescript-eslint/no-unused-vars */
+function createFolder(loc: string): Promise<void> {
   return new Promise((res, rej) => {
     return fs.mkdir(loc, (err) => {
-      return (!!err ? rej(err) : res());
+      return (err ? rej(err) : res());
     });
   });
 }
@@ -60,10 +61,11 @@ function remove(loc: string): Promise<void> {
 /**
  * Copy file.
  */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 function copy(src: string, dest: string): Promise<void> {
   return new Promise((res, rej) => {
     return fs.copy(src, dest, (err) => {
-      return (!!err ? rej(err) : res());
+      return (err ? rej(err) : res());
     });
   });
 }
@@ -73,16 +75,16 @@ function copy(src: string, dest: string): Promise<void> {
  */
 function exec(cmd: string, loc: string): Promise<void> {
   return new Promise((res, rej) => {
-    return childProcess.exec(cmd, {cwd: loc}, (err, stdout, stderr) => {
-      if (!!stdout) {
+    return childProcess.exec(cmd, { cwd: loc }, (err, stdout, stderr) => {
+      if (stdout) {
         // logger.info(stdout);
         console.info(stdout);
       }
-      if (!!stderr) {
+      if (stderr) {
         // logger.warn(stderr);
         console.warn(stderr);
       }
-      return (!!err ? rej(err) : res());
+      return (err ? rej(err) : res());
     });
   });
 }
