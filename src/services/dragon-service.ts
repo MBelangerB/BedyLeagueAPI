@@ -1,8 +1,9 @@
 import path, { basename } from 'path';
 import services from './file-service';
 import infoData from '../static/info.json';
-import dragonModel, { IDragonData } from '../models/Dragon/dragon-model';
+import dragonModel, { IChampionData, IDragonData } from '../models/dragon/dragon-model';
 import { DragonCulture } from '../declarations/enum';
+import { IChampion } from '../models/riot/ChampionInfo';
 
 // **** Variables **** //
 
@@ -11,6 +12,7 @@ export const errors = {
     unauth: 'Unauthorized',
     uninitialized: 'The \'Dragon\' files have not been initialized. Please initialize it first.',
     errGetDragonVersion: 'An error occured in DragonService.getDragonVersion',
+    errReadDragonFile: 'An error occured in DragonService.readDragonFile', 
 } as const;
 
 // Dragon file path
@@ -19,7 +21,12 @@ export const dragonPath = {
     staticFolder: path.join(`${__dirname}`, '/..', '/static/'),
     dragonStaticFolder: path.join(`${__dirname}`, '/..', '/static/dragon'),
     versionFilePath: path.join(`${__dirname}`, '/..', '/static/dragon', 'version.json'),
+    dragonFilePath: (filename: string) => path.join(`${__dirname}`, '/..', '/static/dragon', filename),
 } as const;
+
+export const dragonFileName = {
+    champion: 'champion.json'
+}
 
 // Class
 export class DragonService {
@@ -41,7 +48,6 @@ export class DragonService {
                 return path.join(`${dragonPath.dragonStaticFolder}`, culture, fileName);
             }
         }
-
     }
 
     /**
@@ -83,7 +89,7 @@ export class DragonService {
                 // Read version file if exists
                 let tmpData!: any[];
                 let invalidFile: boolean = false;
-               await services.readInternalFile(this.getDragonVersionPath()).then(fileContent => {
+                await services.readInternalFile(this.getDragonVersionPath()).then(fileContent => {
                     if (typeof (fileContent) !== 'string') {
                         tmpData = fileContent;
                     } else {
@@ -103,7 +109,7 @@ export class DragonService {
                 if (invalidFile) {
                     data.errorMsg = errors.uninitialized;
                     resolve(data);
-                    return;           
+                    return;
                 }
 
                 if (typeof tmpData !== 'undefined' && tmpData.length > 0) {
@@ -122,6 +128,71 @@ export class DragonService {
 
             resolve(data);
         });
+    }
+
+    static readDragonFile(filename: string, culture: DragonCulture): Promise<any> { // Promise<Array<IChampionData>> {
+        return new Promise(async (resolve: any, reject: any) => {
+            let fileData: any = null;
+          //  let result: Array<IChampionData> = new Array<IChampionData>;
+            
+            try {
+                await services.readInternalFile(this.getDragonFullPath(culture, filename)).then(fileContent => {
+                    if (typeof (fileContent) !== 'string') {
+                        fileData = fileContent;
+                    } else {
+                        fileData = JSON.parse(fileContent);              
+                    }     
+                    // Impossible de FIND dans ca
+                    // if (fileData && fileData.data) {
+                    //     result = fileData.data;
+                    // }
+
+                }).catch(err => {
+                    if (err && err?.message == "Unexpected end of JSON input") {
+                        return;
+                    } else {
+                        throw err;
+                    }
+
+                });
+            } catch (ex) {
+                console.error(errors.errReadDragonFile);
+                console.error(ex);
+
+                reject(fileData);
+            }
+
+            resolve(fileData);
+        });
+    }
+
+    static async readDragonChampionFile(culture: DragonCulture) : Promise<Array<IChampion>> {
+        return new Promise(async (resolve: any, reject: any) => {
+            const championData: Array<IChampion> = new Array<IChampion>;
+            try {
+                const dragonChampion: any = await DragonService.readDragonFile(dragonFileName.champion, culture);
+                if (dragonChampion.type == 'champion')
+                {
+                    for (let keyName in dragonChampion.data) {
+                        let dragonChampionInfo = dragonChampion.data[keyName];
+                        if (dragonChampionInfo) {
+                            const champion: IChampion = {
+                                id: dragonChampionInfo.key,
+                                name: dragonChampionInfo.name
+                            };
+             
+                            championData.push(champion);
+                        }
+                    }
+                }
+               
+            } catch (ex) {
+                reject(ex);
+            }
+
+            resolve(championData);
+        });
+ 
     }
 
     /**
@@ -266,7 +337,7 @@ async function updateDragon(forceUpdate: boolean = false, dragonCulture: DragonC
         });
 
     } else {
-        dataDragon.message?.push("Les fichiers sont déjà à jour.");      
+        dataDragon.message?.push("Les fichiers sont déjà à jour.");
     }
 
     return dataDragon;
@@ -277,6 +348,7 @@ async function updateDragon(forceUpdate: boolean = false, dragonCulture: DragonC
 
 export default {
     dragonPath,
+    dragonFileName,
     getVersion,
     updateDragon
 } as const;

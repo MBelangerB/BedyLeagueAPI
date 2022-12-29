@@ -2,7 +2,7 @@
 import HttpStatusCodes from '../../declarations/major/HttpStatusCodes';
 import dragonService from "../../services/dragon-service";
 import { Request, Response } from "express";
-import { IDragonData } from '../../models/Dragon/dragon-model';
+import { IDragonData } from '../../models/dragon/dragon-model';
 import { DragonCulture } from '../../declarations/enum';
 
 const modulePath: string = '/dragon';
@@ -67,7 +67,7 @@ async function updateDragon(req: Request, response: Response) {
 
         const data: IDragonData = await dragonService.updateDragon(forceUpdate, dragonCulture);
         if (data) {
-            return response.status(HttpStatusCodes.OK).send(data.message);
+            return response.status(HttpStatusCodes.OK).send(data.currentVersion);
         }
 
     } catch (ex) {

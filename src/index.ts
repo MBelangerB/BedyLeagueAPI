@@ -18,6 +18,9 @@ dotenv.config();
 // Importer router
 import mainRouter from './routes/main';
 import dragonRouter from './routes/global/dragon-routes';
+import leagueRouter from './routes/global/lol-routes';
+
+// const env = process.env.NODE_ENV;
 
 // **** Init express **** //
 const app = express();
@@ -37,12 +40,10 @@ app.use(compression());
 
 /* Cors configuration */
 // FrontEnd Address
-const allowlist = ['http://bedyapi.com', 'https://bedyapi.com', 'http://localhost:4200', 'http://localhost:8080',
-                    'http://web.bedyapi.com', 'https://web.bedyapi.com'];
 
 const corsOptions = {
     origin: (origin : any, callback : any) => {
-        if (allowlist.indexOf(origin) !== -1) {
+        if (EnvVars.cors.allowlist.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
             callback(new Error('401'));
@@ -92,6 +93,7 @@ if (EnvVars.nodeEnv === NodeEnvs.Production) {
 // **** Add API routes **** //3
 app.use('/', mainRouter.homeRouter);
 app.use(dragonRouter.modulePath, mainRouter.dragonRouter);
+app.use(leagueRouter.modulePath, mainRouter.lolRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res) {
@@ -119,4 +121,4 @@ app.use(function (err : any, req : Request, res : Response) {
 });
 
 // **** Export default **** //
-export default app;
+export default { app, corsOptions };

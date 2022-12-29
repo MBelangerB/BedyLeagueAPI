@@ -1,23 +1,24 @@
 #!/usr/bin/env node
 
 // Module dependencies.
-import app from '../index';
+import main from '../index';
 import debug from 'debug';
 import http, { Server } from 'http';
 import { BedyBot } from '../lib/logger';
+import EnvVars from '../declarations/major/EnvVars';
 
 
 // Initialise dotEnv
 require('dotenv').config();
 
 // Get port from environment and store in Express.
-const port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
+const port = EnvVars.port; // normalizePort(process.env.PORT || '3000');
+main.app.set('port', port);
 
 /**
  * Create HTTP server.
  */
-var server: Server = http.createServer(app);
+var server: Server = http.createServer(main.app);
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -29,22 +30,21 @@ server.listen(port, onStart);
 /**
  * Normalize a port into a number, string, or false.
  */
+// function normalizePort(val: string): any {
+//   var port = parseInt(val, 10);
 
-function normalizePort(val: string): any {
-  var port = parseInt(val, 10);
+//   if (isNaN(port)) {
+//     // named pipe
+//     return val;
+//   }
 
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
+//   if (port >= 0) {
+//     // port number
+//     return port;
+//   }
 
-  if (port >= 0) {
-    // port number
-    return port;
-  }
-
-  return false;
-}
+//   return false;
+// }
 
 /**
  * Event listener for HTTP server "error" event.

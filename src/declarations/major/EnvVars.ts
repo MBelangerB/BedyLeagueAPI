@@ -1,22 +1,31 @@
 /* eslint-disable node/no-process-env */
+import dotenv from 'dotenv';
+dotenv.config();
 
 export default {
   nodeEnv: (process.env.NODE_ENV ?? 'development'),
   port: (process.env.PORT ?? 3000),
-  cookieProps: {
-    key: 'bedybot_api_TsProps',
-    secret: (process.env.COOKIE_SECRET ?? ''),
-    options: {
-      httpOnly: true,
-      signed: true,
-      path: (process.env.COOKIE_PATH ?? ''),
-      maxAge: Number(process.env.COOKIE_EXP ?? 0),
-      domain: (process.env.COOKIE_DOMAIN ?? ''),
-      secure: (process.env.SECURE_COOKIE === 'true'),
-    },
-  },
   jwt: {
-    secret: (process.env.JWT_SECRET ??  ''),
+    secret: (process.env.JWT_SECRET ?? ''),
     exp: (process.env.COOKIE_EXP ?? ''), // exp at the same time as the cookie
   },
+  cors: {
+    allowlist: ['http://bedyapi.com', 'https://bedyapi.com', 'http://localhost:4200', 'http://localhost:8080',
+      'http://web.bedyapi.com', 'https://web.bedyapi.com']
+  },
+  riot: {
+    leagueToken: (process.env.riotLolToken ?? process.env.riotDevToken),
+    tftToken: (process.env.riotTftToken ?? process.env.riotDevToken),
+    valoToken: (process.env.riotValoToken ?? process.env.riotDevToken),
+  },
+  recaptcha: {
+    v3Token: (process.env.RECAPTCHA_V3)
+  },
+  email: {
+    host: process.env.email_host,
+    port: process.env.email_port,
+    secure: (process.env.email_secure ?? false),
+    emailTo: process.env.email_emailTo,
+    emailFrom: (process.env.email_emailFrom ?? 'noreply@bedyapi.com')
+  }
 } as const;

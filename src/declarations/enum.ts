@@ -10,3 +10,10 @@ export enum NodeEnvs {
     fr_fr = 'fr_FR',
     en_us = 'en_us'
   }
+
+  export enum RiotTokenType {
+    LOL = 'LOL',
+    TFT = 'TFT',
+  }
+
+  
