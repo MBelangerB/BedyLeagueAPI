@@ -1,3 +1,4 @@
+// ***** Interface ***** //
 export interface IChampionInfo {
     maxNewPlayerLevel: number,
     freeChampionIdsForNewPlayers: Array<number>,
@@ -17,6 +18,7 @@ export interface IChampion {
     name: string,
 }
 
+// ***** Classes ***** //
 export class ChampionInfoExt implements IChampionInfoExt {
     freeChampionForNewPlayers: IChampion[] = [];
     freeChampion: IChampion[] = [];

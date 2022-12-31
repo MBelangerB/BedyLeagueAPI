@@ -1,6 +1,5 @@
-import express, { Express, Request, Response } from 'express';
+import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
-import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import logger from 'morgan';
@@ -11,7 +10,7 @@ import helmet from 'helmet';
 import { NodeEnvs } from './declarations/enum';
 import EnvVars from './declarations/major/EnvVars';
 import './lib/logger';
-import { BedyBot } from './lib/logger';
+import { logType } from './lib/logger';
 
 dotenv.config();
 
@@ -42,6 +41,7 @@ app.use(compression());
 // FrontEnd Address
 
 const corsOptions = {
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     origin: (origin : any, callback : any) => {
         if (EnvVars.cors.allowlist.indexOf(origin) !== -1) {
             callback(null, true);
@@ -97,11 +97,12 @@ app.use(leagueRouter.modulePath, mainRouter.lolRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res) {
-    console.log(BedyBot.logType.SERVER, 'Route \'%s\' has not found.', req?.url);
+    console.log(logType.SERVER, 'Route \'%s\' has not found.', req?.url);
     res.status(404).send('404 - Not found');
 });
 
 // error handler
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 app.use(function (err : any, req : Request, res : Response) {
     // set locals, only providing error in development
     res.locals.message = err.message;

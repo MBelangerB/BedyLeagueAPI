@@ -49,7 +49,7 @@ function remove(loc: string): Promise<void> {
 /**
  * Create Folder
  */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 function createFolder(loc: string): Promise<void> {
   return new Promise((res, rej) => {
     return fs.mkdir(loc, (err) => {
@@ -61,7 +61,7 @@ function createFolder(loc: string): Promise<void> {
 /**
  * Copy file.
  */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 function copy(src: string, dest: string): Promise<void> {
   return new Promise((res, rej) => {
     return fs.copy(src, dest, (err) => {

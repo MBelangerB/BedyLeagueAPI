@@ -59,3 +59,8 @@ Permet d'obtenir les 5 champions avec le plus de points de maitrises
 nodemon --inspect src/bin/www.ts 
 
 + VS Code Attach 
+
++ Disabled EsLint verif
+/* eslint-disable-line no-shadow */         ->  Disabled current line
+/* eslint-disable-next-line no-shadow */    -> Disabled next line
+/* eslint-disable no-shadow */              -> Disabled in file

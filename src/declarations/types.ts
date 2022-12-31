@@ -1,3 +1,3 @@
-export type RegionRegionData = {
+export type RegionData = {
     [region: string] : string
 }

@@ -2,18 +2,17 @@ import moment from 'moment';
 import chalk from 'chalk';
 import util from 'node:util';
 
-export namespace BedyBot {
-    export enum logType {
-        VERBOSE = 1,
-        DEBUG,
-        INFORMATION,
-        WARNING,
-        ERROR,
-        API,
-        DB,
-        SERVER,
-        BUILD
-    }
+/* eslint-disable-next-line no-shadow */
+export enum logType {
+    VERBOSE = 1,
+    DEBUG,
+    INFORMATION,
+    WARNING,
+    ERROR,
+    API,
+    DB,
+    SERVER,
+    BUILD
 }
 
 const showPrefix = (process.env.showPrefix || true);
@@ -84,7 +83,8 @@ const formatString = function (message: string) {
 };
 
 // Step 1 : Format orignal string
-const formatOrignalString = function (message: string, params: Object[]) {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const formatOrignalString = function (message: string, params: any[]) {
     let newMessage = message;
     if (params && params.length > 0) {
         for (let index = 0; index < params.length; index++) {
@@ -128,38 +128,39 @@ const exError = console.error;
 const exInfo = console.info;
 const exWarning = console.warn;
 
-console.log = function (type: BedyBot.logType, message?: any, ...params: any[]) {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+console.log = function (type: logType, message?: any, ...params: any[]) {
     switch (type) {
-        case BedyBot.logType.VERBOSE: {
+        case logType.VERBOSE: {
             exLog.apply(this, [prefixMessage(logPrefix.verbose, formatOrignalString(message, params))]);
             break;
         }
-        case BedyBot.logType.DEBUG: {
+        case logType.DEBUG: {
             exDebug.apply(this, [prefixMessage(logPrefix.debug, formatOrignalString(message, params))]);
             break;
         }
-        case BedyBot.logType.INFORMATION: {
+        case logType.INFORMATION: {
             exInfo.apply(this, [prefixMessage(logPrefix.info, formatOrignalString(message, params))]);
             break;
         }
-        case BedyBot.logType.WARNING: {
+        case logType.WARNING: {
             exWarning.apply(this, [prefixMessage(logPrefix.warning, formatOrignalString(message, params))]);
             break;
         }
-        case BedyBot.logType.ERROR: {
+        case logType.ERROR: {
             exError.apply(this, [prefixMessage(logPrefix.error, formatOrignalString(message, params))]);
             break;
         }
 
-        case BedyBot.logType.API: {
+        case logType.API: {
             exLog.apply(this, [prefixMessage(logPrefix.api, formatOrignalString(message, params))]);
             break;
         }
-        case BedyBot.logType.DB: {
+        case logType.DB: {
             exLog.apply(this, [prefixMessage(logPrefix.db, formatOrignalString(message, params))]);
             break;
         }
-        case BedyBot.logType.SERVER: {
+        case logType.SERVER: {
             exLog.apply(this, [prefixMessage(logPrefix.server, formatOrignalString(message, params))]);
             break;
         }
@@ -170,20 +171,35 @@ console.log = function (type: BedyBot.logType, message?: any, ...params: any[]) 
     }
 };
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 console.debug = function (message?: any, ...params: any[]) {
     exDebug.apply(this, [prefixMessage(logPrefix.debug, formatOrignalString(message, params))]);
 };
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 console.info = function (message?: any, ...params: any[]) {
     exInfo.apply(this, [prefixMessage(logPrefix.info, formatOrignalString(message, params))]);
 };
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 console.warn = function (message?: any, ...params: any[]) {
     exWarning.apply(this, [prefixMessage(logPrefix.warning, formatOrignalString(message, params))]);
 };
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 console.error = function (message?: any, ...params: any[]) {
     exError.apply(this, [prefixMessage(logPrefix.error, formatOrignalString(message, params))]);
+};
+
+declare global {
+    interface Console {
+        api: (message?: any, ...params: any[]) => void
+    }
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+console.api = function (message?: any, ...params: any[]) {
+    exLog.apply(this, [prefixMessage(logPrefix.api, formatOrignalString(message, params))]);
 };
 
 module.exports.log = console.log;
@@ -191,4 +207,6 @@ module.exports.debug = console.debug;
 module.exports.warn = console.warn;
 module.exports.info = console.info;
 module.exports.error = console.error;
+
+module.exports.api = console.api;
 

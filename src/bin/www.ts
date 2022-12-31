@@ -4,12 +4,9 @@
 import main from '../index';
 import debug from 'debug';
 import http, { Server } from 'http';
-import { BedyBot } from '../lib/logger';
+import { logType } from '../lib/logger';
 import EnvVars from '../declarations/major/EnvVars';
 
-
-// Initialise dotEnv
-require('dotenv').config();
 
 // Get port from environment and store in Express.
 const port = EnvVars.port; // normalizePort(process.env.PORT || '3000');
@@ -27,29 +24,12 @@ server.on('error', onError);
 server.on('listening', onListening);
 server.listen(port, onStart);
 
-/**
- * Normalize a port into a number, string, or false.
- */
-// function normalizePort(val: string): any {
-//   var port = parseInt(val, 10);
-
-//   if (isNaN(port)) {
-//     // named pipe
-//     return val;
-//   }
-
-//   if (port >= 0) {
-//     // port number
-//     return port;
-//   }
-
-//   return false;
-// }
 
 /**
  * Event listener for HTTP server "error" event.
  */
 
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 function onError(error: any) {
   if (error.syscall !== 'listen') {
     throw error;
@@ -92,12 +72,13 @@ function onListening() {
  * Event listerner OnStart
  */
 function onStart() {
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   const addr: any = server.address();
 
-  let host = addr?.address;
-  const port = addr?.port;
+  let cHost = addr?.address;
+  const cPort = addr?.port;
 
-  if (host === '::') { host = 'localhost'; }
+  if (cHost === '::') { cHost = 'localhost'; }
 
   // console.log(BedyBot.logType.VERBOSE, 'Ceci est un message classique.');
   // console.log(BedyBot.logType.INFORMATION, 'Ceci est message d\'info avec argument pour "%s".', 'toto');
@@ -107,6 +88,6 @@ function onStart() {
   // console.error('Ceci est un message d\'erreur.');
 
 
-  console.log(BedyBot.logType.SERVER, `Démarrage du serveur BedyAPI (HTTP) le '${new Date().toString()}' sur: '${host}' Server : '${port}'`);
+  console.log(logType.SERVER, `Démarrage du serveur BedyAPI (HTTP) le '${new Date().toString()}' sur: '${cHost}' Server : '${cPort}'`);
 }
 
