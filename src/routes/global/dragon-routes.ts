@@ -3,6 +3,7 @@ import dragonService from '../../services/dragon-service';
 import { Request, Response } from 'express';
 import { IDragonData } from '../../models/dragon/dragon-model';
 import { DragonCulture } from '../../declarations/enum';
+import { IReturnData, ReturnData } from '../../models/IReturnData';
 
 const modulePath = '/dragon';
 
@@ -14,11 +15,11 @@ const routes = {
 
 /**
  * Get full routes path
- * @param routes Routes name
+ * @param route Routes name
  * @returns Full path route (module/routes)
  */
-function getPath(routes: string) {
-    return modulePath + routes;
+function getPath(route: string) {
+    return modulePath + route;
 }
 
 /**
@@ -29,11 +30,13 @@ function getPath(routes: string) {
  */
 async function getCurrentVersion(req: Request, response: Response) {
     try {
-        const data: IDragonData = await dragonService.getVersion();
+        const returnData: ReturnData<IDragonData> = new ReturnData<IDragonData>;
+
+        const data: IDragonData = await dragonService.getVersion(returnData);
         if (data.currentVersion && typeof data.currentVersion !== 'undefined') {
             return response.status(HttpStatusCodes.OK).send(data.currentVersion);
         } else {
-            return response.status(HttpStatusCodes.OK).send(data.errorMsg);
+            return response.status(HttpStatusCodes.OK).send(returnData.messages);
         }
     } catch (ex) {
         return response.status(HttpStatusCodes.BAD_REQUEST).send(ex);
@@ -48,25 +51,19 @@ async function getCurrentVersion(req: Request, response: Response) {
  */
 async function updateDragon(req: Request, response: Response) {
     try {
-        let { forceUpdate } = req.body;
-        let { culture } = req.query; // req.params;
+        const forceUpdate: boolean = ((req.query?.forceUpdate == 'true' || (req.query?.forceUpdate == '1')) || false);
+        const culture: string = (req.query.culture as string);
 
-        if (typeof forceUpdate == 'undefined') {
-            forceUpdate = false;
-        }
-
-        const dragonCulture : DragonCulture = DragonCulture.fr_fr;
+        let dragonCulture : DragonCulture = DragonCulture.fr_fr;
         if (typeof culture !== 'undefined' && culture == 'en') {
-            culture = DragonCulture.en_us;
-
+            dragonCulture = DragonCulture.en_us;
         } else if (typeof culture !== 'undefined' && (culture !== 'fr' && culture !== 'en')) {
             return response.status(HttpStatusCodes.BAD_REQUEST).send('Culture invalid');
         }
 
-
-        const data: IDragonData = await dragonService.updateDragon(forceUpdate, dragonCulture);
+        const data: IReturnData<IDragonData> = await dragonService.updateDragon(forceUpdate, dragonCulture);
         if (data) {
-            return response.status(HttpStatusCodes.OK).send(data.message);
+            return response.status(HttpStatusCodes.OK).send(data.messages);
         }
 
     } catch (ex) {

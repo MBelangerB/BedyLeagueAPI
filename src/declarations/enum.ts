@@ -8,7 +8,7 @@ export enum NodeEnvs {
 
 export enum DragonCulture {
   fr_fr = 'fr_FR',
-  en_us = 'en_us'
+  en_us = 'en_US'
 }
 
 export enum RiotTokenType {
