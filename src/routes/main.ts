@@ -11,7 +11,7 @@ const validate = jetValidator();
 // **** Setup Homes routes **** //
 const homeRouter = express.Router();
 
-homeRouter.get('/', function(req, res) {
+homeRouter.get('/', function (req, res) {
   res.redirect('https://bedyapi.com');
 });
 
@@ -38,21 +38,34 @@ lolRouter.get(lol_routes.routes.RANK, cors(), function (req, res) {
 });
 
 lolRouter.get(lol_routes.routes.ROTATE_PARAMS,
-            validate(['region', 'string', 'params']),
-            function (req, res) {
-  return lol_routes.getRotate(req, res);
-});
+  validate(['region', 'string', 'params']),
+  function (req, res) {
+    return lol_routes.getRotate(req, res);
+  });
 
 lolRouter.get(lol_routes.routes.ROTATE,
   validate(['region', 'string', 'query']),
   function (req, res) {
-return lol_routes.getRotate(req, res);
-});
+    return lol_routes.getRotate(req, res);
+  });
+
+lolRouter.get(lol_routes.routes.SUMMONER_INFO_PARAMS,
+  validate(['region', 'string', 'params'], ['summonerName', 'string', 'params']),
+  function (req, res) {
+    return lol_routes.getSummonerInfo(req, res);
+  });
+
+lolRouter.get(lol_routes.routes.SUMMONER_INFO,
+  validate(['region', 'string', 'query'], ['summonerName', 'string', 'query']),
+  function (req, res) {
+    return lol_routes.getSummonerInfo(req, res);
+  });
+
 
 
 // **** Export default **** //
 export default {
-    homeRouter,
-    dragonRouter,
-    lolRouter,
+  homeRouter,
+  dragonRouter,
+  lolRouter,
 };

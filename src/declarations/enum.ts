@@ -15,3 +15,11 @@ export enum RiotTokenType {
   LOL = 'LOL',
   TFT = 'TFT',
 }
+
+export enum ApiRiotMethod {
+  ROTATE, 
+  SUMMONER_INFO,
+  RANK, 
+  TOP_MASTERIES
+} 
+ 

@@ -1,27 +1,31 @@
 import infoData from '../static/info.json';
 import axios, { AxiosError, ResponseType } from 'axios';
-import { DragonCulture, RiotTokenType } from '../declarations/enum';
+import { ApiRiotMethod, DragonCulture, RiotTokenType } from '../declarations/enum';
 import EnvVars from '../declarations/major/EnvVars';
-import { RegionRegionData } from '../declarations/types';
+import { RegionData } from '../declarations/types';
 import { RouteError } from '../declarations/classes';
 import HttpStatusCodes from '../declarations/major/HttpStatusCodes';
 import { IChampion, IChampionInfo, ChampionInfoExt } from '../models/riot/ChampionInfo';
 import { DragonService } from './dragon-service';
+import { getBoolean } from '../declarations/functions';
+import { ApiParameters } from '../models/riot/ApiParameters';
 
 // **** Variables **** //
 
 // Errors
 export const errors = {
     unauth: 'Unauthorized',
-    invalidRegion: (region: string) => `Region parameters "${region}" is invalid.`,
+    errParamsIsInvalid: (paramsName: string, region: string) => `The parameters '${paramsName}' with value '${region}' is invalid.`,
+    errParamsIsMissing: (params: string) => `The parameter '${params}' is mandatory.`,
     errInFunction: (functionName: string) => `An error occured in "RiotService.${functionName}"`,
     errChampionNotExist: (list: string, championId: string) => `Cannot add ${championId} in ${list}. Champion doesn't exists, please try to update dragon file.`,
+
 } as const;
 
 export class RiotService {
 
     static autorizedRegion = ['BR1', 'EUN1', 'EUW1', 'JP1', 'KR', 'LA1', 'LA2', 'NA1', 'OC1', 'TR1', 'RU'];
-    static regionDataMapping: RegionRegionData = {
+    static regionDataMapping: RegionData = {
         // BR1
         'BR': 'BR1',
         'BR1': 'BR1',
@@ -58,10 +62,12 @@ export class RiotService {
      * @param region
      * @returns
      */
-    static convertToRealRegion(region: string) {
+    static convertToRealRegion(region: string): string {
         const realRegion: string = RiotService.regionDataMapping[region.toUpperCase()];
-        if (!RiotService.autorizedRegion.includes(realRegion)) {
-            throw new RouteError(HttpStatusCodes.BAD_REQUEST, errors.invalidRegion(region));
+        if (typeof region === 'undefined' || region.trim().length === 0) {
+            throw new RouteError(HttpStatusCodes.BAD_REQUEST, errors.errParamsIsMissing('region'));
+        } else if (!RiotService.autorizedRegion.includes(realRegion)) {
+            throw new RouteError(HttpStatusCodes.BAD_REQUEST, errors.errParamsIsInvalid('region', region));
         } else {
             return realRegion;
         }
@@ -181,6 +187,110 @@ export class RiotService {
     }
 }
 
+export class RiotQueryValidation {
+
+      /**
+     * Valid the summonerName
+     * @param summonerName 
+     */
+       static validateSummonerName(summonerName: string): void {
+        if (typeof summonerName === 'undefined' || summonerName.trim().length === 0) {
+            throw new RouteError(HttpStatusCodes.BAD_REQUEST, errors.errParamsIsMissing('summonerName'));
+
+        } else if (!RiotQueryValidation.isValidSummonerName(summonerName)) {
+            throw new RouteError(HttpStatusCodes.BAD_REQUEST, errors.errParamsIsInvalid('summonerName', summonerName));
+        }
+    }
+
+    private static isValidSummonerName(summonerName: string) {
+        // https://developer.riotgames.com/getting-started.html
+        // https://stackoverflow.com/questions/20690499/concrete-javascript-regex-for-accented-characters-diacritics
+        // Ex: βlue Łagoon
+        let valid = false;
+        if (typeof summonerName !== 'undefined' && summonerName.trim().length >= 0) {
+
+            const arrUsernames = summonerName.trim().split(';');
+            /* eslint-disable no-shadow */
+            /* eslint-disable no-unused-vars */
+            arrUsernames.forEach(function myFunction(summonerName) {
+                if (summonerName.length < 3 || summonerName.length > 16) {
+                    return false;
+                }
+
+                // MBB 2021-08-31 : Désactivation temporaire de la validation
+                /*
+                var re = new RegExp('^[0-9\u00C0-\u024F _.αβŁ\\w]+$', 'giu');
+                if (re.test(summonerName)) {
+                    valid = true;
+                }
+                */
+                valid = true;
+            });
+        }
+        return valid;
+    }
+
+    /**
+     * Fix optional parameters for RIOT Query
+     * @param method 
+     * @param queryParams 
+     */
+    static fixOptionalParams(method: ApiRiotMethod, queryParameters: any): ApiParameters {
+        let optionalParam: ApiParameters = new ApiParameters();
+
+        switch (method) {
+            case ApiRiotMethod.RANK:
+                const defaultLp: boolean = true;
+                const defaultShowType: boolean = true;
+                const defaultShowWinRate: boolean = true;
+                const defaultShowAllQueue: boolean = false;
+                const defaultFQ: boolean = true;
+                const defaultFullString: boolean = false;
+                const defaultSeries: string = '✓X-';
+                const defaultQueue: string = 'solo5';
+
+                // Show LP
+                // if (typeof queryParameters.lp !== 'undefined' && queryParameters.lp.trim().length > 0) {
+                //     optionalParam.showLp = getBoolean(queryParameters.lp);
+                // }
+                optionalParam.showLp = (queryParameters?.lp ?? defaultLp);
+                optionalParam.showQueueType = (queryParameters?.type ?? defaultShowType);
+                optionalParam.showAllQueueInfo = ((queryParameters?.all) ?? defaultShowAllQueue);
+                optionalParam.showFQ = (queryParameters?.fq ?? defaultFQ);
+
+                optionalParam.series = (queryParameters?.series ?? defaultSeries);
+                optionalParam.queueType = ((queryParameters?.queuetype || queryParameters?.qt) ?? defaultQueue);
+                optionalParam.showFullString = ((queryParameters?.fullstring || queryParameters?.fs) ?? defaultFullString);
+
+                optionalParam.showWinRate = ((queryParameters?.winrate || queryParameters?.wr) ?? defaultShowWinRate);
+
+                // Series value [Win/Lose/NoResult]
+                // if (!queryParams || typeof queryParams?.series == "undefined" || queryParams?.series.length !== 3) {
+                //     queryParams.series = defaultSeries;
+                // }
+
+                break;
+
+            case ApiRiotMethod.ROTATE:
+                // No optional parameters
+                break;
+
+            case ApiRiotMethod.SUMMONER_INFO:
+                // No optional parameters
+                break;
+
+            case ApiRiotMethod.TOP_MASTERIES:
+                optionalParam.nbMasteries = (queryParameters?.nb ?? 5);
+                // if (!queryParameters || typeof queryParameters?.nb == "undefined" || queryParameters?.nb < 0) {
+                //     queryParameters.nb = defaultNbValue;
+                // }
+                break;
+        }
+
+        return optionalParam;
+    }
+}
+
 // **** Functions **** //
 
 /**
@@ -213,7 +323,7 @@ async function getRiotRotate(region: string): Promise<ChampionInfoExt> {
     });
 
     if (rotate) {
-         await RiotService.getRotate(rotate).then(result => {
+        await RiotService.getRotate(rotate).then(result => {
             result.freeChampion.sort(function (a, b) {
                 return a.name.localeCompare(b.name);
             });
@@ -235,5 +345,6 @@ async function getRiotRotate(region: string): Promise<ChampionInfoExt> {
 export default {
     errors,
     RiotService,
+    RiotQueryValidation,
     getRiotRotate,
 } as const;

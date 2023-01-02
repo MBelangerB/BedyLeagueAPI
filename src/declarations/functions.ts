@@ -25,3 +25,15 @@ export function tick(milliseconds: number): Promise<void> {
     }, milliseconds);
   });
 }
+
+export function getBoolean(value: any){
+  switch(value){
+       case true:
+       case "true":
+       case 1:
+       case "1":
+           return true;
+       default: 
+           return false;
+   }
+}
