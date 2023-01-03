@@ -2,7 +2,7 @@
 const validator = require('../../util/validator');
 const staticFunc = require('../../util/staticFunction');
 
-const { SummonerInfo } = require('../../module/lol/summoner');
+const { RiotSummonerController } = require('../../controller/riot/RiotSummonerController');
 const LeagueEntry = require('../../module/lol/rank');
 
 /* GET Rank. */
@@ -19,73 +19,71 @@ exports.rank = async function (req, res) {
         validator.parameters.validateCulture(params);
 
         // Gestion des paramètres
-        let queryParameters;
-        const queryString = staticFunc.request.lowerQueryString(query);
-        console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
+        const urlParameters = staticFunc.request.parseUrlParameters(params, query);
+        console.log(`UrlParameters: ${JSON.stringify(urlParameters)}`);
 
         /*
-            On effectue initialement la validation des Params (region/platform/tag).
+            On effectue initialement la validation des Params (region/SummonerName).
             Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
             en QueryString
         */
-        let validationErrors = [];
-        if (params && Object.keys(params).length > 1) {
-            validationErrors = validator.lol.validateParams(params, validator.lol.METHOD_ENUM.RANK);
-            queryParameters = params;
-        } else {
-            validationErrors = validator.lol.validateParams(queryString, validator.lol.METHOD_ENUM.RANK);
-            queryParameters = queryString;
-        }
+        let validationErrors = validator.lol.validateParams(urlParameters, validator.lol.METHOD_ENUM.RANK);
         if (validationErrors && validationErrors.length > 0) {
-            console.error('Error in validationErrors');
-            console.error(validationErrors);
-            return res.status(400).send('Invalid parameters, please try again');
+            res.send(validationErrors);
+            return;
         }
-        validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters, validator.lol.METHOD_ENUM.RANK);
+        validator.lol.fixOptionalParams(urlParameters, validator.lol.METHOD_ENUM.RANK);
 
         /*
-            Obtenir initiale le summoner pour avoir EncryptedAccountID
+            On call le RiotSummoner controller qui vérifie si l'information est dans la BD
+            Si oui, on utilise cette information.
+            Si non, on call API de Riot et on ajoutes l'item en BD.
+
+            Si l'information est présente en BD, on valide qu'elle soit a jours (1 update au 12 heures)
         */
-        const summoner = new SummonerInfo(queryParameters);
+        let result = await RiotSummonerController.findSummoner(urlParameters).then(success => {
+            return success;
 
-        await summoner.getSummonerInfo().then(async function (result) {
-            if (result.code === 200) {
-                return result.data;
-            } else if (result.code === 403 || result.code === 404) {
-                return res.status(result.code).send(`The summoner ${summoner?.summonerName} doesn't exist.`);  
+        }).catch(ex => {
+            console.error(ex);
+            if (ex.code == 404 && ex.error.message != '') {
+                res.status(404).send(ex.error.message);
+            } else if (ex.error.stack) {
+                res.status(500).send(ex.error.stack);
+            } else {
+                res.status(500).send(ex);
             }
-        }).catch(error => {
-            console.error('An error occured during getSummonerInfo');
-            console.error(`${error.code} - ${error.err.statusMessage}`);
-            res.status(400).send('A error occured, please try again');
-            return;
         });
-        queryParameters.summoner = summoner.summonerInfo;
 
-        if (res.statusCode === 200 && queryParameters.summoner.id !== '') {
-            const leagueEntries = new LeagueEntry(queryParameters);
-            await leagueEntries.getLeagueRank().then(async function (rankResult) {
-                if (rankResult.code === 200) {
-                    await leagueEntries.getReturnValue().then(result => {
-                        if (leagueEntries.getJson && leagueEntries.getJson == true) {
-                            res.json(result);
-                        } else {
-                            res.send(result);
-                        }
-                    });
-                }
-                return;
-    
-            }).catch(error => {
-                console.error('An error occured during getLeagueRank');
-                console.error(`${error.code} - ${error.err.statusMessage}`);
-                res.status(400).send('A error occured, please try again');
-                return;
-            });
+        if (result) {
+            urlParameters.dbSummoner = result;
+
+            if (res.statusCode === 200 && result.riotId !== '') {
+                const leagueEntries = new LeagueEntry(urlParameters);
+                await leagueEntries.getLeagueRank().then(async function (rankResult) {
+                    if (rankResult.code === 200) {
+                        await leagueEntries.getReturnValue().then(result => {
+                            if (leagueEntries.getJson && leagueEntries.getJson == true) {
+                                res.json(result);
+                            } else {
+                                res.send(result);
+                            }
+                        });
+                    }
+                    return;
+        
+                }).catch(error => {
+                    console.error('An error occured during getLeagueRank');
+                    console.error(`${error.code} - ${error.err.statusMessage}`);
+                    res.status(400).send('A error occured, please try again');
+                    return;
+                });
+            }
         }
+
     } catch (ex) {
-        console.error('Error in GetRank');
+        console.error('A error occured in GetRank');
         console.error(ex);
-        res.status(500).send('A error occured, please try again');
+        res.status(500).send(ex);
     }
 };
