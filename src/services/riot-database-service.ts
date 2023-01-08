@@ -34,11 +34,13 @@ export class RiotDatabaseService {
             // Check if RiotID exist, occured if a summoner change his SummonerName
             /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
             await RIOT_Summoner.findSummonerByRiotId(summonerInfo.id).then((result: any) => {
-                entity = result;
-                dbSummoner = BedyMapper.MapToRiotSummoner(result, true);
+                if (result) {
+                    entity = result;
+                    dbSummoner = BedyMapper.MapToRiotSummoner(result, true);
+                }
             });
 
-            if (dbSummoner !== null || typeof dbSummoner !== 'undefined') {
+            if (dbSummoner !== null && typeof dbSummoner !== 'undefined') {
                 // If summonerName has change
                 if (dbSummoner?.name !== summonerInfo.name) {
                     await RIOT_SummonerHistory.addSummonerHistory(dbSummoner?.id, dbSummoner?.name, dbSummoner?.summonerLevel);
@@ -46,8 +48,11 @@ export class RiotDatabaseService {
                 // Cant update because WE NEED original object
                 await entity.updateSummonerInfo(summonerInfo.name, summonerInfo.summonerLevel, summonerInfo.profileIconId);
             } else {
-                dbSummoner = await RIOT_Summoner.addSummoner(summonerInfo.id, summonerInfo.accountId, summonerInfo.puuid,
+                entity = await RIOT_Summoner.addSummoner(summonerInfo.id, summonerInfo.accountId, summonerInfo.puuid,
                     summonerInfo.name, summonerInfo.summonerLevel, summonerInfo.profileIconId, region);
+
+                // Entity dont exists in DB we return API entity
+                dbSummoner = summonerInfo;
             }
 
             /* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */

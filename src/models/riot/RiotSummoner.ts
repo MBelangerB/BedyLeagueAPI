@@ -4,7 +4,7 @@ import { BedyMapper } from '../../mapper/mapper';
 
 moment.locale(EnvVars.culture);
 
-  /* eslint-disable-next-line @typescript-eslint/no-var-requires */
+/* eslint-disable-next-line @typescript-eslint/no-var-requires */
 const { sequelize } = require('../../db/dbSchema');
 const { RIOT_Summoner } = sequelize.models;
 
@@ -24,8 +24,8 @@ export interface IRiotSummoner {
     expiredKey?: Date;
 
     // Function
-    requireUpdate() : boolean;
-    toString() : string;
+    requireUpdate(): boolean;
+    toString(): string;
 }
 
 export class RiotSummoner implements IRiotSummoner {
@@ -39,13 +39,13 @@ export class RiotSummoner implements IRiotSummoner {
     dbId?: string | undefined;
     expiredKey?: Date | undefined;
 
-    requireUpdate() : boolean {
+    requireUpdate(): boolean {
         if (this.dbId) {
             const lastUpdate = moment(this.revisionDate);
             if (moment().diff(lastUpdate, 'hours') >= EnvVars.config.updateDelay) {
-              return true;
+                return true;
             } else {
-              return false;
+                return false;
             }
         }
         return false; // it's not a DB user, update isn't important
@@ -65,22 +65,19 @@ export interface ISummonerInfo {
 
 async function getRiotSummonerByName(summonerName: string, region: string): Promise<RiotSummoner> {
     // Get Summoner on DB
-    let summoner: RiotSummoner | null = new RiotSummoner();
+    let summoner: RiotSummoner;
 
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     await RIOT_Summoner.findSummonerBySummonerName(summonerName, region).then((dbResult: any) => {
-        summoner = BedyMapper.MapToRiotSummoner(dbResult, true);
-
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        if (dbResult) {
+            summoner = BedyMapper.MapToRiotSummoner(dbResult, true);
+        }
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     }).catch((error: any) => {
         throw error;
     });
 
-    if (!summoner) {
-        throw Error('Null summoner');
-    }
-
-    return summoner;
+    return summoner!;
 }
 
 export default {

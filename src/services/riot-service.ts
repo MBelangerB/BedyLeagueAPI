@@ -364,6 +364,8 @@ async function getRiotRotate(region: string): Promise<ChampionInfoExt> {
 
         if (err instanceof AxiosError) {
             console.error(err.message);
+        } else if (err.response && err.response.data) {
+            console.error(err.response.data);
         } else {
             console.error(err);
         }

@@ -133,7 +133,7 @@ async function getSummonerInfo(req: Request, response: Response) {
             }
         }
 
-    } catch (ex) {
+    } catch (ex: any) {
         if (ex instanceof RouteError) {
             return response.status((ex as RouteError).status).send((ex as RouteError).message);
 
@@ -146,6 +146,9 @@ async function getSummonerInfo(req: Request, response: Response) {
                 return response.status(status).send(message);
             }
             return response.status(HttpStatusCodes.BAD_REQUEST).send((ex as AxiosError).message);
+
+        } else if (ex.status !== null) {
+            return response.status(ex.status).send(ex.statusText);
         }
         return response.status(HttpStatusCodes.BAD_REQUEST).send(ex);
     }
