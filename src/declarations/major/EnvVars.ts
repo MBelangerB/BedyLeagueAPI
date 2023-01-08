@@ -4,6 +4,10 @@ dotenv.config();
 export default {
   nodeEnv: (process.env.NODE_ENV ?? 'development'),
   port: (process.env.PORT ?? 3000),
+  culture: (process.env.culture ?? 'fr'),
+  config: {
+    updateDelay: (process.env.updateDelay ?? 12),
+  },
   jwt: {
     secret: (process.env.JWT_SECRET ?? ''),
     exp: (process.env.COOKIE_EXP ?? ''), // exp at the same time as the cookie

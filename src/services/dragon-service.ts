@@ -6,7 +6,6 @@ import { DragonCulture } from '../declarations/enum';
 import { IChampion } from '../models/riot/ChampionInfo';
 import { ReturnData } from '../models/IReturnData';
 import HttpStatusCodes from '../declarations/major/HttpStatusCodes';
-import { AxiosError } from 'axios';
 
 // **** Variables **** //
 
@@ -166,7 +165,7 @@ export class DragonService {
                     console.error(localization.errReadDragonFile);
                     console.error(ex);
                 }
-  
+
                 reject(fileData);
                 return;
             }
@@ -364,8 +363,8 @@ async function updateDragon(forceUpdate = false, dragonCulture: DragonCulture): 
     if (!needUpdate && !forceUpdate) {
         await DragonService.readDragonFile(dragonFileName.champion, dragonCulture).then(content => {
             if (content && content.version) {
-                let newVersion: number =  dragonModel.castToNumber(content.version);
-                let currentVersion: number = dragonModel.castToNumber(dataDragon.currentVersion as string);
+                const newVersion: number = dragonModel.castToNumber(content.version);
+                const currentVersion: number = dragonModel.castToNumber(dataDragon.currentVersion as string);
                 needUpdate = (newVersion < currentVersion);
             } else {
                 needUpdate = true;
@@ -375,14 +374,14 @@ async function updateDragon(forceUpdate = false, dragonCulture: DragonCulture): 
             if (!err) {
                 needUpdate = true;
             }
-        })
+        });
     }
 
     // Si changement de langue, il faudrait un moyen de keep info pour télécharger
     if (needUpdate || forceUpdate) {
         const dragonChampionUrl = infoData.dragon.champions.replace('{version}', dataDragon.currentVersion as string).replace('{lang}', dragonCulture);
         const dragonProfileIconsUrl = infoData.dragon.profileIcons.replace('{version}', dataDragon.currentVersion as string).replace('{lang}', dragonCulture);
-    
+
         await DragonService.downloadDragonFile(dragonChampionUrl, dragonCulture, returnData).then(state => {
             return state;
         }).catch(err => {

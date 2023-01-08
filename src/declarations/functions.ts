@@ -26,14 +26,15 @@ export function tick(milliseconds: number): Promise<void> {
   });
 }
 
-export function getBoolean(value: any){
-  switch(value){
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+export function getBoolean(value: any) {
+  switch (value) {
        case true:
-       case "true":
+       case 'true':
        case 1:
-       case "1":
+       case '1':
            return true;
-       default: 
+       default:
            return false;
    }
 }

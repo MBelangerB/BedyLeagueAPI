@@ -1,31 +1,31 @@
 export interface IApiParameters {
     /*
     json :
-        Default: False 
+        Default: False
         Response is return JSON object
-    series : 
-        Default: '✓X-' 
+    series :
+        Default: '✓X-'
         Specifie les valeur a utilisé en BO.
-    nb  : 
+    nb  :
         Default: 5
         Method : Masteries
-        
-    lp  : 
+
+    lp  :
         Default : True
         Method : Ranked
         Afficher le nombre de LP dans la chaine de retour
     type
         Default : True
         Method : Ranked
-        Afficher le type de queue   
+        Afficher le type de queue
     winrate
         Default : True
         Method : Ranked
-        Afficher le WinRate 
+        Afficher le WinRate
     all
         Default : False
         Method : Ranked
-        Afficher les informations de toutes les Queues disponible  
+        Afficher les informations de toutes les Queues disponible
     queuetype
         Default : True
         Method : Ranked
@@ -85,15 +85,15 @@ export interface IApiParameters {
 }
 
 export class ApiParameters implements IApiParameters {
-    json: boolean = false;
-    nbMasteries: number = 5;
-    series: string= '✓X-';
-    showLp: boolean = true;
-    showWinRate: boolean= true;
-    showQueueType: boolean= true;
-    showAllQueueInfo: boolean = false;
-    showFullString: boolean = false;
-    queueType: string = 'solo5';
-    showFQ: boolean = false;
-    
+    json = false;
+    nbMasteries = 5;
+    series = '✓X-';
+    showLp = true;
+    showWinRate = true;
+    showQueueType = true;
+    showAllQueueInfo = false;
+    showFullString = false;
+    queueType = 'solo5';
+    showFQ = false;
+
 }

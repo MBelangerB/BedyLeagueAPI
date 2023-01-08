@@ -7,8 +7,11 @@ import { RouteError } from '../declarations/classes';
 import HttpStatusCodes from '../declarations/major/HttpStatusCodes';
 import { IChampion, IChampionInfo, ChampionInfoExt } from '../models/riot/ChampionInfo';
 import { DragonService } from './dragon-service';
-import { getBoolean } from '../declarations/functions';
+// import { getBoolean } from '../declarations/functions';
 import { ApiParameters } from '../models/riot/ApiParameters';
+import { RiotSummoner } from '../models/riot/RiotSummoner';
+// import { ReturnData } from '../models/IReturnData';
+import { BedyMapper } from '../mapper/mapper';
 
 // **** Variables **** //
 
@@ -191,7 +194,7 @@ export class RiotQueryValidation {
 
       /**
      * Valid the summonerName
-     * @param summonerName 
+     * @param summonerName
      */
        static validateSummonerName(summonerName: string): void {
         if (typeof summonerName === 'undefined' || summonerName.trim().length === 0) {
@@ -232,37 +235,37 @@ export class RiotQueryValidation {
 
     /**
      * Fix optional parameters for RIOT Query
-     * @param method 
-     * @param queryParams 
+     * @param method
+     * @param queryParams
      */
     static fixOptionalParams(method: ApiRiotMethod, queryParameters: any): ApiParameters {
-        let optionalParam: ApiParameters = new ApiParameters();
+        const optionalParam: ApiParameters = new ApiParameters();
 
         switch (method) {
             case ApiRiotMethod.RANK:
-                const defaultLp: boolean = true;
-                const defaultShowType: boolean = true;
-                const defaultShowWinRate: boolean = true;
-                const defaultShowAllQueue: boolean = false;
-                const defaultFQ: boolean = true;
-                const defaultFullString: boolean = false;
-                const defaultSeries: string = '✓X-';
-                const defaultQueue: string = 'solo5';
+                // const defaultLp: boolean = true;
+                // const defaultShowType: boolean  = true;
+                // const defaultShowWinRate: boolean  = true;
+                // const defaultShowAllQueue: boolean  = false;
+                // const defaultFQ: boolean  = true;
+                // const defaultFullString: boolean  = false;
+                // const defaultSeries: string = '✓X-';
+                // const defaultQueue: string = 'solo5';
 
                 // Show LP
                 // if (typeof queryParameters.lp !== 'undefined' && queryParameters.lp.trim().length > 0) {
                 //     optionalParam.showLp = getBoolean(queryParameters.lp);
                 // }
-                optionalParam.showLp = (queryParameters?.lp ?? defaultLp);
-                optionalParam.showQueueType = (queryParameters?.type ?? defaultShowType);
-                optionalParam.showAllQueueInfo = ((queryParameters?.all) ?? defaultShowAllQueue);
-                optionalParam.showFQ = (queryParameters?.fq ?? defaultFQ);
+                optionalParam.showLp = (queryParameters?.lp ?? true);
+                optionalParam.showQueueType = (queryParameters?.type ?? true);
+                optionalParam.showAllQueueInfo = ((queryParameters?.all) ?? false);
+                optionalParam.showFQ = (queryParameters?.fq ?? true);
 
-                optionalParam.series = (queryParameters?.series ?? defaultSeries);
-                optionalParam.queueType = ((queryParameters?.queuetype || queryParameters?.qt) ?? defaultQueue);
-                optionalParam.showFullString = ((queryParameters?.fullstring || queryParameters?.fs) ?? defaultFullString);
+                optionalParam.series = (queryParameters?.series ?? '✓X-');
+                optionalParam.queueType = ((queryParameters?.queuetype || queryParameters?.qt) ?? 'solo5');
+                optionalParam.showFullString = ((queryParameters?.fullstring || queryParameters?.fs) ?? false);
 
-                optionalParam.showWinRate = ((queryParameters?.winrate || queryParameters?.wr) ?? defaultShowWinRate);
+                optionalParam.showWinRate = ((queryParameters?.winrate || queryParameters?.wr) ?? true);
 
                 // Series value [Win/Lose/NoResult]
                 // if (!queryParams || typeof queryParams?.series == "undefined" || queryParams?.series.length !== 3) {
@@ -340,6 +343,37 @@ async function getRiotRotate(region: string): Promise<ChampionInfoExt> {
     return rotateResult;
 }
 
+/**
+ * Function called by API for prepare the data
+ * @param region
+ * @param json
+ * @returns
+ */
+ async function getRiotSummonerByName(summonerName: string, region: string): Promise<RiotSummoner> {
+    const summonerUrl = infoData.lol.routes.summoner.v4.getBySummonerName.replace('{summonerName}', summonerName).replace('{region}', region);
+    let summoner: RiotSummoner = new RiotSummoner();
+
+    // Step 1 : Get SummonerInfo
+    // TODO: Cache for Riot Info
+    await RiotService.callRiotAPI(summonerUrl, RiotTokenType.LOL).then(result => {
+        summoner = BedyMapper.MapToRiotSummoner(result);
+
+    }).catch(err => {
+        // TODO: Est-ce que le retour devrait être un type avec : code, errMessage, data (ChampionInfoExt)
+        console.error(errors.errInFunction('getRiotSummonerByName'));
+
+        if (err instanceof AxiosError) {
+            console.error(err.message);
+        } else {
+            console.error(err);
+        }
+
+        throw err;
+    });
+
+    return summoner;
+}
+
 // **** Export default **** //
 
 export default {
@@ -347,4 +381,5 @@ export default {
     RiotService,
     RiotQueryValidation,
     getRiotRotate,
+    getRiotSummonerByName,
 } as const;

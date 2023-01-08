@@ -62,7 +62,6 @@ lolRouter.get(lol_routes.routes.SUMMONER_INFO,
   });
 
 
-
 // **** Export default **** //
 export default {
   homeRouter,

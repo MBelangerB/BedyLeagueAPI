@@ -33,6 +33,7 @@
     "moment": "^2.29.4",
     "morgan": "^1.10.0",
     "path": "^0.12.7",
+    "sequelize": "^6.28.0",
     "util": "^0.12.5"
   },
   "devDependencies": {
@@ -43,7 +44,8 @@
     "@types/express": "^4.17.15",
     "@types/fs-extra": "^9.0.13",
     "@types/morgan": "^1.9.3",
-    "@types/node": "^18.11.17",
+    "@types/node": "^18.11.18",
+    "@types/validator": "^13.7.10",
     "@typescript-eslint/eslint-plugin": "^5.47.1",
     "@typescript-eslint/parser": "^5.47.1",
     "concurrently": "^7.6.0",

@@ -17,9 +17,8 @@ export enum RiotTokenType {
 }
 
 export enum ApiRiotMethod {
-  ROTATE, 
+  ROTATE,
   SUMMONER_INFO,
-  RANK, 
+  RANK,
   TOP_MASTERIES
-} 
- 
+}

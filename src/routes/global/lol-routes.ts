@@ -7,6 +7,9 @@ import { ChampionInfoExt } from '../../models/riot/ChampionInfo';
 import { AxiosError } from 'axios';
 import { ApiRiotMethod } from '../../declarations/enum';
 import { ApiParameters } from '../../models/riot/ApiParameters';
+import { RiotDatabaseService } from '../../services/riot-database-service';
+// import { ReturnData } from '../../models/IReturnData';
+import summoner, { RiotSummoner } from '../../models/riot/RiotSummoner';
 // import { isNumberObject } from 'util/types';
 
 
@@ -111,9 +114,24 @@ async function getSummonerInfo(req: Request, response: Response) {
     try {
         region = RiotService.convertToRealRegion(region);
         RiotQueryValidation.validateSummonerName(summonerName);
+        console.api(`BaseUrl: ${req.originalUrl}, Params: ${JSON.stringify(req.params)}, Query: ${JSON.stringify(req.query)}`);
 
+        let dbSummoner: RiotSummoner = await summoner.getRiotSummonerByName(summonerName, region);
+        if (!dbSummoner || dbSummoner.requireUpdate()) {
+            // No db result or expired
+            const apiSummoner: RiotSummoner | null = await riot.getRiotSummonerByName(summonerName, region);
+            if (apiSummoner) {
+                dbSummoner = await RiotDatabaseService.createOrUpdateSummoner(apiSummoner, region);
+            }
+        }
 
-        return response.status(HttpStatusCodes.OK).send('To do');
+        if (dbSummoner) {
+            if (json) {
+                response.status(HttpStatusCodes.OK).json(dbSummoner);
+            } else {
+                response.status(HttpStatusCodes.OK).send(dbSummoner.toString());
+            }
+        }
 
     } catch (ex) {
         if (ex instanceof RouteError) {
