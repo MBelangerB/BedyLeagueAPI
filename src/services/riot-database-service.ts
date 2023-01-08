@@ -1,9 +1,12 @@
 import { BedyMapper } from '../mapper/mapper';
 import { RiotSummoner } from '../models/riot/RiotSummoner';
 
-// **** Variables **** //
+/* eslint-disable-next-line @typescript-eslint/no-var-requires */
 const { sequelize } = require('../db/dbSchema');
 const { RIOT_Summoner, RIOT_SummonerHistory } = sequelize.models;
+
+
+// **** Variables **** //
 
 // Errors
 export const errors = {
@@ -24,6 +27,7 @@ export class RiotDatabaseService {
     static async createOrUpdateSummoner(summonerInfo: RiotSummoner, region: string): Promise<RiotSummoner> {
         try {
             let dbSummoner: RiotSummoner | undefined;
+            /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
             let entity: any;
 
             // todo: Promise
@@ -46,6 +50,7 @@ export class RiotDatabaseService {
                     summonerInfo.name, summonerInfo.summonerLevel, summonerInfo.profileIconId, region);
             }
 
+            /* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */
             return dbSummoner!;
 
             /* eslint-disable-next-line @typescript-eslint/no-explicit-any */

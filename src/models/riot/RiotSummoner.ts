@@ -4,7 +4,7 @@ import { BedyMapper } from '../../mapper/mapper';
 
 moment.locale(EnvVars.culture);
 
-// import sequelize = require('../../db/dbSchema');
+  /* eslint-disable-next-line @typescript-eslint/no-var-requires */
 const { sequelize } = require('../../db/dbSchema');
 const { RIOT_Summoner } = sequelize.models;
 
