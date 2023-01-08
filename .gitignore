@@ -14,10 +14,10 @@
 /jspm_packages/
 
 # Dragon Data
-**/static/dragon/
+**/static/dragon/*
 **/static/en)us/*.json
 **/static/fr_fr/*.json
-**/dragon/*
+# **/dragon/*
 
 # Public (autorize)
 !/web/*.txt
