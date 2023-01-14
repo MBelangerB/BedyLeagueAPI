@@ -333,7 +333,7 @@ export class RiotQueryValidation {
     }
 }
 
-// **** Functions **** //
+// **** Functions (Route call) **** //
 
 /**
  * Function called by API for prepare the data

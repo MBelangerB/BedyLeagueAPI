@@ -18,7 +18,11 @@ export const errors = {
 
 // **** Classes **** //
 
+/**
+ * Database call for obtains Riot information
+ */
 export class RiotDatabaseService {
+
     /**
      * [DB] Add Riot Summoner info on DB
      * @param {*} summonerInfo Information actuel provenant de API de Riot
@@ -73,8 +77,8 @@ export class RiotDatabaseService {
 
 // **** Functions **** //
 
-// **** Export default **** //
 
+// **** Export default **** //
 export default {
     errors,
     RiotDatabaseService,

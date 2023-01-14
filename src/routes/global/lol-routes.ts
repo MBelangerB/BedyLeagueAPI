@@ -34,6 +34,13 @@ const routes = {
 } as const;
 
 // **** Export function **** //
+
+/**
+ * [ROUTE] Get current rotate
+ * @param req 
+ * @param response 
+ * @returns 
+ */
 async function getRotate(req: Request, response: Response) {
     // TODO: Replace « newPlayer » by "enum". 0 (Free champ) - 1 (New player champs) - 2 (All champ, dans NewPlayer add *)
     // Default : 0
@@ -89,7 +96,7 @@ async function getRank(req: Request, response: Response) {
         const optionalParams: ApiParameters = RiotQueryValidation.fixOptionalParams(ApiRiotMethod.RANK, req.query);
         console.api(`BaseUrl: ${req.originalUrl}, Params: ${JSON.stringify(req.params)}, Query: ${JSON.stringify(req.query)}, Optional: ${JSON.stringify(optionalParams)}`);
 
-
+        
         return response.status(HttpStatusCodes.OK).send('To do');
 
     } catch (ex) {
@@ -110,6 +117,12 @@ async function getRank(req: Request, response: Response) {
     }
 }
 
+/**
+ * [ROUTE] Get summoner info
+ * @param req 
+ * @param response 
+ * @returns 
+ */
 async function getSummonerInfo(req: Request, response: Response) {
     // Mandatory params
     let region: string = (req.params?.region ?? req.query?.region);
@@ -161,6 +174,12 @@ async function getSummonerInfo(req: Request, response: Response) {
     }
 }
 
+/**
+ * [ROUTE] Get masteries
+ * @param req 
+ * @param response 
+ * @returns 
+ */
 async function getTopMasteries(req: Request, response: Response) {
     // Mandatory params
     let region: string = (req.params?.region ?? req.query?.region);

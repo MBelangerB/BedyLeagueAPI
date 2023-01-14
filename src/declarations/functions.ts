@@ -9,11 +9,20 @@
  * @param replaceWith new value
  * @returns
  */
-export function replaceAll(baseString: string, search: string, replaceWith: string) {
+export function replaceAll(baseString: string, search: string, replaceWith: string) : string {
   const searchRegExp = new RegExp(search, 'gi'); // Throws SyntaxError
   return baseString.replace(searchRegExp, replaceWith);
 }
 
+/**
+ * Cast a Object to JSON string
+ * @param data 
+ * @returns 
+ */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export function castDataToJSON(data: any) : string {
+  return JSON.stringify(data, null, 2);
+}
 
 /**
  * Wait for a certain number of milliseconds.

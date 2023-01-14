@@ -2,6 +2,7 @@ import fs, { readFileSync } from 'fs';
 import axios, { ResponseType } from 'axios';
 import path from 'path';
 import util from 'util';
+import { castDataToJSON } from '../declarations/functions';
 
 // **** Variables **** //
 export const basicPath = {
@@ -20,6 +21,9 @@ export const errors = {
 } as const;
 
 
+/**
+ * File process
+ */
 class FileService {
 
     /**
@@ -59,6 +63,12 @@ class FileService {
         return Promise.resolve(folder);
     }
 
+    /**
+     * Create a file and write it
+     * @param filePath 
+     * @param fileContent 
+     * @returns 
+     */
     static async writeFile(filePath: string, fileContent: string): Promise<string> {
         const file = new Promise<string>((resolve, reject) => {
             try {
@@ -81,73 +91,77 @@ class FileService {
         return Promise.resolve(file);
     }
 
+    // https://www.geeksforgeeks.org/node-js-fs-readfilesync-method/
+    /**
+     * Read a file content and return JSON Object
+     * @param filePath 
+     * @param fileEncoding 
+     * @param flag 
+     * @returns 
+     */
+    static async readInternalFile(filePath: string, fileEncoding: BufferEncoding = 'utf8', flag = 'r') {
+        const rawdata = readFileSync(filePath, { encoding: fileEncoding, flag: flag });
+        const data = JSON.parse(rawdata);
+        return data;
+    }
 
-}
-
-// https://www.geeksforgeeks.org/node-js-fs-readfilesync-method/
-async function readInternalFile(filePath: string, fileEncoding: BufferEncoding = 'utf8', flag = 'r') {
-    const rawdata = readFileSync(filePath, { encoding: fileEncoding, flag: flag });
-    const data = JSON.parse(rawdata);
-    return data;
-}
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-function castDataToJSON(data: any) {
-    return JSON.stringify(data, null, 2);
-}
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-async function downloadExternalFile(requestUrl: string, responseType: ResponseType = 'json'): Promise<any> {
-    const downloadResult = new Promise<any>(function (resolve, reject) {
-        try {
-            console.info(`Downloading the '${requestUrl}' file`);
-            axios(encodeURI(requestUrl),
-                {
-                    method: 'GET',
-                    responseType: responseType,
-                    responseEncoding: 'utf8', // default
-                    transformResponse: [function (data) {
-                        try {
-                            if (data) {
-                                // Do whatever you want to transform the data
-                                return JSON.parse(data);
+    /**
+     * Request a URL for read the file content
+     * @param requestUrl 
+     * @param responseType 
+     * @returns 
+     */
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    static async downloadExternalFile(requestUrl: string, responseType: ResponseType = 'json'): Promise<any> {
+        const downloadResult = new Promise<any>(function (resolve, reject) {
+            try {
+                console.info(`Downloading the '${requestUrl}' file`);
+                axios(encodeURI(requestUrl),
+                    {
+                        method: 'GET',
+                        responseType: responseType,
+                        responseEncoding: 'utf8', // default
+                        transformResponse: [function (data) {
+                            try {
+                                if (data) {
+                                    // Do whatever you want to transform the data
+                                    return JSON.parse(data);
+                                }
+                            } catch (ex) {
+                                return data;
                             }
-                        } catch (ex) {
-                            return data;
+                        }],
+                    }).then(response => {
+                        if (response.status === 200 && response.statusText === 'OK') {
+                            resolve(response.data);
+                        } else {
+                            console.error(errors.errGetExternal);
+                            console.error(response);
+                            reject(response);
                         }
-                    }],
-                }).then(response => {
-                    if (response.status === 200 && response.statusText === 'OK') {
-                        resolve(response.data);
-                    } else {
+
+                    }).catch(error => {
                         console.error(errors.errGetExternal);
-                        console.error(response);
-                        reject(response);
-                    }
+                        console.error(error);
 
-                }).catch(error => {
-                    console.error(errors.errGetExternal);
-                    console.error(error);
+                        reject(error);
+                    });
 
-                    reject(error);
-                });
+            } catch (ex) {
+                console.error(errors.errInternalGetExternal);
+                console.error(ex);
 
-        } catch (ex) {
-            console.error(errors.errInternalGetExternal);
-            console.error(ex);
+                reject(ex);
+            }
+        });
 
-            reject(ex);
-        }
-    });
+        return Promise.resolve(downloadResult);
+    }
 
-    return Promise.resolve(downloadResult);
 }
 
 export default {
     basicPath,
     errors,
     FileService,
-    readInternalFile,
-    downloadExternalFile,
-    castDataToJSON,
 } as const;
