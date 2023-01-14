@@ -15,7 +15,9 @@ homeRouter.get('/', function (req, res) {
   res.redirect('https://bedyapi.com');
 });
 
-// **** Setup Dragon routes **** //
+// *************************************** //
+// ****      Setup Dragon routes      **** //
+// *************************************** //
 const dragonRouter = express.Router();
 
 dragonRouter.get(dragon_routes.routes.HOME, function (req, res) {
@@ -30,9 +32,12 @@ dragonRouter.get(dragon_routes.routes.UPDATE, function (req, res) {
   return dragon_routes.updateDragon(req, res);
 });
 
+// *************************************** //
 // **** Setup League of Legend routes **** //
+// *************************************** //
 const lolRouter = express.Router();
 
+// TODO:
 lolRouter.get(lol_routes.routes.RANK, cors(), function (req, res) {
   return lol_routes.getRank(req, res);
 });
@@ -59,6 +64,18 @@ lolRouter.get(lol_routes.routes.SUMMONER_INFO,
   validate(['region', 'string', 'query'], ['summonerName', 'string', 'query']),
   function (req, res) {
     return lol_routes.getSummonerInfo(req, res);
+  });
+
+lolRouter.get(lol_routes.routes.TOP_MASTERIES,
+  validate(['region', 'string', 'query'], ['summonerName', 'string', 'query']),
+  function (req, res) {
+    return lol_routes.getTopMasteries(req, res);
+  });
+
+lolRouter.get(lol_routes.routes.TOP_MASTERIES_PARAMS,
+  validate(['region', 'string', 'params'], ['summonerName', 'string', 'params']),
+  function (req, res) {
+    return lol_routes.getTopMasteries(req, res);
   });
 
 

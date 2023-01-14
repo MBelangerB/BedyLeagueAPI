@@ -10,6 +10,7 @@ import { ApiParameters } from '../../models/riot/ApiParameters';
 import { RiotDatabaseService } from '../../services/riot-database-service';
 // import { ReturnData } from '../../models/IReturnData';
 import summoner, { RiotSummoner } from '../../models/riot/RiotSummoner';
+import { ChampionMastery } from '../../models/riot/ChampionMastery';
 // import { isNumberObject } from 'util/types';
 
 
@@ -71,6 +72,9 @@ async function getRotate(req: Request, response: Response) {
     }
 }
 
+// Utiliser les méthodes pour obtneir l'historique des parties du joueurs selon le type ranked
+// A partir de la date du début de la saison
+// POur les 10 premières parti histoire d'avoir historiques
 async function getRank(req: Request, response: Response) {
     // Mandatory params
     let region: string = (req.params?.region ?? req.query?.region);
@@ -82,6 +86,9 @@ async function getRank(req: Request, response: Response) {
     try {
         region = RiotService.convertToRealRegion(region);
         RiotQueryValidation.validateSummonerName(summonerName);
+        const optionalParams: ApiParameters = RiotQueryValidation.fixOptionalParams(ApiRiotMethod.RANK, req.query);
+        console.api(`BaseUrl: ${req.originalUrl}, Params: ${JSON.stringify(req.params)}, Query: ${JSON.stringify(req.query)}, Optional: ${JSON.stringify(optionalParams)}`);
+
 
         return response.status(HttpStatusCodes.OK).send('To do');
 
@@ -166,8 +173,27 @@ async function getTopMasteries(req: Request, response: Response) {
         region = RiotService.convertToRealRegion(region);
         RiotQueryValidation.validateSummonerName(summonerName);
         const optionalParams: ApiParameters = RiotQueryValidation.fixOptionalParams(ApiRiotMethod.TOP_MASTERIES, req.query);
+        console.api(`BaseUrl: ${req.originalUrl}, Params: ${JSON.stringify(req.params)}, Query: ${JSON.stringify(req.query)}, Optional: ${JSON.stringify(optionalParams)}`);
 
-        return response.status(HttpStatusCodes.OK).send('To do');
+        // Get Summoner
+        let dbSummoner: RiotSummoner = await summoner.getRiotSummonerByName(summonerName, region);
+        if (!dbSummoner || dbSummoner.requireUpdate()) {
+            // No db result or expired
+            const apiSummoner: RiotSummoner | null = await riot.getRiotSummonerByName(summonerName, region);
+            if (apiSummoner) {
+                dbSummoner = await RiotDatabaseService.createOrUpdateSummoner(apiSummoner, region);
+            }
+        }
+
+        // Get Masteries
+        let masteries: ChampionMastery = await riot.getRiotMasteries(dbSummoner.id, region);
+        if (masteries) {
+            if (json) {
+                return response.status(HttpStatusCodes.OK).json(masteries);
+            } else {
+                return response.status(HttpStatusCodes.OK).send(masteries.getResult(optionalParams.nbMasteries));
+            }
+        }
 
     } catch (ex) {
         if (ex instanceof RouteError) {

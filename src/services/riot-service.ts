@@ -12,6 +12,7 @@ import { ApiParameters } from '../models/riot/ApiParameters';
 import { RiotSummoner } from '../models/riot/RiotSummoner';
 // import { ReturnData } from '../models/IReturnData';
 import { BedyMapper } from '../mapper/mapper';
+import { ChampionMastery, ChampionMasteryExt, IChampionMastery } from '../models/riot/ChampionMastery';
 
 // **** Variables **** //
 
@@ -188,15 +189,53 @@ export class RiotService {
 
         return Promise.resolve(process);
     }
+
+    static async getMasteries(masteries: Array<IChampionMastery>): Promise<ChampionMastery> {
+        const dragonChampionData: Array<IChampion> = await DragonService.readDragonChampionFile(DragonCulture.fr_fr);
+
+        const process = new Promise<ChampionMastery>(function (resolve: any, reject: any) {
+            let result: ChampionMastery = new ChampionMastery();
+
+            try {
+                masteries.forEach(function (info: IChampionMastery) {
+                    try {
+                        let champ: ChampionMasteryExt = new ChampionMasteryExt();
+                        champ.championLevel = info.championLevel;
+                        champ.championPoints = info.championPoints;
+                        champ.chestGranted = info.chestGranted;
+                        champ.championPointsUntilNextLevel = info.championPointsUntilNextLevel;
+                        champ.championPointsSinceLastLevel = info.championPointsSinceLastLevel;
+                        champ.tokensEarned = info.tokensEarned;
+                        champ.lastPlayTime = info.lastPlayTime;
+
+                        const dragonChamp = dragonChampionData.find(e => e.id === info.championId.toString());
+                        if (dragonChamp) {
+                            champ.champion = dragonChamp;
+                            result.championMastery.push(champ);
+                        }
+                    } catch (ex) {
+                        console.warn(errors.errChampionNotExist('freeChampions', info.championId.toString()));
+                    }
+                });
+
+            } catch (ex) {
+                reject(ex);
+            }
+
+            resolve(result);
+        });
+
+        return Promise.resolve(process);
+    }
 }
 
 export class RiotQueryValidation {
 
-      /**
-     * Valid the summonerName
-     * @param summonerName
-     */
-       static validateSummonerName(summonerName: string): void {
+    /**
+   * Valid the summonerName
+   * @param summonerName
+   */
+    static validateSummonerName(summonerName: string): void {
         if (typeof summonerName === 'undefined' || summonerName.trim().length === 0) {
             throw new RouteError(HttpStatusCodes.BAD_REQUEST, errors.errParamsIsMissing('summonerName'));
 
@@ -344,12 +383,12 @@ async function getRiotRotate(region: string): Promise<ChampionInfoExt> {
 }
 
 /**
- * Function called by API for prepare the data
+ * Function called by API for get RIOT Data API
  * @param region
  * @param json
  * @returns
  */
- async function getRiotSummonerByName(summonerName: string, region: string): Promise<RiotSummoner> {
+async function getRiotSummonerByName(summonerName: string, region: string): Promise<RiotSummoner> {
     const summonerUrl = infoData.lol.routes.summoner.v4.getBySummonerName.replace('{summonerName}', summonerName).replace('{region}', region);
     let summoner: RiotSummoner = new RiotSummoner();
 
@@ -376,6 +415,60 @@ async function getRiotRotate(region: string): Promise<ChampionInfoExt> {
     return summoner;
 }
 
+/**
+ * Function called by API for prepare the data
+ * @param region
+ * @param json
+ * @returns
+ */
+async function getRiotMasteries(summonerId: string, region: string): Promise<ChampionMastery> {
+    const masteriesUrl = infoData.lol.routes.championMastery.v4.getChampionMasteriesBySummoner.replace('{encryptedSummonerId}', summonerId).replace('{region}', region);
+    let masteries: Array<IChampionMastery> | null = null;
+    let masteriesResult: ChampionMastery = new ChampionMastery();
+
+    // Step 1 : Get SummonerInfo
+    // TODO: Cache for Riot Info
+    await RiotService.callRiotAPI(masteriesUrl, RiotTokenType.LOL).then(result => {
+        masteries = result;
+
+    }).catch(err => {
+        // TODO: Est-ce que le retour devrait être un type avec : code, errMessage, data (ChampionInfoExt)
+        console.error(errors.errInFunction('getRiotMasteries'));
+
+        if (err instanceof AxiosError) {
+            console.error(err.message);
+        } else {
+            console.error(err);
+        }
+
+        throw err;
+    });
+
+    if (masteries) {
+        // Prepare Data
+        await RiotService.getMasteries(masteries).then((result: ChampionMastery) => {
+            result.championMastery.sort(function (a, b) {
+                // Inverted ( < = -1 | > 1 )
+                if (a.championPoints < b.championPoints) {
+                    return 1;
+                }
+                if (a.championPoints > b.championPoints) {
+                    return -1;
+                }
+                // return 0;
+                return a.champion.name.localeCompare(b.champion.name);
+            });
+
+            masteriesResult = result;
+        }).catch(err => {
+            throw err;
+        });
+
+    }
+
+    return masteriesResult!;
+}
+
 // **** Export default **** //
 
 export default {
@@ -384,4 +477,5 @@ export default {
     RiotQueryValidation,
     getRiotRotate,
     getRiotSummonerByName,
+    getRiotMasteries
 } as const;
