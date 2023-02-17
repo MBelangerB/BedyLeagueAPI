@@ -1,18 +1,18 @@
-import infoData from '../static/info.json';
+// import infoData from '../static/info.json';
 import axios, { AxiosError, ResponseType } from 'axios';
 import { ApiRiotMethod, DragonCulture, RiotTokenType } from '../declarations/enum';
 import EnvVars from '../declarations/major/EnvVars';
 import { RegionData } from '../declarations/types';
 import { RouteError } from '../declarations/classes';
 import HttpStatusCodes from '../declarations/major/HttpStatusCodes';
-import { IChampion, IChampionInfo, ChampionInfoExt } from '../models/riot/ChampionInfo';
-import { DragonService } from './dragon-service';
+// import { IChampion, IChampionInfo, ChampionInfoExt } from '../models/riot/ChampionInfo';
+// import { DragonService } from './dragon-service';
 // import { getBoolean } from '../declarations/functions';
 import { ApiParameters } from '../models/riot/ApiParameters';
-import { RiotSummoner } from '../models/riot/RiotSummoner';
+// import { RiotSummoner } from '../models/riot/RiotSummoner';
 // import { ReturnData } from '../models/IReturnData';
-import { BedyMapper } from '../mapper/mapper';
-import { ChampionMastery, ChampionMasteryExt, IChampionMastery } from '../models/riot/ChampionMastery';
+// import { BedyMapper } from '../mapper/mapper';
+// import { ChampionMastery, ChampionMasteryExt, IChampionMastery } from '../models/riot/ChampionMastery';
 
 // **** Variables **** //
 
@@ -146,87 +146,87 @@ export class RiotService {
         return Promise.resolve(axiosQuery);
     }
 
-    /**
-     * Read Dragon file and initialize IChampionInfoExt
-     * @param rotate
-     * @returns
-     */
-    static async getRotate(rotate: IChampionInfo): Promise<ChampionInfoExt> {
-        const dragonChampionData: Array<IChampion> = await DragonService.readDragonChampionFile(DragonCulture.fr_fr);
+    // /**
+    //  * Read Dragon file and initialize IChampionInfoExt
+    //  * @param rotate
+    //  * @returns
+    //  */
+    // static async getRotate(rotate: IChampionInfo): Promise<ChampionInfoExt> {
+    //     const dragonChampionData: Array<IChampion> = await DragonService.readDragonChampionFile(DragonCulture.fr_fr);
 
-        const process = new Promise<ChampionInfoExt>(function (resolve: any, reject: any) {
-            const rotateResult: ChampionInfoExt = new ChampionInfoExt();
+    //     const process = new Promise<ChampionInfoExt>(function (resolve: any, reject: any) {
+    //         const rotateResult: ChampionInfoExt = new ChampionInfoExt();
 
-            try {
-                rotate.freeChampionIds.forEach(function (championId) {
-                    try {
-                        const dragonChamp = dragonChampionData.find(e => e.id === championId.toString());
-                        if (dragonChamp) {
-                            rotateResult.freeChampion.push(dragonChamp);
-                        }
-                    } catch (ex) {
-                        console.warn(errors.errChampionNotExist('freeChampions', championId.toString()));
-                    }
-                });
+    //         try {
+    //             rotate.freeChampionIds.forEach(function (championId) {
+    //                 try {
+    //                     const dragonChamp = dragonChampionData.find(e => e.id === championId.toString());
+    //                     if (dragonChamp) {
+    //                         rotateResult.freeChampion.push(dragonChamp);
+    //                     }
+    //                 } catch (ex) {
+    //                     console.warn(errors.errChampionNotExist('freeChampions', championId.toString()));
+    //                 }
+    //             });
 
-                rotate.freeChampionIdsForNewPlayers.forEach(function (championId) {
-                    try {
-                        const dragonChamp = dragonChampionData.find(e => e.id === championId.toString());
-                        if (dragonChamp) {
-                            rotateResult.freeChampionForNewPlayers.push(dragonChamp);
-                        }
-                    } catch (ex) {
-                        console.warn(errors.errChampionNotExist('freeChampionsForNewPlayers', championId.toString()));
-                    }
-                });
+    //             rotate.freeChampionIdsForNewPlayers.forEach(function (championId) {
+    //                 try {
+    //                     const dragonChamp = dragonChampionData.find(e => e.id === championId.toString());
+    //                     if (dragonChamp) {
+    //                         rotateResult.freeChampionForNewPlayers.push(dragonChamp);
+    //                     }
+    //                 } catch (ex) {
+    //                     console.warn(errors.errChampionNotExist('freeChampionsForNewPlayers', championId.toString()));
+    //                 }
+    //             });
 
-            } catch (ex) {
-                reject(ex);
-            }
+    //         } catch (ex) {
+    //             reject(ex);
+    //         }
 
-            resolve(rotateResult);
-        });
+    //         resolve(rotateResult);
+    //     });
 
-        return Promise.resolve(process);
-    }
+    //     return Promise.resolve(process);
+    // }
 
-    static async getMasteries(masteries: Array<IChampionMastery>): Promise<ChampionMastery> {
-        const dragonChampionData: Array<IChampion> = await DragonService.readDragonChampionFile(DragonCulture.fr_fr);
+    // static async getMasteries(masteries: Array<IChampionMastery>): Promise<ChampionMastery> {
+    //     const dragonChampionData: Array<IChampion> = await DragonService.readDragonChampionFile(DragonCulture.fr_fr);
 
-        const process = new Promise<ChampionMastery>(function (resolve: any, reject: any) {
-            let result: ChampionMastery = new ChampionMastery();
+    //     const process = new Promise<ChampionMastery>(function (resolve: any, reject: any) {
+    //         let result: ChampionMastery = new ChampionMastery();
 
-            try {
-                masteries.forEach(function (info: IChampionMastery) {
-                    try {
-                        let champ: ChampionMasteryExt = new ChampionMasteryExt();
-                        champ.championLevel = info.championLevel;
-                        champ.championPoints = info.championPoints;
-                        champ.chestGranted = info.chestGranted;
-                        champ.championPointsUntilNextLevel = info.championPointsUntilNextLevel;
-                        champ.championPointsSinceLastLevel = info.championPointsSinceLastLevel;
-                        champ.tokensEarned = info.tokensEarned;
-                        champ.lastPlayTime = info.lastPlayTime;
+    //         try {
+    //             masteries.forEach(function (info: IChampionMastery) {
+    //                 try {
+    //                     let champ: ChampionMasteryExt = new ChampionMasteryExt();
+    //                     champ.championLevel = info.championLevel;
+    //                     champ.championPoints = info.championPoints;
+    //                     champ.chestGranted = info.chestGranted;
+    //                     champ.championPointsUntilNextLevel = info.championPointsUntilNextLevel;
+    //                     champ.championPointsSinceLastLevel = info.championPointsSinceLastLevel;
+    //                     champ.tokensEarned = info.tokensEarned;
+    //                     champ.lastPlayTime = info.lastPlayTime;
 
-                        const dragonChamp = dragonChampionData.find(e => e.id === info.championId.toString());
-                        if (dragonChamp) {
-                            champ.champion = dragonChamp;
-                            result.championMastery.push(champ);
-                        }
-                    } catch (ex) {
-                        console.warn(errors.errChampionNotExist('freeChampions', info.championId.toString()));
-                    }
-                });
+    //                     const dragonChamp = dragonChampionData.find(e => e.id === info.championId.toString());
+    //                     if (dragonChamp) {
+    //                         champ.champion = dragonChamp;
+    //                         result.championMastery.push(champ);
+    //                     }
+    //                 } catch (ex) {
+    //                     console.warn(errors.errChampionNotExist('freeChampions', info.championId.toString()));
+    //                 }
+    //             });
 
-            } catch (ex) {
-                reject(ex);
-            }
+    //         } catch (ex) {
+    //             reject(ex);
+    //         }
 
-            resolve(result);
-        });
+    //         resolve(result);
+    //     });
 
-        return Promise.resolve(process);
-    }
+    //     return Promise.resolve(process);
+    // }
 }
 
 export class RiotQueryValidation {
@@ -335,139 +335,141 @@ export class RiotQueryValidation {
 
 // **** Functions (Route call) **** //
 
-/**
- * Function called by API for prepare the data
- * @param region
- * @param json
- * @returns
- */
-async function getRiotRotate(region: string): Promise<ChampionInfoExt> {
-    const RotateUrl = infoData.lol.routes.champion.v3.championRotation.replace('{region}', region);
-    let rotate: IChampionInfo | null = null;
-    let rotateResult: ChampionInfoExt = new ChampionInfoExt();
+// /**
+//  * Function called by API for prepare the data
+//  * @param region
+//  * @param json
+//  * @returns
+//  */
+// async function getRiotRotate(region: string): Promise<ChampionInfoExt> {
+//     const RotateUrl = infoData.lol.routes.champion.v3.championRotation.replace('{region}', region);
+//     let rotate: IChampionInfo | null = null;
+//     let rotateResult: ChampionInfoExt = new ChampionInfoExt();
 
-    // Step 1 : Get Rotate Info
-    // TODO: Cache for Riot Info
-    await RiotService.callRiotAPI(RotateUrl, RiotTokenType.LOL).then(result => {
-        rotate = result;
+//     // Step 1 : Get Rotate Info
+//     // TODO: Cache for Riot Info
+//     await RiotService.callRiotAPI(RotateUrl, RiotTokenType.LOL).then(result => {
+//         rotate = result;
 
-    }).catch(err => {
-        // TODO: Est-ce que le retour devrait être un type avec : code, errMessage, data (ChampionInfoExt)
-        console.error(errors.errInFunction('getRiotRotate'));
+//     }).catch(err => {
+//         // TODO: Est-ce que le retour devrait être un type avec : code, errMessage, data (ChampionInfoExt)
+//         console.error(errors.errInFunction('getRiotRotate'));
 
-        if (err instanceof AxiosError) {
-            console.error(err.message);
-        } else {
-            console.error(err);
-        }
+//         if (err instanceof AxiosError) {
+//             console.error(err.message);
+//         } else {
+//             console.error(err);
+//         }
 
-        throw err;
-    });
+//         throw err;
+//     });
 
-    if (rotate) {
-        await RiotService.getRotate(rotate).then(result => {
-            result.freeChampion.sort(function (a, b) {
-                return a.name.localeCompare(b.name);
-            });
-            result.freeChampionForNewPlayers.sort(function (a, b) {
-                return a.name.localeCompare(b.name);
-            });
+//     if (rotate) {
+//         await RiotService.getRotate(rotate).then(result => {
+//             result.freeChampion.sort(function (a, b) {
+//                 return a.name.localeCompare(b.name);
+//             });
+//             result.freeChampionForNewPlayers.sort(function (a, b) {
+//                 return a.name.localeCompare(b.name);
+//             });
 
-            rotateResult = result;
-        }).catch(err => {
-            throw err;
-        });
-    }
+//             rotateResult = result;
+//         }).catch(err => {
+//             throw err;
+//         });
+//     }
 
-    return rotateResult;
-}
+//     return rotateResult;
+// }
 
-/**
- * Function called by API for get RIOT Data API
- * @param region
- * @param json
- * @returns
- */
-async function getRiotSummonerByName(summonerName: string, region: string): Promise<RiotSummoner> {
-    const summonerUrl = infoData.lol.routes.summoner.v4.getBySummonerName.replace('{summonerName}', summonerName).replace('{region}', region);
-    let summoner: RiotSummoner = new RiotSummoner();
 
-    // Step 1 : Get SummonerInfo
-    // TODO: Cache for Riot Info
-    await RiotService.callRiotAPI(summonerUrl, RiotTokenType.LOL).then(result => {
-        summoner = BedyMapper.MapToRiotSummoner(result);
 
-    }).catch(err => {
-        // TODO: Est-ce que le retour devrait être un type avec : code, errMessage, data (ChampionInfoExt)
-        console.error(errors.errInFunction('getRiotSummonerByName'));
+// /**
+//  * Function called by API for get RIOT Data API
+//  * @param region
+//  * @param json
+//  * @returns
+//  */
+// async function getRiotSummonerByName(summonerName: string, region: string): Promise<RiotSummoner> {
+//     const summonerUrl = infoData.lol.routes.summoner.v4.getBySummonerName.replace('{summonerName}', summonerName).replace('{region}', region);
+//     let summoner: RiotSummoner = new RiotSummoner();
 
-        if (err instanceof AxiosError) {
-            console.error(err.message);
-        } else if (err.response && err.response.data) {
-            console.error(err.response.data);
-        } else {
-            console.error(err);
-        }
+//     // Step 1 : Get SummonerInfo
+//     // TODO: Cache for Riot Info
+//     await RiotService.callRiotAPI(summonerUrl, RiotTokenType.LOL).then(result => {
+//         summoner = BedyMapper.MapToRiotSummoner(result);
 
-        throw err;
-    });
+//     }).catch(err => {
+//         // TODO: Est-ce que le retour devrait être un type avec : code, errMessage, data (ChampionInfoExt)
+//         console.error(errors.errInFunction('getRiotSummonerByName'));
 
-    return summoner;
-}
+//         if (err instanceof AxiosError) {
+//             console.error(err.message);
+//         } else if (err.response && err.response.data) {
+//             console.error(err.response.data);
+//         } else {
+//             console.error(err);
+//         }
 
-/**
- * Function called by API for prepare the data
- * @param region
- * @param json
- * @returns
- */
-async function getRiotMasteries(summonerId: string, region: string): Promise<ChampionMastery> {
-    const masteriesUrl = infoData.lol.routes.championMastery.v4.getChampionMasteriesBySummoner.replace('{encryptedSummonerId}', summonerId).replace('{region}', region);
-    let masteries: Array<IChampionMastery> | null = null;
-    let masteriesResult: ChampionMastery = new ChampionMastery();
+//         throw err;
+//     });
 
-    // Step 1 : Get SummonerInfo
-    // TODO: Cache for Riot Info
-    await RiotService.callRiotAPI(masteriesUrl, RiotTokenType.LOL).then(result => {
-        masteries = result;
+//     return summoner;
+// }
 
-    }).catch(err => {
-        // TODO: Est-ce que le retour devrait être un type avec : code, errMessage, data (ChampionInfoExt)
-        console.error(errors.errInFunction('getRiotMasteries'));
+// /**
+//  * Function called by API for prepare the data
+//  * @param region
+//  * @param json
+//  * @returns
+//  */
+// async function getRiotMasteries(summonerId: string, region: string): Promise<ChampionMastery> {
+//     const masteriesUrl = infoData.lol.routes.championMastery.v4.getChampionMasteriesBySummoner.replace('{encryptedSummonerId}', summonerId).replace('{region}', region);
+//     let masteries: Array<IChampionMastery> | null = null;
+//     let masteriesResult: ChampionMastery = new ChampionMastery();
 
-        if (err instanceof AxiosError) {
-            console.error(err.message);
-        } else {
-            console.error(err);
-        }
+//     // Step 1 : Get SummonerInfo
+//     // TODO: Cache for Riot Info
+//     await RiotService.callRiotAPI(masteriesUrl, RiotTokenType.LOL).then(result => {
+//         masteries = result;
 
-        throw err;
-    });
+//     }).catch(err => {
+//         // TODO: Est-ce que le retour devrait être un type avec : code, errMessage, data (ChampionInfoExt)
+//         console.error(errors.errInFunction('getRiotMasteries'));
 
-    if (masteries) {
-        // Prepare Data
-        await RiotService.getMasteries(masteries).then((result: ChampionMastery) => {
-            result.championMastery.sort(function (a, b) {
-                // Inverted ( < = -1 | > 1 )
-                if (a.championPoints < b.championPoints) {
-                    return 1;
-                }
-                if (a.championPoints > b.championPoints) {
-                    return -1;
-                }
-                // return 0;
-                return a.champion.name.localeCompare(b.champion.name);
-            });
+//         if (err instanceof AxiosError) {
+//             console.error(err.message);
+//         } else {
+//             console.error(err);
+//         }
 
-            masteriesResult = result;
-        }).catch(err => {
-            throw err;
-        });
+//         throw err;
+//     });
 
-    }
+//     if (masteries) {
+//         // Prepare Data
+//         await RiotService.getMasteries(masteries).then((result: ChampionMastery) => {
+//             result.championMastery.sort(function (a, b) {
+//                 // Inverted ( < = -1 | > 1 )
+//                 if (a.championPoints < b.championPoints) {
+//                     return 1;
+//                 }
+//                 if (a.championPoints > b.championPoints) {
+//                     return -1;
+//                 }
+//                 // return 0;
+//                 return a.champion.name.localeCompare(b.champion.name);
+//             });
 
-    return masteriesResult!;
-}
+//             masteriesResult = result;
+//         }).catch(err => {
+//             throw err;
+//         });
+
+//     }
+
+//     return masteriesResult!;
+// }
 
 // **** Export default **** //
 
@@ -475,7 +477,7 @@ export default {
     errors,
     RiotService,
     RiotQueryValidation,
-    getRiotRotate,
-    getRiotSummonerByName,
-    getRiotMasteries
+    // getRiotRotate,
+    // getRiotSummonerByName,
+    // getRiotMasteries
 } as const;

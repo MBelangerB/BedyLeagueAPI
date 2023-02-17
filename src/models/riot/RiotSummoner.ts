@@ -1,6 +1,7 @@
 import moment from 'moment';
 import EnvVars from '../../declarations/major/EnvVars';
 import { BedyMapper } from '../../mapper/mapper';
+import { ISummonerDTO } from 'bedyriot';
 
 moment.locale(EnvVars.culture);
 
@@ -8,17 +9,10 @@ moment.locale(EnvVars.culture);
 const { sequelize } = require('../../db/dbSchema');
 const { RIOT_Summoner } = sequelize.models;
 
-export interface IRiotSummoner {
-    id: string;
-    accountId: string;
-    profileIconId: number;
-    puuid: string;
-    name: string;
-    summonerLevel: number;
-
-    // Riot Only
-    revisionDate?: Date;
-
+/**
+ * Interface who contains extends {ISummonerDTO} and dbSummonerInfo 
+ */
+export interface IRiotSummoner extends ISummonerDTO {
     // Db Only
     dbId?: string;
     expiredKey?: Date;
@@ -35,7 +29,7 @@ export class RiotSummoner implements IRiotSummoner {
     puuid = '';
     name = '';
     summonerLevel = 0;
-    revisionDate?: Date | undefined;
+    revisionDate?: undefined;
     dbId?: string | undefined;
     expiredKey?: Date | undefined;
 
@@ -57,12 +51,12 @@ export class RiotSummoner implements IRiotSummoner {
     }
 }
 
-
-export interface ISummonerInfo {
-    riotSummoner: IRiotSummoner,
-    dbSummoner: IRiotSummoner
-}
-
+/**
+ * Check if summoner is on DB
+ * @param summonerName 
+ * @param region 
+ * @returns 
+ */
 async function getRiotSummonerByName(summonerName: string, region: string): Promise<RiotSummoner> {
     // Get Summoner on DB
     let summoner: RiotSummoner;

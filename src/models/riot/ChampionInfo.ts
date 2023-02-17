@@ -1,51 +1,82 @@
-// ***** Interface ***** //
-export interface IChampionInfo {
-    maxNewPlayerLevel: number,
-    freeChampionIdsForNewPlayers: Array<number>,
-    freeChampionIds: Array<number>,
-}
+// import { IChampionInfo } from "bedyriot";
+// import { DragonCulture } from "src/declarations/enum";
+// // import { DragonService } from "src/services/dragon-service";
+// import { IChampion } from "../dragon/IChampion";
 
-export interface IChampionInfoExt {
-    freeChampionForNewPlayers: Array<IChampion>;
-    freeChampion: Array<IChampion>;
+// // ***** Interface ***** //
+// // export interface IChampionInfo {
+// //     maxNewPlayerLevel: number,
+// //     freeChampionIdsForNewPlayers: Array<number>,
+// //     freeChampionIds: Array<number>,
+// // }
 
-    getFreeChampionStr() : string;
-    getNewbiesFreeChampionStr() : string;
-}
+// export interface IChampionInfoExt extends IChampionInfo {
+//     freeChampionForNewPlayers: Array<IChampion>;
+//     freeChampion: Array<IChampion>;
 
-export interface IChampion {
-    id: string,
-    name: string,
-}
+//     getFreeChampionStr() : string;
+//     getNewbiesFreeChampionStr() : string;
+// }
 
-// ***** Classes ***** //
-export class ChampionInfoExt implements IChampionInfoExt {
-    freeChampionForNewPlayers: IChampion[] = [];
-    freeChampion: IChampion[] = [];
+// // ***** Classes ***** //
+// export class ChampionInfoExt implements IChampionInfoExt {
+//     // IChampionInfo
+//     maxNewPlayerLevel: number = 0;
+//     freeChampionIdsForNewPlayers: number[] = [];
+//     freeChampionIds: number[] = [];
 
-    getFreeChampionStr() : string {
-        let returnValue = '';
+//     // IChampionInfoExt
+//     freeChampionForNewPlayers: IChampion[] = [];
+//     freeChampion: IChampion[] = [];
 
-        this.freeChampion.forEach(function (champ) {
-            if (returnValue.length > 0) { returnValue += ' | '; }
-            returnValue += champ.name;
-        });
+//     getFreeChampionStr() : string {
+//         let returnValue = '';
 
-        returnValue = returnValue.trimEnd();
+//         this.freeChampion.forEach(function (champ) {
+//             if (returnValue.length > 0) { returnValue += ' | '; }
+//             returnValue += champ.name;
+//         });
 
-        return returnValue;
-    }
+//         returnValue = returnValue.trimEnd();
 
-    getNewbiesFreeChampionStr() : string {
-        let returnValue = '';
+//         return returnValue;
+//     }
 
-        this.freeChampionForNewPlayers.forEach(function (champ) {
-            if (returnValue.length > 0) { returnValue += ' | '; }
-            returnValue += champ.name;
-        });
+//     getNewbiesFreeChampionStr() : string {
+//         let returnValue = '';
 
-        returnValue = returnValue.trimEnd();
+//         this.freeChampionForNewPlayers.forEach(function (champ) {
+//             if (returnValue.length > 0) { returnValue += ' | '; }
+//             returnValue += champ.name;
+//         });
 
-        return returnValue;
-    }
-}
+//         returnValue = returnValue.trimEnd();
+
+//         return returnValue;
+//     }
+// }
+
+
+// // /**
+// //  * Check if summoner is on DB
+// //  * @param summonerName 
+// //  * @param region 
+// //  * @returns 
+// //  */
+// //  async function getRotatationByChampionId(championId: number, culture: DragonCulture = DragonCulture.fr_fr): Promise<IChampion> {
+// //     // Get Summoner on DB
+// //     // TODO: Cache for DragonService
+// //     const dragonChampionData: Array<IChampion> = await DragonService.readDragonChampionFile(culture);
+// //     const dragonChamp = dragonChampionData.find(e => e.id === championId.toString());
+
+// //     let returnValue : IChampion;
+// //     if (dragonChamp) {
+// //         returnValue = dragonChamp;
+// //     }
+// //     return returnValue!;
+// // }
+
+// // export default {
+// //     getRotatationByChampionId,
+// // };
+

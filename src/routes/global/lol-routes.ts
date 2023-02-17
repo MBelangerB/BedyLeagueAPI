@@ -1,18 +1,36 @@
-import HttpStatusCodes from '../../declarations/major/HttpStatusCodes';
+// import HttpStatusCodes from '../../declarations/major/HttpStatusCodes';
 import { Request, Response } from 'express';
-import riot, { RiotQueryValidation, RiotService } from '../../services/riot-service';
+// import riot, { RiotQueryValidation, RiotService } from '../../services/riot-service';
+import { RiotQueryValidation } from '../../services/riot-service';
 import { RouteError } from '../../declarations/classes';
 // import { logType } from '../../lib/logger';
-import { ChampionInfoExt } from '../../models/riot/ChampionInfo';
+// import { ChampionInfoExt } from '../../models/riot/ChampionInfo';
 import { AxiosError } from 'axios';
 import { ApiRiotMethod } from '../../declarations/enum';
 import { ApiParameters } from '../../models/riot/ApiParameters';
 import { RiotDatabaseService } from '../../services/riot-database-service';
 // import { ReturnData } from '../../models/IReturnData';
 import summoner, { RiotSummoner } from '../../models/riot/RiotSummoner';
-import { ChampionMastery } from '../../models/riot/ChampionMastery';
+// import { ChampionMastery } from '../../models/riot/ChampionMastery';
 // import { isNumberObject } from 'util/types';
+import { BedyMapper } from '../../mapper/mapper';
+import { ChampionMasteries } from '../../models/riot/ChampionMastery';
+// import { ChampionInfoExt } from '../../models/riot/ChampionInfo';
 
+// import { ILeagueEntryDTO, ISummonerDTO, ChampionMasteryDTO, IChampionInfo} from 'bedyriot';
+// import BedyRiot, { RiotService, ValidationService, RiotHttpStatusCode, ISummonerDTO, ChampionMasteryDTO, IChampionInfo } from 'bedyriot';
+
+// import BedyRiot from 'bedyriot';
+import { RiotService, ValidationService, RiotHttpStatusCode } from 'bedyriot';
+import { ISummonerDTO, ILeagueEntryDTO, IChampionMasteryDTO } from 'bedyriot';
+import { Rotation } from 'bedyriot/build/model/RiotModel';
+// import { ChampionInfo } from 'bedyriot/build/entity/Champion-v3/ChampionInfo';
+
+// import { SummonerV4 } from 'bedyriot/build/service/RiotService';
+// import { ILeagueEntryDTO } from 'bedyriot/build/entity/League-v4/LeagueEntryDTO';
+// import { ValidationService } from 'bedyriot/build/service/ValidationService';
+
+// import RiotHttpStatusCode from 'bedyriot/build/declaration/RiotHttpStatusCode';
 
 // **** Export const **** //
 const modulePath = '/lol';
@@ -48,21 +66,48 @@ async function getRotate(req: Request, response: Response) {
     const json: boolean = ((req.query?.json == 'true' || (req.query?.json == '1')) || false);
     const newPlayer: boolean = ((req.query?.newPlayer == 'true' || (req.query?.newPlayer == '1')) || false);
 
+    // Get extra
+    let showChampionName: boolean = ((req.query?.showChampionName == 'true' || (req.query?.showChampionName == '1')) || false);
+    const showSquare: boolean = ((req.query?.showSquare == 'true' || (req.query?.showSquare == '1')) || false);
+    const showLoadingScreen: boolean = ((req.query?.showLoadingScreen == 'true' || (req.query?.showLoadingScreen == '1')) || false);
+
     try {
-        region = RiotService.convertToRealRegion(region);
+        // If we dont ask JSON return, we needs to have the champions name for show the result, we force the value.
+        if (!json) {
+            showChampionName = true;
+        }
+
+        region = ValidationService.convertToRealRegion(region);
         console.api(`BaseUrl: ${req.originalUrl}, Params: ${JSON.stringify(req.params)}, Query: ${JSON.stringify(req.query)}`);
 
-        const rotateResult: ChampionInfoExt = await riot.getRiotRotate(region);
-        if (rotateResult) {
+        const service: RiotService = new RiotService();
+        let championInfo: Rotation = await service.ChampionV3.getChampionRotations(region, { 
+                                                                                    showChampionName: showChampionName, 
+                                                                                    showSquare: showSquare,
+                                                                                    showLoadingScreen: showLoadingScreen,
+                                                                                    });
+        if (championInfo) {
             if (json) {
-                response.status(HttpStatusCodes.OK).json(rotateResult);
+                response.status(RiotHttpStatusCode.OK).json(championInfo);
             } else if (newPlayer) {
-                response.status(HttpStatusCodes.OK).send(rotateResult.getNewbiesFreeChampionStr());
+                response.status(RiotHttpStatusCode.OK).send(championInfo.getNewbiesFreeChampionStr());
             } else {
-                response.status(HttpStatusCodes.OK).send(rotateResult.getFreeChampionStr());
+                response.status(RiotHttpStatusCode.OK).send(championInfo.getFreeChampionStr());
             }
         }
-    } catch (ex) {
+
+        // let championRotate: ChampionInfoExt = await BedyMapper.MapRotationToChampionInfo(championInfo);
+        // if (championRotate) {
+        //     if (json) {
+        //         response.status(RiotHttpStatusCode.OK).json(championRotate);
+        //     } else if (newPlayer) {
+        //         response.status(RiotHttpStatusCode.OK).send(championRotate.getNewbiesFreeChampionStr());
+        //     } else {
+        //         response.status(RiotHttpStatusCode.OK).send(championRotate.getFreeChampionStr());
+        //     }
+        // }
+
+    } catch (ex: any) {
         if (ex instanceof RouteError) {
             return response.status((ex as RouteError).status).send((ex as RouteError).message);
         } else if (ex instanceof AxiosError) {
@@ -73,9 +118,9 @@ async function getRotate(req: Request, response: Response) {
 
                 return response.status(status).send(message);
             }
-            return response.status(HttpStatusCodes.BAD_REQUEST).send((ex as AxiosError).message);
+            return response.status(RiotHttpStatusCode.BAD_REQUEST).send((ex as AxiosError).message);
         }
-        return response.status(HttpStatusCodes.BAD_REQUEST).send(ex);
+        return response.status(RiotHttpStatusCode.BAD_REQUEST).send(ex?.message);
     }
 }
 
@@ -91,13 +136,36 @@ async function getRank(req: Request, response: Response) {
     const json: boolean = ((req.query?.json == 'true' || (req.query?.json == '1')) || false);
 
     try {
-        region = RiotService.convertToRealRegion(region);
+        region = ValidationService.convertToRealRegion(region);
         RiotQueryValidation.validateSummonerName(summonerName);
         const optionalParams: ApiParameters = RiotQueryValidation.fixOptionalParams(ApiRiotMethod.RANK, req.query);
         console.api(`BaseUrl: ${req.originalUrl}, Params: ${JSON.stringify(req.params)}, Query: ${JSON.stringify(req.query)}, Optional: ${JSON.stringify(optionalParams)}`);
 
-        
-        return response.status(HttpStatusCodes.OK).send('To do');
+
+        const service: RiotService = new RiotService();
+        // Get DB summoner info
+        let dbSummoner: RiotSummoner = await summoner.getRiotSummonerByName(summonerName, region);
+        if (!dbSummoner || dbSummoner.requireUpdate()) {
+            // No db result or expired. We call Riot API for obtains summoner DTO
+            // Cast Summoner DTO to local object
+            const apiSummoner: ISummonerDTO = await service.SummonerV4.getBySummonerName(summonerName, region);
+            const summoner: RiotSummoner | null = BedyMapper.MapToRiotSummoner(apiSummoner, false);
+            // If we can make RiotSummoner, we create db object
+            if (summoner) {
+                dbSummoner = await RiotDatabaseService.createOrUpdateSummoner(summoner, region);
+            }
+        }
+
+        if (dbSummoner) {
+            const summonerRank: Array<ILeagueEntryDTO> = await service.LeagueV4.getLeagueEntriesByEncryptedSummonerId(dbSummoner.id, region);
+            if (summonerRank) {
+                if (json) {
+                    response.status(RiotHttpStatusCode.OK).json(summonerRank);
+                } else {
+                    response.status(RiotHttpStatusCode.OK).send(summonerRank.toString());
+                }
+            }
+        }
 
     } catch (ex) {
         if (ex instanceof RouteError) {
@@ -111,9 +179,9 @@ async function getRank(req: Request, response: Response) {
 
                 return response.status(status).send(message);
             }
-            return response.status(HttpStatusCodes.BAD_REQUEST).send((ex as AxiosError).message);
+            return response.status(RiotHttpStatusCode.BAD_REQUEST).send((ex as AxiosError).message);
         }
-        return response.status(HttpStatusCodes.BAD_REQUEST).send(ex);
+        return response.status(RiotHttpStatusCode.BAD_REQUEST).send(ex);
     }
 }
 
@@ -132,24 +200,31 @@ async function getSummonerInfo(req: Request, response: Response) {
     const json: boolean = ((req.query?.json == 'true' || (req.query?.json == '1')) || false);
 
     try {
-        region = RiotService.convertToRealRegion(region);
         RiotQueryValidation.validateSummonerName(summonerName);
+        region = ValidationService.convertToRealRegion(region);
         console.api(`BaseUrl: ${req.originalUrl}, Params: ${JSON.stringify(req.params)}, Query: ${JSON.stringify(req.query)}`);
 
+        // Get DB summoner info
         let dbSummoner: RiotSummoner = await summoner.getRiotSummonerByName(summonerName, region);
         if (!dbSummoner || dbSummoner.requireUpdate()) {
-            // No db result or expired
-            const apiSummoner: RiotSummoner | null = await riot.getRiotSummonerByName(summonerName, region);
-            if (apiSummoner) {
-                dbSummoner = await RiotDatabaseService.createOrUpdateSummoner(apiSummoner, region);
+            // No db result or expired. We call Riot API for obtains summoner DTO
+            // Cast Summoner DTO to local object
+
+            const service: RiotService = new RiotService();
+            const apiSummoner: ISummonerDTO = await service.SummonerV4.getBySummonerName(summonerName, region);
+            const summoner: RiotSummoner | null = BedyMapper.MapToRiotSummoner(apiSummoner, false);
+
+            // If we can make RiotSummoner, we create db object
+            if (summoner) {
+                dbSummoner = await RiotDatabaseService.createOrUpdateSummoner(summoner, region);
             }
         }
 
         if (dbSummoner) {
             if (json) {
-                response.status(HttpStatusCodes.OK).json(dbSummoner);
+                response.status(RiotHttpStatusCode.OK).json(dbSummoner);
             } else {
-                response.status(HttpStatusCodes.OK).send(dbSummoner.toString());
+                response.status(RiotHttpStatusCode.OK).send(dbSummoner.toString());
             }
         }
 
@@ -165,13 +240,14 @@ async function getSummonerInfo(req: Request, response: Response) {
 
                 return response.status(status).send(message);
             }
-            return response.status(HttpStatusCodes.BAD_REQUEST).send((ex as AxiosError).message);
+            return response.status(RiotHttpStatusCode.BAD_REQUEST).send((ex as AxiosError).message);
 
-        } else if (ex.status !== null) {
+        } else if (ex.status != null) {
             return response.status(ex.status).send(ex.statusText);
         }
-        return response.status(HttpStatusCodes.BAD_REQUEST).send(ex);
+        return response.status(RiotHttpStatusCode.BAD_REQUEST).send(ex?.message);
     }
+
 }
 
 /**
@@ -189,32 +265,39 @@ async function getTopMasteries(req: Request, response: Response) {
     const json: boolean = ((req.query?.json == 'true' || (req.query?.json == '1')) || false);
 
     try {
-        region = RiotService.convertToRealRegion(region);
         RiotQueryValidation.validateSummonerName(summonerName);
+        region = ValidationService.convertToRealRegion(region);
         const optionalParams: ApiParameters = RiotQueryValidation.fixOptionalParams(ApiRiotMethod.TOP_MASTERIES, req.query);
         console.api(`BaseUrl: ${req.originalUrl}, Params: ${JSON.stringify(req.params)}, Query: ${JSON.stringify(req.query)}, Optional: ${JSON.stringify(optionalParams)}`);
 
-        // Get Summoner
+        const service: RiotService = new RiotService();
+        // Get DB summoner info
         let dbSummoner: RiotSummoner = await summoner.getRiotSummonerByName(summonerName, region);
         if (!dbSummoner || dbSummoner.requireUpdate()) {
-            // No db result or expired
-            const apiSummoner: RiotSummoner | null = await riot.getRiotSummonerByName(summonerName, region);
-            if (apiSummoner) {
-                dbSummoner = await RiotDatabaseService.createOrUpdateSummoner(apiSummoner, region);
+            // No db result or expired. We call Riot API for obtains summoner DTO
+            // Cast Summoner DTO to local object
+
+
+            const apiSummoner: ISummonerDTO = await service.SummonerV4.getBySummonerName(summonerName, region);
+            const summoner: RiotSummoner | null = BedyMapper.MapToRiotSummoner(apiSummoner, false);
+            // If we can make RiotSummoner, we create db object
+            if (summoner) {
+                dbSummoner = await RiotDatabaseService.createOrUpdateSummoner(summoner, region);
             }
         }
 
         // Get Masteries
-        let masteries: ChampionMastery = await riot.getRiotMasteries(dbSummoner.id, region);
-        if (masteries) {
+        let masteriesDTO: Array<IChampionMasteryDTO> = await service.ChampionMasteryV4.getByEncryptedSummonerId(dbSummoner.id, region);
+        let summonerMasteries: ChampionMasteries = await BedyMapper.MapChampionMasteryToMasteries(masteriesDTO);
+        if (summonerMasteries) {
             if (json) {
-                return response.status(HttpStatusCodes.OK).json(masteries);
+                return response.status(RiotHttpStatusCode.OK).json(summonerMasteries);
             } else {
-                return response.status(HttpStatusCodes.OK).send(masteries.getResult(optionalParams.nbMasteries));
+                return response.status(RiotHttpStatusCode.OK).send(summonerMasteries.getResult(optionalParams.nbMasteries));
             }
         }
 
-    } catch (ex) {
+    } catch (ex: any) {
         if (ex instanceof RouteError) {
             return response.status((ex as RouteError).status).send((ex as RouteError).message);
 
@@ -226,9 +309,9 @@ async function getTopMasteries(req: Request, response: Response) {
 
                 return response.status(status).send(message);
             }
-            return response.status(HttpStatusCodes.BAD_REQUEST).send((ex as AxiosError).message);
+            return response.status(RiotHttpStatusCode.BAD_REQUEST).send((ex as AxiosError).message);
         }
-        return response.status(HttpStatusCodes.BAD_REQUEST).send(ex);
+        return response.status(RiotHttpStatusCode.BAD_REQUEST).send(ex?.message);
     }
 }
 

@@ -165,7 +165,11 @@ console.log = function (type: logType, message?: any, ...params: any[]) {
             break;
         }
         default: {
-            exLog.apply(this, [prefixMessage(logPrefix.verbose, formatOrignalString(message, params))]);
+            if (typeof(type) == "string") {
+                exLog.apply(this, [prefixMessage(logPrefix.verbose, formatOrignalString(type, message))]);
+            } else {
+                exLog.apply(this, [prefixMessage(logPrefix.verbose, formatOrignalString(message, params))]);
+            }
             break;
         }
     }
