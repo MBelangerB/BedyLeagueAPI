@@ -35,7 +35,7 @@
     "node-cache": "^5.1.2",
     "nodemailer": "^6.8.0",
     "qs": "^6.11.0",
-    "sequelize": "^6.26.0",
+    "sequelize": "^6.29.0",
     "sqlite3": "^5.1.2",
     "util": "^0.12.5",
     "uuid": "^8.3.2"
