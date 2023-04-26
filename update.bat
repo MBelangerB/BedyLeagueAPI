@@ -1,0 +1,1 @@
+npm install ./lib/bedyriot-1.0.0.tgz 

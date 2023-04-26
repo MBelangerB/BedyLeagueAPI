@@ -14,7 +14,7 @@ import summoner, { RiotSummoner } from '../../models/riot/RiotSummoner';
 // import { ChampionMastery } from '../../models/riot/ChampionMastery';
 // import { isNumberObject } from 'util/types';
 import { BedyMapper } from '../../mapper/mapper';
-import { ChampionMasteries } from '../../models/riot/ChampionMastery';
+// import { ChampionMasteries } from '../../models/riot/ChampionMastery';
 // import { ChampionInfoExt } from '../../models/riot/ChampionInfo';
 
 // import { ILeagueEntryDTO, ISummonerDTO, ChampionMasteryDTO, IChampionInfo} from 'bedyriot';
@@ -23,7 +23,7 @@ import { ChampionMasteries } from '../../models/riot/ChampionMastery';
 // import BedyRiot from 'bedyriot';
 import { RiotService, ValidationService, RiotHttpStatusCode } from 'bedyriot';
 import { ISummonerDTO, ILeagueEntryDTO, IChampionMasteryDTO } from 'bedyriot';
-import { Rotation } from 'bedyriot/build/model/RiotModel';
+import { ChampionMasteries, Rotation } from 'bedyriot/build/model/RiotModel';
 // import { ChampionInfo } from 'bedyriot/build/entity/Champion-v3/ChampionInfo';
 
 // import { SummonerV4 } from 'bedyriot/build/service/RiotService';
@@ -81,11 +81,11 @@ async function getRotate(req: Request, response: Response) {
         console.api(`BaseUrl: ${req.originalUrl}, Params: ${JSON.stringify(req.params)}, Query: ${JSON.stringify(req.query)}`);
 
         const service: RiotService = new RiotService();
-        let championInfo: Rotation = await service.ChampionV3.getChampionRotations(region, { 
-                                                                                    showChampionName: showChampionName, 
-                                                                                    showSquare: showSquare,
-                                                                                    showLoadingScreen: showLoadingScreen,
-                                                                                    });
+        let championInfo: Rotation = await service.ChampionV3.getChampionRotations(region, {
+            showChampionName: showChampionName,
+            showSquare: showSquare,
+            showLoadingScreen: showLoadingScreen,
+        });
         if (championInfo) {
             if (json) {
                 response.status(RiotHttpStatusCode.OK).json(championInfo);
@@ -276,8 +276,6 @@ async function getTopMasteries(req: Request, response: Response) {
         if (!dbSummoner || dbSummoner.requireUpdate()) {
             // No db result or expired. We call Riot API for obtains summoner DTO
             // Cast Summoner DTO to local object
-
-
             const apiSummoner: ISummonerDTO = await service.SummonerV4.getBySummonerName(summonerName, region);
             const summoner: RiotSummoner | null = BedyMapper.MapToRiotSummoner(apiSummoner, false);
             // If we can make RiotSummoner, we create db object
@@ -286,9 +284,25 @@ async function getTopMasteries(req: Request, response: Response) {
             }
         }
 
+        // Get extra
+        let showChampionName: boolean = ((req.query?.showChampionName == 'true' || (req.query?.showChampionName == '1')) || false);
+        const showSquare: boolean = ((req.query?.showSquare == 'true' || (req.query?.showSquare == '1')) || false);
+        const showLoadingScreen: boolean = ((req.query?.showLoadingScreen == 'true' || (req.query?.showLoadingScreen == '1')) || false);
+
+        // If we dont ask JSON return, we needs to have the champions name for show the result, we force the value.
+        if (!json) {
+            showChampionName = true;
+        }
+
+
         // Get Masteries
-        let masteriesDTO: Array<IChampionMasteryDTO> = await service.ChampionMasteryV4.getByEncryptedSummonerId(dbSummoner.id, region);
-        let summonerMasteries: ChampionMasteries = await BedyMapper.MapChampionMasteryToMasteries(masteriesDTO);
+        let summonerMasteries: ChampionMasteries = await service.ChampionMasteryV4.getByEncryptedSummonerId(dbSummoner.id, region, {
+            showChampionName: showChampionName,
+            showSquare: showSquare,
+            showLoadingScreen: showLoadingScreen,
+        });
+
+        // let summonerMasteries: ChampionMasteries = await BedyMapper.MapChampionMasteryToMasteries(masteriesDTO);
         if (summonerMasteries) {
             if (json) {
                 return response.status(RiotHttpStatusCode.OK).json(summonerMasteries);
@@ -296,6 +310,16 @@ async function getTopMasteries(req: Request, response: Response) {
                 return response.status(RiotHttpStatusCode.OK).send(summonerMasteries.getResult(optionalParams.nbMasteries));
             }
         }
+
+        // let masteriesDTO: Array<IChampionMasteryDTO> = await service.ChampionMasteryV4.getByEncryptedSummonerId(dbSummoner.id, region);
+        // let summonerMasteries: ChampionMasteries = await BedyMapper.MapChampionMasteryToMasteries(masteriesDTO);
+        // if (summonerMasteries) {
+        //     if (json) {
+        //         return response.status(RiotHttpStatusCode.OK).json(summonerMasteries);
+        //     } else {
+        //         return response.status(RiotHttpStatusCode.OK).send(summonerMasteries.getResult(optionalParams.nbMasteries));
+        //     }
+        // }
 
     } catch (ex: any) {
         if (ex instanceof RouteError) {
