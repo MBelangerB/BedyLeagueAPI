@@ -1,9 +1,9 @@
 import HttpStatusCodes from '../../declarations/major/HttpStatusCodes';
 // import dragonService from '../../services/dragon-service';
-import { Request, Response } from 'express';
+import e, { Request, Response } from 'express';
 // import { IDragonData } from '../../models/dragon/dragon-model';
 import { DragonService, IDragonVersion, ReturnData } from 'bedyriot';
-import { DragonCulture, DragonFile } from 'bedyriot/build/declaration/enum';
+import { DragonCulture, DragonFileType } from 'bedyriot/build/declaration/enum';
 import { IDragonChampion } from 'bedyriot/build/model/DragonModel';
 // import { ReturnData } from 'src/models/IReturnData';
 // import { IDragonVersion } from 'bedyriot/build/model/DragonModel';
@@ -16,7 +16,8 @@ const modulePath = '/dragon';
 const routes = {
     HOME: '/',
     GET_VERSION: '/version',
-    UPDATE: '/update',
+    GET_CHAMPION_INFO: '/championInfo'
+    // UPDATE: '/update',
     // TEST: '/test'
 } as const;
 
@@ -54,60 +55,45 @@ async function getCurrentVersion(req: Request, response: Response) {
     }
 }
 
-// /**
-//  * Get current dragon module version
-//  * @param req
-//  * @param response
-//  * @returns
-//  */
-// async function getDragonChamps(req: Request, response: Response) {
-//     try {
-//         // const dragonVData: ReturnData<IDragonVersion> = await DragonService.getDragonVersion();
-
-//         const dragonData: Map<number, IDragonChampion> = await DragonService.readDragonChampionFile(DragonCulture.fr_fr);
-//         let test: IDragonChampion | undefined = dragonData.get(54);
-
-//         console.log(test);
-//         console.dir(test);
-//         if (dragonData) {
-//             // const url: string = DragonService.getFileUrl(DragonFile.Champion, DragonCulture.fr_fr, dragonData.data!);
-//             // let t = await DragonService.downloadDragonFile(url, DragonCulture.fr_fr, dragonData.data!);
-
-//             return response.status(HttpStatusCodes.OK).send(test);
-//         }
-
-//     } catch (ex) {
-//         return response.status(HttpStatusCodes.BAD_REQUEST).send(ex);
-//     }
-// }
-
 /**
- * Performs the update of the dragons files
+ * Get current dragon module version
  * @param req
  * @param response
  * @returns
  */
-// async function updateDragon(req: Request, response: Response) {
-//     try {
-//         const forceUpdate: boolean = ((req.query?.forceUpdate == 'true' || (req.query?.forceUpdate == '1')) || false);
-//         const culture: string = (req.query.culture as string);
+async function getChampionInfo(req: Request, response: Response) {
+    try {
+        const championId: number = (req.query?.championId != null ? Number(req.query?.championId) : -1);
+        const championName: string = (req.query?.championName != null ? req.query?.championName.toString() : "");
 
-//         let dragonCulture : DragonCulture = DragonCulture.fr_fr;
-//         if (typeof culture !== 'undefined' && culture == 'en') {
-//             dragonCulture = DragonCulture.en_us;
-//         } else if (typeof culture !== 'undefined' && (culture !== 'fr' && culture !== 'en')) {
-//             return response.status(HttpStatusCodes.BAD_REQUEST).send('Culture invalid');
-//         }
+        const culture: string = (req.query.culture as string);
+        let dragonCulture: DragonCulture = DragonCulture.fr_fr;
+        if (typeof culture !== 'undefined' && culture == 'en') {
+            dragonCulture = DragonCulture.en_us;
 
-//         const data: IReturnData<IDragonData> = await dragonService.updateDragon(forceUpdate, dragonCulture);
-//         if (data) {
-//             return response.status(HttpStatusCodes.OK).send(data.messages);
-//         }
+        } else if (typeof culture !== 'undefined' && (culture !== 'fr' && culture !== 'en')) {
+            return response.status(HttpStatusCodes.BAD_REQUEST).send('Culture invalid');
+        }
 
-//     } catch (ex) {
-//         return response.status(HttpStatusCodes.BAD_REQUEST).send(ex);
-//     }
-// }
+        let championInfo: IDragonChampion | undefined;
+        if (championId != null && championId > 0) {
+            championInfo = await DragonService.getChampionInfoById(championId, dragonCulture);
+
+        } else if (championName != null && championName.trim().length > 0) {
+            championInfo = await DragonService.getChampionInfoByName(championName, dragonCulture);
+        } else {
+            return response.status(HttpStatusCodes.BAD_REQUEST).send('Missing parameters');  
+        }
+
+        if (championInfo != null && championInfo != undefined) {
+            return response.status(HttpStatusCodes.OK).send(championInfo);
+        }
+
+    } catch (ex) {
+        return response.status(HttpStatusCodes.BAD_REQUEST).send(ex);
+    }
+}
+
 
 // **** Export default **** //
 
@@ -116,6 +102,5 @@ export default {
     modulePath,
     getPath,
     getCurrentVersion,
-    // getDragonChamps,
-    // updateDragon,
+    getChampionInfo,
 } as const;

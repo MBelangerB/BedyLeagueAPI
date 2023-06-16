@@ -28,9 +28,9 @@ dragonRouter.get(dragon_routes.routes.GET_VERSION, function (req, res) {
   return dragon_routes.getCurrentVersion(req, res);
 });
 
-// dragonRouter.get(dragon_routes.routes.TEST, function (req, res) {
-//   return dragon_routes.getDragonChamps(req, res);
-// });
+dragonRouter.get(dragon_routes.routes.GET_CHAMPION_INFO, function (req, res) {
+  return dragon_routes.getChampionInfo(req, res);
+});
 
 // dragonRouter.get(dragon_routes.routes.UPDATE, function (req, res) {
 //   return dragon_routes.updateDragon(req, res);

@@ -18,7 +18,7 @@ import './src/lib/logger';
     await remove('./dist/');
 
     // Copy front-end files
-    await copy('./src/db', './dist/db');
+    await copy('./src/db', './dist/src/db');
     // await copy('./src/views', './dist/views');
 
     // Copy back-end files
