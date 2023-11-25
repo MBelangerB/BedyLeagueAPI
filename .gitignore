@@ -9,6 +9,12 @@
 # Vs Code
 # /.vscode
 
+# ----------------
+# Temporaire
+/backup
+/src/db/**
+# ----------------
+
 # Dependency directories
 /node_modules/
 /jspm_packages/
