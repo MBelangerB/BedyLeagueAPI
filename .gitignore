@@ -45,3 +45,4 @@
 # Dist
 **/db/dist
 **/dist/*
+.env_2.exemple
