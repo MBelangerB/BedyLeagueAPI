@@ -12,6 +12,7 @@ var dragonsRouter = require('./routes/dragon');
 
 /* League of Legend Route */
 var rankRouter = require('./routes/lol/rank');
+// var v2RankRouter = require('./routes/lol/v2/rank');
 var leagueRouter = require('./routes/lol/league');
 var summonerRouter = require('./routes/lol/summoner');
 
@@ -20,7 +21,7 @@ var emailRouteur = require('./routes/api/email');
 var validateCaptchaRouteur = require('./routes/api/validateCaptcha');
 
 /* OW Route */
-var overwatchRouter = require('./routes/ow/rank');
+// var overwatchRouter = require('./routes/ow/rank');
 
 /* Initialize Express */
 var app = express();
@@ -112,17 +113,23 @@ app.get('/:lang?/lol/topMasteries/:region/:summonerName', summonerRouter.topMast
 app.get('/:lang?/lol/summonerInfo', summonerRouter.summonerInfo);
 app.get('/:lang?/lol/summonerInfo/:region/:summonerName', summonerRouter.summonerInfo);
 
-app.get('/:lang?/lol/rank', cors(), rankRouter.rank);
+// V1
+app.get('/:lang?/lol/v1/rank', cors(), rankRouter.rank);
+app.get('/:lang?/lol/v1/rank/:region/:summonerName',cors(), rankRouter.rank);
 app.get('/:lang?/lol/rank/:region/:summonerName',cors(), rankRouter.rank);
 
+// v2RankRouter
+// app.get('/:lang?/lol/rank', cors(), v2RankRouter.rank);
+// app.get('/:lang?/lol/rank/:region/:summonerName-:tag',cors(), v2RankRouter.rank);
+
 // Overwatch Route
-app.get('/:lang?/ow/rank', overwatchRouter.rank);
-app.get('/:lang?/ow/rank/:region/:platform/:tag', overwatchRouter.rank);
+// app.get('/:lang?/ow/rank', overwatchRouter.rank);
+// app.get('/:lang?/ow/rank/:region/:platform/:tag', overwatchRouter.rank);
 
 // Temporary redirection
 // TODO: Remove
-app.get('/rank', rankRouter.rankRework);
-app.get('/v2/rank', rankRouter.rankRework);
+// app.get('/rank', rankRouter.rankRework);
+// app.get('/v2/rank', rankRouter.rankRework);
 
 // Private API routing
 // app.options('/api/sendEmail', cors())

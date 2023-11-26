@@ -1,9 +1,10 @@
 {
   "name": "bedyapi",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "cleanInstall": "npm ci"
   },
   "dependencies": {
     "axios": "^0.27.2",

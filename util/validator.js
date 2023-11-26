@@ -87,11 +87,30 @@ validator.ow = {
 validator.lol = {
     errors: [],
 
-    METHOD_ENUM: { ROTATE: 0, SUMMONER_INFO: 2, RANK: 3, MASTERIES: 4, LIVEGAME: 5, OVERLAY: 6 },
-    OVERLAY_MODE_ENUM: { MINIMALIST: 1, FULL: 2},
+    METHOD_ENUM: { ROTATE: 1, SUMMONER_INFO: 2, RANK: 3, MASTERIES: 4, LIVEGAME: 5, OVERLAY: 6 },
+    OVERLAY_MODE_ENUM: { MINIMALIST: 1, FULL: 2 },
 
     validateParams: function (params, method) {
         this.errors = [];
+        params.version = 1;
+        params.globalRegion = "";
+
+        let summonerName = (params.summonerName || params.summonername);
+
+        if (summonerName.includes("#")) {
+            params.version = 2;
+            let splitValue =  summonerName.split("#")          
+            params.gameName = splitValue[0];
+            params.tagLine = splitValue[1];
+
+        } else if (summonerName.includes("-")) {
+            params.version = 2;
+
+            let splitValue =  summonerName.split("-")
+            params.gameName = splitValue[0];
+            params.tagLine = splitValue[1];
+
+        }
 
         switch (method) {
             case this.METHOD_ENUM.ROTATE:
@@ -116,10 +135,17 @@ validator.lol = {
             case this.METHOD_ENUM.OVERLAY:
                 if (this.requireArguments(params)) {
                     this.validateRegion(params.region);
-                    this.validateSummonerName((params.summonerName || params.summonername));
-                    this.validateQueueType(params.queuetype);
-
                     this.convertToRealRegion(params);
+                           
+                    if (params.version == 2) {
+                        this.validateGameNameAndTag(params.gameName, params.tagLine);
+                        params.globalRegion = this.getGlobalRegion(params.region);
+
+                    } else {
+                        this.validateSummonerName((params.summonerName || params.summonername));
+                    }
+
+                    this.validateQueueType(params.queuetype);
                     this.convertToRealQueueType(params);
                 }
                 break;
@@ -143,6 +169,24 @@ validator.lol = {
         return this.errors;
     },
 
+    getGlobalRegion: function (region) {
+        let globalRegion = "";
+        switch (region.trim()) {
+            case "NA1":
+                globalRegion = "AMERICAS"; // routeInfo.globalRegion.AMERICAS; // "AMERICAS"
+                break;
+
+            case "EUW1":
+                globalRegion = "EUROPE" // routeInfo.globalRegion.EUROPE; // "EUROPE"
+                break;
+
+            case "EUN1":
+                globalRegion= "EUROPE" // routeInfo.globalRegion.EUROPE; // "EUROPE"
+                break;
+        }
+        return globalRegion;
+    },
+
 
 
     fixOptionalParams: function (optionalParams, queryParameters, method) {
@@ -155,7 +199,7 @@ validator.lol = {
             if (optionalParams && optionalParams.series) {
                 queryParameters.series = optionalParams.series;
             }
-            
+
         } else {
             switch (method) {
                 case this.METHOD_ENUM.MASTERIES:
@@ -220,7 +264,12 @@ validator.lol = {
 
     requireArguments: function (queryString) {
         if (Object.keys(queryString).length === 0) {
-            this.errors.push("Paramètres marquant (region, summonerName) / missing parameters (region, summonerName)");
+            if (this.version == 2) {
+                // this.errors.push("Paramètres marquant (region, gameName, tagLine) / missing parameters (region, gameName, tagLine)");
+                this.errors.push("Paramètres marquant (region, summonerName) / missing parameters (region, summonerName)");
+            } else {
+                this.errors.push("Paramètres marquant (region, summonerName) / missing parameters (region, summonerName)");
+            }
             return false;
         }
         return true;
@@ -234,6 +283,31 @@ validator.lol = {
         } else if (!this.isValidSummonerName(summonerName)) {
             this.errors.push("La paramètre 'summonerName' est invalide.");
         }
+    },
+    validateGameNameAndTag: function (gameName, tagLine) {
+        // Valider la présence de la region en parametre
+        if (typeof gameName === "undefined" || gameName.trim().length === 0) {
+            this.errors.push("Le paramètre 'gameName' est obligatoire.");
+
+        } else if (!this.isValidSummonerName(gameName)) {
+            this.errors.push("La paramètre 'gameName' est invalide.");
+        }
+
+        if (typeof tagLine === "undefined" || tagLine.trim().length === 0) {
+            this.errors.push("Le paramètre 'tagLine' est obligatoire.");
+        } else {
+            this.isValidTagLine(tagLine)
+        }
+    },
+    isValidTagLine: function (tagLine) {
+        var valid = true;
+        tagLine = tagLine.trim();
+        if (tagLine.length < 3 || tagLine.length > 5) {
+            this.errors.push("Le paramètre 'tagLine' est invalide. Il doit comprendre entre 3 et 5 caractères.");
+            valid = false;
+        }
+
+        return valid;
     },
     isValidSummonerName: function (summonerName) {
         // https://developer.riotgames.com/getting-started.html
@@ -255,7 +329,7 @@ validator.lol = {
                     valid = true;
                 }
                 */
-               valid = true;
+                valid = true;
             });
         }
         return valid;
@@ -287,9 +361,9 @@ validator.lol = {
         }
         return valid;
     },
-    convertToRealRegion: function(params) {
+    convertToRealRegion: function (params) {
         var region = params.region.toUpperCase();
-        var regionData =  {
+        var regionData = {
             'EUW': 'EUW1',
             'EUW1': 'EUW1',
             'NA': 'NA1',
@@ -329,9 +403,9 @@ validator.lol = {
         }
         return valid;
     },
-    convertToRealQueueType: function(params) {
+    convertToRealQueueType: function (params) {
         var queueTypeInfo = params.queuetype;
-        var typeData =  {
+        var typeData = {
             'tft': 'tft',
             'solo5': 'solo5',
             'solo': 'solo5',
@@ -345,7 +419,7 @@ validator.lol = {
         } else {
             queueTypeInfo = "solo5";
         }
-     
+
         params.queuetype = typeData[queueTypeInfo];
         return typeData[queueTypeInfo];
     }
@@ -380,7 +454,7 @@ validator.api = {
             this.validateUsername((queryString.username || queryString.u));
         }
         return this.errors;
-    }, 
+    },
 
     validateAddSong: function (queryString) {
         this.errors = [];
@@ -389,7 +463,7 @@ validator.api = {
             this.validateRequire(queryString.token || queryString.t);
         }
         return this.errors;
-    }, 
+    },
 
     requireArguments: function (queryString) {
         if (Object.keys(queryString).length === 0) {
@@ -398,7 +472,7 @@ validator.api = {
         }
         return true;
     },
-    validateRequire: function(token) {
+    validateRequire: function (token) {
         if (typeof token === "undefined" || token.trim().length === 0) {
             this.errors.push("Le paramètre 'token' est obligatoire.");
         }

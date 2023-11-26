@@ -12,6 +12,12 @@
 # Old version
 # /V1.3/
 
+# Temporaire
+/backup
+/src
+/.env_2.exemple
+/dist
+
 # Dependency directories
 /node_modules/
 /jspm_packages/

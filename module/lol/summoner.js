@@ -6,6 +6,7 @@ const DragonLoading = require('../../controller/dragonLoading');
 
 const SummonerDTO = require('../../entity/riot/Summoner-v4/summonerDTO');
 const ChampionMasteryDTO = require('../../entity/riot/Champion-Mastery-v4/ChampionMasteryDTO');
+const AccountDTO = require('../../entity/riot/Account-v1/AccountDto')
 
 /*
     Cache configuration
@@ -20,12 +21,17 @@ var summonerCache = new CacheService(summonerInfoDelay); // Create a new cache s
 
 module.exports = {
     SummonerInfo: class SummonerInfo {
-        constructor(params) {
+        constructor(params, getAccount = false) {
             // Paramètre obligatoire
             this.summonerName = (params.summonername || params.summonerName);
+            // this.summonerParam = this.summonerName;
+            this.tagLine = (params.tagLine || params.tagline);
+            this.gameName = (params.gameName || params.gamename);
+            
             this.region = params.region;
+            this.globalRegion = params.globalRegion;
             this.queueType = params.queuetype;
-           // this.url = this.getUrlBySummonerName();
+            this.version = params.version;
 
             this.gameType = RequestManager.TokenType.LOL;
             if (this.queueType?.toLowerCase() === "tft") {
@@ -36,9 +42,14 @@ module.exports = {
             this.getJson = ((params.json === 1) || (params.json === true));
         }
 
-        getCacheKey() {
-            return `SummonerInfo-${this.summonerName}-${this.region}-${this.queueType}`;
+        getCacheKey(isAccount = false) {
+            if (isAccount) {
+                return `AccountInfo-${this.summonerName}-${this.region}`;
+            } else {
+                return `SummonerInfo-${this.summonerName}-${this.region}-${this.queueType}`;
+            }        
         }
+
         getUrlBySummonerName(summonerName, region, queueType) {
             if (!summonerName) { summonerName = this.summonerName; }
             if (!region) { region = this.region; }
@@ -48,15 +59,43 @@ module.exports = {
             if (queueType === "tft") {
                 baseUrl = routeInfo.lol.routes.tft_summoner.v1.getBySummonerName;
             }
-            baseUrl = baseUrl.replace("{summonerName}", summonerName);
+
+            if (this.version == "2" && this.accountInfo != null) {
+                baseUrl = routeInfo.lol.routes.summoner.v4.getByPuuid;
+                if (queueType === "tft") {
+                    baseUrl = routeInfo.lol.routes.tft_summoner.v1.getByPuuid;
+                }
+                baseUrl = baseUrl.replace("{puuid}", this.accountInfo.puuid);
+
+            } else {          
+                baseUrl = baseUrl.replace("{summonerName}", summonerName);
+            }
             baseUrl = baseUrl.replace("{region}", region);
 
             return baseUrl;
         }
 
+         getAccountUrlBySummonerDetails(gameName, tagLine, globalRegion) {
+            if (!gameName) { gameName = this.gameName; }
+            if (!tagLine) { tagLine = this.tagLine; }
+            if (!globalRegion) { globalRegion = this.globalRegion; }
+
+            let baseUrl = routeInfo.lol.routes.account.v1.getRiotIdByGameNameAndTagLine;
+            baseUrl = baseUrl.replace("{gameName}", gameName);
+            baseUrl = baseUrl.replace("{tagLine}", tagLine);
+            baseUrl = baseUrl.replace("{GlobalRegion}", globalRegion);
+
+            return baseUrl;
+         }
+
+        /**
+         * Get SummonerInfo
+         * @param {*} requestManager 
+         * @param {*} result 
+         * @returns 
+         */
         async _querySummonerInfo(requestManager, result) {
             try {
-                // Le SummonerInfo n'est pas présent dans la cache
                 var data = await requestManager.ExecuteTokenRequest(this.getUrlBySummonerName(), this.gameType).then(function (summonerDTO) {
                     return summonerDTO;
                 }, function (error) {
@@ -84,6 +123,108 @@ module.exports = {
             return data;
         }
 
+        /**
+         * Get AccountInfo
+         * @param {*} requestManager 
+         * @param {*} result 
+         * @returns 
+         */
+        async _queryAccountInfo(requestManager, result) {
+            try {
+                // Le SummonerInfo n'est pas présent dans la cache
+                var data = await requestManager.ExecuteTokenRequest(this.getAccountUrlBySummonerDetails(), this.gameType).then(function (accountDTO) {
+                    return accountDTO;
+                }, function (error) {
+                    if (error.response) {
+                        result.err = {
+                            statusCode: error.response.status,
+                            statusMessage: error.response.statusText,
+                            stack: error.stack
+                        }
+                    } else {
+                        result.err = {
+                            statusCode: 404,
+                            statusMessage: error.message,
+                            stack: error.stack
+                        }
+                    }
+ 
+                    return result;
+                });
+
+            } catch (ex) {
+                console.error(ex);
+                res.send(ex);
+            }
+            return data;
+        }
+
+
+        /**
+         * 20 nov 2023
+         * Méthode Principale, obtenir AccountINfo
+         */
+        async getAccountInfo() {
+            var result = {
+                "code": 0,
+                "err": {}
+            };
+            // Step 1 : Si Version = 2 alors get AccountInfo
+
+            this.accountInfo = new AccountDTO();
+
+            var key = this.getCacheKey(true);
+            var self = this;
+
+            return new Promise(async function (resolve, reject) {
+                try {
+                    await summonerCache.getAsyncB(key).then(async function (resultData) {
+                        // Vérifie si les données sont déjà en cache, si OUI on utilise la cache
+                        if (typeof resultData === "undefined") {
+                            var data = await self._queryAccountInfo(RequestManager, result);
+                            if (data) { // && (!data.statusCode || data.statusCode != "200")) {
+                                summonerCache.setCacheValue(key, data);
+                                return data;
+                            } else {
+                                reject(result);
+                                return;
+                            }
+                        } else {
+                            // L'information est présente dans la cache
+                            return resultData;
+                        }
+
+                    }).then(async resultQry => {
+                        // On traite le Resut
+                        if (resultQry && typeof resultQry.err === "undefined") {
+                            // On convertie le data
+                            self.accountInfo.init(resultQry);
+                            result.data = resultQry;
+                            result.code = 200;
+
+                        } else if (resultQry && typeof resultQry.err != "undefined" && resultQry.err.statusCode === "200-1") {
+                            // Erreur normal (pas classé, invocateur n'Existe pas)
+                            result.code = 201;
+
+                        } else {
+                            result.code = 404;
+                        }
+
+                    });
+                    resolve(result);
+                    return;
+
+                } catch (ex) {
+                    console.error(ex);
+
+                    result.code = -1;
+                    result.err.statusMessage = ex;
+
+                    reject(result);
+                    return;
+                }
+            });        
+        }
 
         /**
          * Méthode principale
