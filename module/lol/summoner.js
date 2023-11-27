@@ -182,7 +182,7 @@ module.exports = {
                         // Vérifie si les données sont déjà en cache, si OUI on utilise la cache
                         if (typeof resultData === "undefined") {
                             var data = await self._queryAccountInfo(RequestManager, result);
-                            if (data) { // && (!data.statusCode || data.statusCode != "200")) {
+                            if (data && data.err == null) { // && (!data.statusCode || data.statusCode != "200")) {
                                 summonerCache.setCacheValue(key, data);
                                 return data;
                             } else {
@@ -245,7 +245,7 @@ module.exports = {
                         // Vérifie si les données sont déjà en cache, si OUI on utilise la cache
                         if (typeof resultData === "undefined") {
                             var data = await self._querySummonerInfo(RequestManager, result);
-                            if (data) {
+                            if (data && data.err == null) {
                                 summonerCache.setCacheValue(key, data);
                                 return data;
                             } else {

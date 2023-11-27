@@ -56,6 +56,7 @@ exports.rank = async function (req, res, next) {
         /*
             Validation de la version
         */
+        var toContinue = true;
         if (queryParameters.version == 2) {
             await summoner.getAccountInfo().then(async function (result) {
                 if (result.code !== 200) {
@@ -70,10 +71,15 @@ exports.rank = async function (req, res, next) {
             }).catch(error => {
                 console.error(`An error occured during getAccountInfo`);
                 console.error(`${error.code} - ${error.err.statusMessage}`);
-                res.send(``);
+                toContinue = false;
                 return;
             });
             queryParameters.accountInfo = summoner.accountInfo;
+        }
+
+        if (!toContinue) {
+            res.send(``);
+            return;
         }
 
         await summoner.getSummonerInfo().then(async function (result) {
