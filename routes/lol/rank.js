@@ -44,7 +44,6 @@ exports.rank = async function (req, res, next) {
             console.error(validationErrors);
             res.send(`'please try again'`);
 
-        //    res.send(validationErrors)
             return;
         }
         validator.lol.fixOptionalParams(staticFunc.request.clone(queryString), queryParameters, validator.lol.METHOD_ENUM.RANK);
@@ -53,6 +52,35 @@ exports.rank = async function (req, res, next) {
             Obtenir initiale le summoner pour avoir EncryptedAccountID
         */
         var summoner = new SummonerInfo(queryParameters);
+
+        /*
+            Validation de la version
+        */
+        var toContinue = true;
+        if (queryParameters.version == 2) {
+            await summoner.getAccountInfo().then(async function (result) {
+                if (result.code !== 200) {
+                    console.error(`Return code is invalid in getAccountInfo`);
+                    console.error(`${result.code} - ${result}`);
+                    res.send(`'please try again'`);
+                } else {
+                    return result.data;
+                }
+                return;
+    
+            }).catch(error => {
+                console.error(`An error occured during getAccountInfo`);
+                console.error(`${error.code} - ${error.err.statusMessage}`);
+                toContinue = false;
+                return;
+            });
+            queryParameters.accountInfo = summoner.accountInfo;
+        }
+
+        if (!toContinue) {
+            res.send(``);
+            return;
+        }
 
         await summoner.getSummonerInfo().then(async function (result) {
             if (result.code !== 200) {

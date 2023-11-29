@@ -10,6 +10,12 @@
             "EUW1",
             "EUN1"
         ],
+        "globalRegion": [
+            "AMERICAS",
+            "ASIA",
+            "EUROPE",
+            "SIA"
+        ],
         "routes": {
             "v2": {
                 "liveGame": {
@@ -18,6 +24,11 @@
                 "matchHistory": {
                     "getMatchListByChampionAndQueue": "https://{region}.api.riotgames.com/lol/match/v4/matchlists/by-account/{encryptedAccountId}?champion={championId}&queue={queueId}&season={seasonId}",
                     "getMatchlist": "https://{region}.api.riotgames.com/lol/match/v4/matchlists/by-account/{encryptedAccountId}?endIndex={end}&beginIndex={begin}"
+                }
+            },
+            "account": {
+                "v1": {
+                    "getRiotIdByGameNameAndTagLine": "https://{GlobalRegion}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}"
                 }
             },
             "league": {

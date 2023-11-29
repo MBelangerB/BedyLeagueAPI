@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 var CacheService = require('../module/Cache.Service');
 
 var LeagueChampion = require(`../entity/api/leagueChampion`);
@@ -23,7 +24,10 @@ let dragonLoading = class DragonLoading {
                 var key = self.getKeyName('champion', lang, 'dragon');
                 var pathFile = path.join(__dirname, `/../static/dragon/`, lang, '/champion.json');
 
-                self._championData = await self.readFileCache(key, pathFile);
+                if (fs.existsSync(pathFile)) {
+                    self._championData = await self.readFileCache(key, pathFile);
+                }
+                
 
                 resolve(self._championData);
                 return;
