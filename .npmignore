@@ -1,0 +1,30 @@
+node_modules
+src
+tsconfig.json
+# README.md
+*.tgz
+*.txt
+
+.*.swp
+._*
+.DS_Store
+.git
+.gitignore
+.hg
+.npmignore
+.github
+.npmrc
+.lock-wscript
+.svn
+.wafpickle-*
+config.gypi
+CVS
+npm-debug.log
+
+# Oldest
+backup
+dist
+
+# Coverage directory used by tools like istanbul
+coverage*
+*.lcov

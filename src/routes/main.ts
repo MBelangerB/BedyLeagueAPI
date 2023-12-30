@@ -32,9 +32,18 @@ dragonRouter.get(dragon_routes.routes.GET_CHAMPION_INFO, function (req, res) {
   return dragon_routes.getChampionInfo(req, res);
 });
 
-// dragonRouter.get(dragon_routes.routes.UPDATE, function (req, res) {
-//   return dragon_routes.updateDragon(req, res);
-// });
+dragonRouter.get(dragon_routes.routes.GET_CHAMPION_INFO_BY_ID_PARAM,
+  validate(['championId', 'number', 'params']),
+  function (req, res) {
+    return dragon_routes.getChampionInfo(req, res);
+  });
+
+dragonRouter.get(dragon_routes.routes.GET_CHAMPION_INFO_BY_NAME_PARAM,
+  validate(['championName', 'string', 'params']),
+  function (req, res) {
+    return dragon_routes.getChampionInfo(req, res);
+  });
+
 
 // *************************************** //
 // **** Setup League of Legend routes **** //

@@ -1,24 +1,15 @@
 import HttpStatusCodes from '../../declarations/major/HttpStatusCodes';
-// import dragonService from '../../services/dragon-service';
-import e, { Request, Response } from 'express';
-// import { IDragonData } from '../../models/dragon/dragon-model';
-import { DragonService, IDragonVersion, ReturnData } from 'bedyriot';
-import { DragonCulture, DragonFileType } from 'bedyriot/build/declaration/enum';
-import { IDragonChampion } from 'bedyriot/build/model/DragonModel';
-// import { ReturnData } from 'src/models/IReturnData';
-// import { IDragonVersion } from 'bedyriot/build/model/DragonModel';
-// import { ReturnData } from 'bedyriot/build/declaration/interface/IReturnData';
-// import { DragonCulture } from '../../declarations/enum';
-// import { IReturnData, ReturnData } from '../../models/IReturnData';
+import { Request, Response } from 'express';
+import { DragonService, DragonCulture, IDragonVersion, IDragonChampion, ReturnData } from '@mbelangerb/riotmodule';
 
 const modulePath = '/dragon';
 
 const routes = {
     HOME: '/',
     GET_VERSION: '/version',
-    GET_CHAMPION_INFO: '/championInfo'
-    // UPDATE: '/update',
-    // TEST: '/test'
+    GET_CHAMPION_INFO: '/championInfo',
+    GET_CHAMPION_INFO_BY_ID_PARAM: '/championInfoById/:championId',
+    GET_CHAMPION_INFO_BY_NAME_PARAM: '/championInfoByName/:championName'
 } as const;
 
 /**
@@ -63,8 +54,10 @@ async function getCurrentVersion(req: Request, response: Response) {
  */
 async function getChampionInfo(req: Request, response: Response) {
     try {
-        const championId: number = (req.query?.championId != null ? Number(req.query?.championId) : -1);
-        const championName: string = (req.query?.championName != null ? req.query?.championName.toString() : "");
+        let championId: number = (req.query?.championId != null ? Number(req.query?.championId) : 
+                                                (req.params?.championId != null ? Number(req.params?.championId) : -1));
+        const championName: string = (req.query?.championName != null ? req.query?.championName.toString() : 
+                                        (req.params?.championName != null ? req.params?.championName.toString() : ""));
 
         const culture: string = (req.query.culture as string);
         let dragonCulture: DragonCulture = DragonCulture.fr_fr;
