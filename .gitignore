@@ -42,3 +42,5 @@
 **/backup/*
 .env_2.exemple
 .npmrc
+/lib/**
+*.tgz
