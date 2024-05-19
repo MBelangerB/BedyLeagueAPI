@@ -19,12 +19,14 @@ module.exports = class LeagueEntry {
         // Paramètre obligatoire
         this.encryptedSummonerId = params.summoner.id;
         this.summonerDTO = params.summoner;
+        this.accountDTO = params.accountInfo;
         this.region = params.region;
         this.url = url;
 
         // Paramètre facultatif
         this.getJson = ((params.json === 1) || (params.json === true));
         this.getAll = ((params.all === 1) || (params.all === true));
+        this.showFullTag = ((params.fulltag === 1) || (params.fulltag === true));
 
         this.showLp = ((params.lp === 1) || (params.lp === true));
         this.fullString = ((params.fullstring === 1) || (params.fullstring === true));
@@ -261,8 +263,11 @@ module.exports = class LeagueEntry {
                 }
 
                 if ((this.fullString && withName) || (this.fullString && (typeof withName !== "undefined" && withName))) {
-                    let CapSummonerName = `${this.summonerDTO.name}`;
-                    CapSummonerName = CapSummonerName.charAt(0).toUpperCase() + CapSummonerName.slice(1);
+                    let CapSummonerName = `${this.accountDTO.gameName}` // `${this.summonerDTO.name}`;
+                    if (this.showFullTag) {
+                        CapSummonerName = `${this.accountDTO.gameName}#${this.accountDTO.tagLine}`
+                    }
+                    // CapSummonerName = CapSummonerName.charAt(0).toUpperCase() + CapSummonerName.slice(1);
 
                     returnValue = `${CapSummonerName} est actuellement ${rankTiers}${leaguePt}${series}${winRate}${gameType}`;
                 } else {
@@ -271,8 +276,11 @@ module.exports = class LeagueEntry {
             }
             else {
                 if ((this.fullString && withName) || (this.fullString && (typeof withName !== "undefined" && withName))) {
-                    let CapSummonerName = `${this.summonerDTO.name}`;
-                    CapSummonerName = CapSummonerName.charAt(0).toUpperCase() + CapSummonerName.slice(1);
+                    let CapSummonerName = `${this.accountDTO.gameName}` // `${this.summonerDTO.name}`;
+                    if (this.showFullTag) {
+                        CapSummonerName = `${this.accountDTO.gameName}#${this.accountDTO.tagLine}`
+                    }
+                    // CapSummonerName = CapSummonerName.charAt(0).toUpperCase() + CapSummonerName.slice(1);
 
                     returnValue = `${CapSummonerName} est actuellement Unranked.`;
                 } else {

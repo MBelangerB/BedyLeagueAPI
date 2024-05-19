@@ -248,6 +248,11 @@ validator.lol = {
                     if (optionalParams && optionalParams.fullstring && (optionalParams.fullstring === "1" || optionalParams.fullstring === 1)) {
                         queryParameters.fullstring = 1;
                     }
+                    queryParameters.fullTag = 0;
+                    if (optionalParams && optionalParams.fulltag && (optionalParams.fulltag === "1" || optionalParams.fulltag === 1)) {
+                        queryParameters.fulltag = 1;
+                    }
+                    
 
                     // If Overlay = mode
                     if (method === this.METHOD_ENUM.OVERLAY) {
