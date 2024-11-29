@@ -4,6 +4,7 @@ const routeInfo = require('../static/info.json');
 
 const validator = {};
 
+// Obosolet after OW2
 validator.ow = {
     errors: [],
 
@@ -86,41 +87,84 @@ validator.ow = {
 validator.lol = {
     errors: [],
 
+    regionData: {
+        // BR1
+        'BR': 'BR1',
+        'BR1': 'BR1',
+        // EUN1
+        'EUN': 'EUN1',
+        'EUN1': 'EUN1',
+        'EUNE': 'EUN1',
+        // EUW1
+        'EUW': 'EUW1',
+        'EUW1': 'EUW1',
+        // JP1
+        'JP': 'JP1',
+        'JP1': 'JP1',
+        // KR
+        'KR': 'KR',
+        // LA1
+        'LA1': 'LA1',
+        'LA2': 'LA2',
+        // NA1
+        'NA': 'NA1',
+        'NA1': 'NA1',
+        // OC1
+        'OC': 'OC1',
+        'OC1': 'OC1',
+        // TR1
+        'TR': 'TR1',
+        'TR1': 'TR1',
+        // RU
+        'RU': 'RU',
+    },
+
+    queueTypeData: {
+        'tft': 'tft',
+        'solo5': 'solo5',
+        'solo': 'solo5',
+        'soloq': 'solo5',
+        'flex': 'flex',
+        'flexq': 'flex',
+    },
+
     METHOD_ENUM: { ROTATE: 0, SUMMONER_INFO: 2, RANK: 3, MASTERIES: 4, LIVEGAME: 5, OVERLAY: 6 },
     OVERLAY_MODE_ENUM: { MINIMALIST: 1, FULL: 2 },
 
     validateParams: function (params, method) {
         this.errors = [];
 
+        // Step 1 : Validate if we have any arguments
+        if (!this.requireArguments(params)) {
+            return this.errors;
+        }
+
+        // Step 2 : Validate if region is specified
+        if (!this.requireRegion(params)) {
+            return this.errors;
+        } else {
+            // if region is specified we convert it
+            this.convertToRealRegion(params);
+        }
+
+        // Now we check specific validation if
         switch (method) {
             case this.METHOD_ENUM.ROTATE:
-                if (this.requireArguments(params)) {
-                    this.validateRegion(params.region);
-
-                    this.convertToRealRegion(params);
-                }
+                // No custom validator
                 break;
 
             case this.METHOD_ENUM.MASTERIES:
             case this.METHOD_ENUM.SUMMONER_INFO:
-                if (this.requireArguments(params)) {
-                    this.validateRegion(params.region);
-                    this.validateSummonerName((params.summonerName || params.summonername));
-
-                    this.convertToRealRegion(params);
-                }
+                this.validateSummonerName(params);
                 break;
 
             case this.METHOD_ENUM.RANK:
             case this.METHOD_ENUM.OVERLAY:
-                if (this.requireArguments(params)) {
-                    this.validateRegion(params.region);
-                    this.validateSummonerName((params.summonerName || params.summonername));
-                    this.validateQueueType(params.queuetype);
-
-                    this.convertToRealRegion(params);
+                this.validateSummonerName(params);
+                if (this.requireQueueType(params)) {
                     this.convertToRealQueueType(params);
                 }
+
                 break;
 
             default:
@@ -130,40 +174,78 @@ validator.lol = {
 
         return this.errors;
     },
+
+    /*
+        json :
+            Default: False 
+            Response is return JSON object
+
+        series : 
+            Default: '✓X-' 
+            Specifie les valeur a utilisé en BO.
+
+        nb  : 
+            Default: 5
+            Method : Masteries
+            
+        lp  : 
+            Default : True
+            Method : Ranked
+            Afficher le nombre de LP dans la chaine de retour
+
+        type
+            Default : True
+            Method : Ranked
+            Afficher le type de queue   
+
+        winrate
+            Default : True
+            Method : Ranked
+            Afficher le WinRate 
+
+        all
+            Default : False
+            Method : Ranked
+            Afficher les informations de toutes les Queues disponible  
+
+        queuetype
+            Default : True
+            Method : Ranked
+            Afficher le nom de la queue dans la réponse
+
+        fq
+            Default : False
+            Method : Ranked
+
+        series
+            Default : '✓X-'
+            Method : Ranked
+            Symbole de remplacement pour Win/Lose/Not play
+
+        fullstring
+            Default : False
+            Method : Ranked
+            Afficher le nom de l'invocateur dans la réponse
+    */
+
     /**
-     * Validation des paramètre pour la call Rotate
-     * TODO: A remove
-     * @param {*} params
+     * Add or fix optional parameters on the query string
+     * @param {*} queryParameters 
+     * @param {*} method 
      */
-    validateRotateParams: function (params) {
-        this.errors = [];
-        this.validateRegion(params?.region);
-        if (this.errors && this.errors.length > 0) {
-            return this.errors;
-        }
-        params.region = this.convertToRealRegion(params);
-        return this.errors;
-    },
-
-
-    fixOptionalParams: function (optionalParams, queryParameters, method) {
+    fixOptionalParams: function (queryParameters, method) {
         // (json=X) -> Retour en JSON
-        queryParameters.json = (queryParameters.json || 0);
-        if (optionalParams && optionalParams.json && (optionalParams.json === '1' || optionalParams.json === 1)) {
-            queryParameters.json = 1;
+        queryParameters.json = (queryParameters?.json == "1" ? 1 : 0);
 
-            queryParameters.series = '✓X-';
-            if (optionalParams && optionalParams.series) {
-                queryParameters.series = optionalParams.series;
-            }
+        // If « IsJson» we fix series parameters is not exists
+        queryParameters.series = (queryParameters?.series || '✓X-')
 
-        } else {
+        // If not JSON return we fix params
+        if (!queryParameters.json) {
+
             switch (method) {
                 case this.METHOD_ENUM.MASTERIES:
-                    queryParameters.nb = 5;
-                    if (optionalParams && optionalParams.nb && optionalParams.nb > 0) {
-                        queryParameters.nb = optionalParams.nb;
-                    }
+                    queryParameters.nb = (queryParameters?.nb || 5);
                     break;
 
                 case this.METHOD_ENUM.SUMMONER_INFO:
@@ -172,70 +254,113 @@ validator.lol = {
 
                 case this.METHOD_ENUM.RANK:
                 case this.METHOD_ENUM.OVERLAY:
-                    queryParameters.lp = 1;
-                    if (optionalParams && optionalParams.lp && (optionalParams.lp === '0' || optionalParams.lp === 0)) {
-                        queryParameters.lp = 0;
-                    }
-                    queryParameters.type = 1;
-                    if (optionalParams && optionalParams.type && (optionalParams.type === '0' || optionalParams.type === 0)) {
-                        queryParameters.type = 0;
-                    }
-                    queryParameters.winrate = 1;
-                    if (optionalParams && optionalParams.winrate && (optionalParams.winrate === '0' || optionalParams.winrate === 0)) {
-                        queryParameters.winrate = 0;
-                    }
-                    queryParameters.all = 0;
-                    if (optionalParams && optionalParams.all && (optionalParams.all === '1' || optionalParams.all === 1)) {
-                        queryParameters.all = 1;
-                    }
-                    queryParameters.queuetype = 'solo5';
-                    if (optionalParams && optionalParams.queuetype && this.isValidQueueType(optionalParams.queuetype)) {
-                        queryParameters.queuetype = optionalParams.queuetype;
-                    }
-                    queryParameters.fq = 1;
-                    if (optionalParams && optionalParams.fq && (optionalParams.fq === '0' || optionalParams.fq === 0)) {
-                        queryParameters.fq = 0;
-                    }
-                    // series
-                    queryParameters.series = '✓X-';
-                    if (optionalParams && optionalParams.series) {
-                        queryParameters.series = optionalParams.series;
-                    }
-                    queryParameters.fullstring = 0;
-                    if (optionalParams && optionalParams.fullstring && (optionalParams.fullstring === '1' || optionalParams.fullstring === 1)) {
-                        queryParameters.fullstring = 1;
+                    const defaultLp = 1;
+                    const defaultShowType = 1;
+                    const defaultShowWinRate = 1;
+                    const defaultShowAllQueue = 0;
+                    const defaultFQ = 1;
+                    const defaultFullString = 0;
+
+                    if (typeof queryParameters.lp === 'undefined' || queryParameters.lp.trim().length === 0) {
+                        queryParameters.lp = defaultLp;
+                    } else {
+                        queryParameters.lp = parseInt(queryParameters.lp);
                     }
 
-                    // If Overlay = mode
-                    if (method === this.METHOD_ENUM.OVERLAY) {
-                        queryParameters.mode = 1;
-                        if (optionalParams && optionalParams.mode && Number.isInteger(parseInt(optionalParams.mode))) {
-                            queryParameters.mode = optionalParams.mode;
-                        }
+                    if (typeof queryParameters.type === 'undefined' || queryParameters.type.trim().length === 0) {
+                        queryParameters.type = defaultShowType;
+                    } else {
+                        queryParameters.type = parseInt(queryParameters.type);
                     }
+
+                    if (typeof queryParameters.winrate === 'undefined' || queryParameters.winrate.trim().length === 0) {
+                        queryParameters.winrate = defaultShowWinRate;
+                    } else {
+                        queryParameters.winrate = parseInt(queryParameters.winrate);
+                    }
+                    
+                    if (typeof queryParameters.all === 'undefined' || queryParameters.all.trim().length === 0) {
+                        queryParameters.all = defaultShowAllQueue;
+                    } else {
+                        queryParameters.all = parseInt(queryParameters.all);
+                    }
+                    
+                    if (typeof queryParameters.fq === 'undefined' || queryParameters.fq.trim().length === 0) {
+                        queryParameters.fq = defaultFQ;
+                    } else {
+                        queryParameters.fq = parseInt(queryParameters.fq);
+                    }
+                    
+                    if (typeof queryParameters.fullstring === 'undefined' || queryParameters.fullstring.trim().length === 0) {
+                        queryParameters.fullstring = defaultFullString;
+                    } else {
+                        queryParameters.fullstring = parseInt(queryParameters.fullstring);
+                    }
+                    
+                    // TO KEEP  
+                    // If Overlay = mode
+                    // if (method === this.METHOD_ENUM.OVERLAY) {
+                    //     queryParameters.mode = 1;
+                    //     if (optionalParams && optionalParams.mode && Number.isInteger(parseInt(optionalParams.mode))) {
+                    //         queryParameters.mode = optionalParams.mode;
+                    //     }
+                    // }
 
                     break;
             }
         }
     },
 
-    requireArguments: function (queryString) {
-        if (Object.keys(queryString).length === 0) {
+    /**
+     * Check if we have any arguments. Don't valide if is required arguments.
+     * @param {Object} params 
+     * @returns {boolean} False if missing
+     */
+    requireArguments: function (params) {
+        if (Object.keys(params).length === 0) {
             this.errors.push('Paramètres marquant (region, summonerName) / missing parameters (region, summonerName)');
             return false;
         }
         return true;
     },
 
-    validateSummonerName: function (summonerName) {
-        // Valider la présence de la region en parametre
+    /**
+     * Check if "region" parameters is missing
+     * @param {Object} params 
+     * @returns {boolean} False if missing
+     */
+    requireRegion: function (params) {
+        const region = params?.region;
+        if (typeof region === 'undefined' || region.trim().length === 0) {
+            this.errors.push('Le paramètre \'region\' est obligatoire.');
+            return false;
+        }
+        return true;
+    },
+
+    /**
+     * Check if "summonerName" parameters is missing
+     * @param {Object} params 
+     * @returns {boolean} False if missing
+     */
+    validateSummonerName: function (params) {
+        const summonerName = (params.summonerName || params.summonername);
         if (typeof summonerName === 'undefined' || summonerName.trim().length === 0) {
             this.errors.push('Le paramètre \'summonerName\' est obligatoire.');
+            return false;
 
         } else if (!this.isValidSummonerName(summonerName)) {
             this.errors.push('La paramètre \'summonerName\' est invalide.');
+            return false;
         }
+
+        return true;
     },
+    /**
+     * Valid summonerName pattern
+     * @param {*} summonerName 
+     * @returns {boolean} False if invalid
+     */
     isValidSummonerName: function (summonerName) {
         // https://developer.riotgames.com/getting-started.html
         //  Validating Calls (^[0-9\\p{L} _\\.]+$)
@@ -257,62 +382,20 @@ validator.lol = {
                     valid = true;
                 }
                 */
-               valid = true;
+                valid = true;
             });
         }
         return valid;
     },
 
-    validateRegion: function (region) {
-        // Valider la présence de la region en parametre
-        if (typeof region === 'undefined' || region.trim().length === 0) {
-            this.errors.push('Le paramètre \'region\' est obligatoire.');
-        }
-    },
-    isValidRegion: function (region) {
-        let valid = false;
-        const availabledRegions = routeInfo.lol.region;
-        if (availabledRegions.includes(region)) {
-            return true;
-        } else {
-            return false;
-        }
-    },
-    convertToRealRegion: function(params) {
+    /**
+     * Convert region to accepted RIOT API value
+     * @param {*} params 
+     * @returns {string} Valid region or null
+     */
+    convertToRealRegion: function (params) {
         const region = params?.region.toUpperCase();
-
-        const regionData = {
-            // BR1
-            'BR': 'BR1',
-            'BR1': 'BR1',
-            // EUN1
-            'EUN': 'EUN1',
-            'EUN1': 'EUN1',
-            'EUNE': 'EUN1',
-            // EUW1
-            'EUW': 'EUW1',
-            'EUW1': 'EUW1',
-            // JP1
-            'JP': 'JP1',
-            'JP1': 'JP1',
-            // KR
-            'KR': 'KR',
-            // LA1
-            'LA1': 'LA1',
-            'LA2': 'LA2',
-            // NA1
-            'NA': 'NA1',
-            'NA1': 'NA1',
-            // OC1
-            'OC': 'OC1',
-            'OC1': 'OC1',
-            // TR1
-            'TR': 'TR1',
-            'TR1': 'TR1',
-            // RU
-            'RU': 'RU',         
-        };
-        const realRegion = regionData[region];
+        const realRegion = this.regionData[region];
 
         if (!this.isValidRegion(realRegion)) {
             this.errors.push('La paramètre \'region\' est invalide.');
@@ -320,15 +403,41 @@ validator.lol = {
         } else {
             params.region = realRegion;
             return realRegion;
-        }     
+        }
     },
 
-    validateQueueType: function (queueType) {
+    /**
+     * Check if specified region is availabled in Bedy API
+     * @param {*} region 
+     * @returns 
+     */
+    isValidRegion: function (region) {
+        const availabledRegions = routeInfo.lol.region;
+        return availabledRegions.includes(region);
+    },
+
+    //#region "Queue Type"
+
+    /**
+     * Check if "queueType" parameters is missing
+     * @param {Object} params 
+     * @returns {boolean} False if missing
+     */
+    requireQueueType: function (params) {
+        const queueType = (params.queuetype || params.queueType);
         // Valider la présence de la region en parametre
         if (typeof queueType !== 'undefined' && queueType.trim().length > 0 && !this.isValidQueueType(queueType)) {
             this.errors.push('La paramètre \'queueType\' est invalide.');
+            return false;
         }
+        return true;
     },
+
+    /**
+     * Check if "queueType" parameters is accepted
+     * @param {*} queueType 
+     * @returns 
+     */
     isValidQueueType(queueType) {
         let valid = false;
         switch (queueType.toLowerCase()) {
@@ -351,26 +460,27 @@ validator.lol = {
         }
         return valid;
     },
-    convertToRealQueueType: function(params) {
-        let queueTypeInfo = params.queuetype;
-        const typeData = {
-            'tft': 'tft',
-            'solo5': 'solo5',
-            'solo': 'solo5',
-            'soloq': 'solo5',
-            'flex': 'flex',
-            'flexq': 'flex',
-        };
 
+    /**
+     * Convert the queueType at RIOT queue type value
+     * @param {*} params 
+     * @returns 
+     */
+    convertToRealQueueType: function (params) {
+        let queueTypeInfo = (params.queuetype || params.queueType);
+
+        // Set SOLOQ on default value if not specified
         if (typeof queueTypeInfo !== 'undefined' && queueTypeInfo.trim().length > 0) {
             queueTypeInfo = queueTypeInfo.toLowerCase();
         } else {
             queueTypeInfo = 'solo5';
         }
 
-        params.queuetype = typeData[queueTypeInfo];
-        return typeData[queueTypeInfo];
+        params.queuetype = this.queueTypeData[queueTypeInfo];
+        return params.queuetype;
     },
+
+    //#endregion
 };
 
 validator.parameters = {
@@ -389,6 +499,10 @@ validator.parameters = {
             this.errors.push('La paramètre \'culture\' est invalide.');
         }
     },
+
+    concatParams: function (params, queryString) {
+        return Object.assign({}, params, queryString);
+    }
 };
 
 validator.api = {
@@ -420,7 +534,7 @@ validator.api = {
         }
         return true;
     },
-    validateRequire: function(token) {
+    validateRequire: function (token) {
         if (typeof token === 'undefined' || token.trim().length === 0) {
             this.errors.push('Le paramètre \'token\' est obligatoire.');
         }

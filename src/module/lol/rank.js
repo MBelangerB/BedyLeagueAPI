@@ -17,8 +17,8 @@ module.exports = class LeagueEntry {
 
     constructor(params, url) {
         // Paramètre obligatoire
-        this.encryptedSummonerId = params.summoner.id;
-        this.summonerDTO = params.summoner;
+        this.encryptedSummonerId = params.dbSummoner.riotId;
+        this.summonerDTO = params.dbSummoner;
         this.region = params.region;
         this.url = url;
 
@@ -43,7 +43,7 @@ module.exports = class LeagueEntry {
     }
 
     getCacheKey() {
-        return `LeagueEntry-${this.summonerDTO.name}-${this.region}-${this.queueType}`;
+        return `LeagueEntry-${this.summonerDTO.riotSummonerName}-${this.region}-${this.queueType}`;
     }
     getUrlBySummonerName(encryptedSummonerId, region, queueType) {
         if (!encryptedSummonerId) { encryptedSummonerId = this.encryptedSummonerId; }
@@ -193,10 +193,10 @@ module.exports = class LeagueEntry {
         // Préparer le retour
         const data = {
             'summoner': {
-                'name': this.summonerDTO.name,
-                'profileIcon': this.summonerDTO.profileIconId,
+                'name': this.summonerDTO.riotSummonerName,
+                'profileIcon': this.summonerDTO.riotProfileIconId,
                 'profileIconUrl': '',
-                'level': this.summonerDTO.summonerLevel,
+                'level': this.summonerDTO.riotSummonerLevel,
             },
             'region': this.region,
             'queues': [],
@@ -262,7 +262,7 @@ module.exports = class LeagueEntry {
                 }
 
                 if ((this.fullString && withName) || (this.fullString && (typeof withName !== 'undefined' && withName))) {
-                    let CapSummonerName = `${this.summonerDTO.name}`;
+                    let CapSummonerName = `${this.summonerDTO.riotSummonerName}`;
                     CapSummonerName = CapSummonerName.charAt(0).toUpperCase() + CapSummonerName.slice(1);
 
                     returnValue = `${CapSummonerName} est actuellement ${rankTiers}${leaguePt}${series}${winRate}${gameType}`;
@@ -270,13 +270,13 @@ module.exports = class LeagueEntry {
                     returnValue = `${rankTiers}${leaguePt}${series}${winRate}${gameType}`;
                 }
             } else if ((this.fullString && withName) || (this.fullString && (typeof withName !== 'undefined' && withName))) {
-                    let CapSummonerName = `${this.summonerDTO.name}`;
-                    CapSummonerName = CapSummonerName.charAt(0).toUpperCase() + CapSummonerName.slice(1);
+                let CapSummonerName = `${this.summonerDTO.riotSummonerName}`;
+                CapSummonerName = CapSummonerName.charAt(0).toUpperCase() + CapSummonerName.slice(1);
 
-                    returnValue = `${CapSummonerName} est actuellement Unranked.`;
-                } else {
-                    returnValue = 'unranked';
-                }
+                returnValue = `${CapSummonerName} est actuellement Unranked.`;
+            } else {
+                returnValue = 'unranked';
+            }
         }
         return returnValue;
     }
