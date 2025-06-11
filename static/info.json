@@ -13,10 +13,35 @@
         "globalRegion": [
             "AMERICAS",
             "ASIA",
-            "EUROPE",
-            "SIA"
+            "EUROPE"
         ],
         "routes": {
+            "account": {
+                "v1": {
+                    "getRiotIdByGameNameAndTagLine": "https://{GlobalRegion}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}"
+                }
+            },
+            "champion": {
+                "v3": {
+                    "championRotation": "https://{region}.api.riotgames.com/lol/platform/v3/champion-rotations"
+                }
+            },
+            "championMastery": {
+                "v4": {
+                    "getChampionMasteriesByPuuid": "https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{encryptedPUUID}",
+                    "getChampionMasteriesByPuuidAndChampionId": "https://{region}.api.riotgames.com//lol/champion-mastery/v4/champion-masteries/by-puuid/{encryptedPUUID}/by-champion/{championId}"
+                }
+            },
+            "league": {
+                "v4": {
+                    "getLeagueEntriesForSummonerByPuuid": "https://{region}.api.riotgames.com/lol/league/v4/entries/by-puuid/{encryptedPUUID}"
+                }
+            },
+            "summoner": {
+                "v4": {
+                    "getByPuuid": "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{encryptedPUUID}"
+                }
+            },
             "v2": {
                 "liveGame": {
                     "getCurrentGameInfoBySummoner": "https://{region}.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/{encryptedSummonerId}"
@@ -26,42 +51,15 @@
                     "getMatchlist": "https://{region}.api.riotgames.com/lol/match/v4/matchlists/by-account/{encryptedAccountId}?endIndex={end}&beginIndex={begin}"
                 }
             },
-            "account": {
-                "v1": {
-                    "getRiotIdByGameNameAndTagLine": "https://{GlobalRegion}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}"
-                }
-            },
-            "league": {
-                "v4": {
-                    "getLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/lol/league/v4/entries/by-summoner/{encryptedSummonerId}"
-                }
-            },
-            "championMastery": {
-                "v4": {
-                    "getChampionMasteriesBySummoner": "https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{encryptedSummonerId}",
-                    "getChampionMasteriesBySummonerAndChampionId": "https://{region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{encryptedSummonerId}/by-champion/{championId}"
-                }
-            },
-            "champion": {
-                "v3": {
-                    "championRotation": "https://{region}.api.riotgames.com/lol/platform/v3/champion-rotations"
-                }
-            },
-            "summoner": {
-                "v4": {
-                    "getBySummonerName": "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}",
-                    "getByPuuid": "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
-                }
-            },
+
             "tft_summoner": {
                 "v1": {
-                    "getBySummonerName": "https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-name/{summonerName}",
-                    "getByPuuid": "https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-puuid/{puuid}"
+                    "getByPuuid": "https://{region}.api.riotgames.com/tft/summoner/v1/summoners/by-puuid/{encryptedPUUID}"
                 }
             },
             "tft_league": {
                 "v1": {
-                    "getTFTLeagueEntriesForSummoner": "https://{region}.api.riotgames.com/tft/league/v1/entries/by-summoner/{encryptedSummonerId}"
+                    "getTFTLeagueEntriesForSummonerByPuuid": "https://{region}.api.riotgames.com/tft/league/v1/by-puuid/{encryptedPUUID}"
                 }
             }
         }

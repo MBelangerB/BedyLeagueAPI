@@ -54,3 +54,18 @@ Permet d'obtenir les 5 champions avec le plus de points de maitrises
 |||||
 |nb|Non|Nombre de données a afficher (5 par défaut)|||
 
+
+```
+exports.topMasteriesAccount = async function (req, res, next) {
+    try {
+        let { query, params } = req;
+
+        // Gestion de la culture
+        validator.parameters.validateCulture(params);
+        
+    } catch (ex) {
+        console.error(ex);
+        res.send(ex);
+    }
+};
+ ```

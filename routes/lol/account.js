@@ -13,7 +13,7 @@ const { SummonerInfo } = require('../../module/lol/summoner');
 const { SummonerMasteries } = require('../../module/lol/summonerMasteries');
 
 /* GET summonerInfo. */
-exports.summonerInfo = async function (req, res, next) {
+exports.accountInfo = async function (req, res, next) {
     try {
         let { query, params } = req;
 
@@ -46,11 +46,15 @@ exports.summonerInfo = async function (req, res, next) {
 
         var summonerInfo = new SummonerInfo(queryParameters);
 
-        var account = await summonerInfo.getAccountInfo().then(async function (result) {
-            if (result.code !== 200) {
-                res.send(`An error occured during getSummonerInfo`)
-            } else {
-                return result.data;
+        await summonerInfo.getSummonerInfo().then(async function (result) {
+            if (result.code === 200) {
+                await summonerInfo.getReturnValue().then(result => {
+                    if (summonerInfo.getJson && summonerInfo.getJson == true) {
+                        res.json(result);
+                    } else {
+                        res.send(result);
+                    }
+                });
             }
             return;
 
@@ -58,26 +62,6 @@ exports.summonerInfo = async function (req, res, next) {
             res.send(`${error.code} - ${error.err.statusMessage}`);
             return;
         });
-
-        if (account) {
-            await summonerInfo.getSummonerInfo().then(async function (result) {
-                if (result.code === 200) {
-                    await summonerInfo.getReturnValue().then(result => {
-                        if (summonerInfo.getJson && summonerInfo.getJson == true) {
-                            res.json(result);
-                        } else {
-                            res.send(result);
-                        }
-                    });
-                }
-                return;
-    
-            }).catch(error => {
-                res.send(`${error.code} - ${error.err.statusMessage}`);
-                return;
-            });
-        }
-        // TODO: No data return
 
     } catch (ex) {
         console.error(ex);
@@ -121,7 +105,7 @@ exports.topMasteries = async function (req, res, next) {
         */
         var summoner = new SummonerInfo(queryParameters);
 
-        var account = await summoner.getAccountInfo().then(async function (result) {
+        await summoner.getSummonerInfo().then(async function (result) {
             if (result.code !== 200) {
                 res.send(`An error occured during getSummonerInfo`)
             } else {
@@ -133,43 +117,27 @@ exports.topMasteries = async function (req, res, next) {
             res.send(`${error.code} - ${error.err.statusMessage}`);
             return;
         });
+        queryParameters.id = summoner.summonerInfo.id;
 
-        if (account) {
-            await summoner.getSummonerInfo().then(async function (result) {
-                if (result.code !== 200) {
-                    res.send(`An error occured during getSummonerInfo`)
-                } else {
-                    return result.data;
-                }
-                return;
-    
-            }).catch(error => {
-                res.send(`${error.code} - ${error.err.statusMessage}`);
-                return;
-            });
-            queryParameters.id = summoner.summonerInfo.id;
-            queryParameters.puuid = summoner.accountInfo.puuid;
-    
-            var masteries = new SummonerMasteries(queryParameters);
-    
-            await masteries.getSummonerMasteries().then(async function (result) {
-                if (result.code === 200) {
-                    await masteries.getReturnValue().then(result => {
-                        if (masteries.getJson && masteries.getJson == true) {
-                            res.json(result);
-                        } else {
-                            res.send(result);
-                        }
-                    });
-                }
-                return;
-    
-            }).catch(error => {
-                res.send(`${error.code} - ${error.err.statusMessage}`);
-                return;
-            });
-        }  
-       // TODO: No data return
+        var masteries = new SummonerMasteries(queryParameters);
+
+        await masteries.getSummonerMasteries().then(async function (result) {
+            if (result.code === 200) {
+                await masteries.getReturnValue().then(result => {
+                    if (masteries.getJson && masteries.getJson == true) {
+                        res.json(result);
+                    } else {
+                        res.send(result);
+                    }
+                });
+            }
+            return;
+
+        }).catch(error => {
+            res.send(`${error.code} - ${error.err.statusMessage}`);
+            return;
+        });
+
 
     } catch (ex) {
         console.error(ex);

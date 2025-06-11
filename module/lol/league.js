@@ -17,6 +17,7 @@ module.exports = class ChampionRotations {
         // Paramètre obligatoire
         this.region = params.region;
         this.url = url;
+
         // Paramètre facultatif
         this.getJson = ((params.json === 1) || (params.json === true));
     }
