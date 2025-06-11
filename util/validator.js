@@ -87,37 +87,53 @@ validator.ow = {
 validator.lol = {
     errors: [],
 
-    METHOD_ENUM: { ROTATE: 1, SUMMONER_INFO: 2, RANK: 3, MASTERIES: 4, LIVEGAME: 5, OVERLAY: 6 },
+    METHOD_ENUM: { ROTATE: 1, SUMMONER_INFO: 2, RANK: 3, MASTERIES: 4, LIVEGAME: 5, ACCOUNT: 6, OVERLAY: 7 },
     OVERLAY_MODE_ENUM: { MINIMALIST: 1, FULL: 2 },
 
-    validateParams: function (params, method) {
+    validateParams: function (params, mainMethod, secondaryMethod) {
         this.errors = [];
-        params.version = 1;
         params.globalRegion = "";
 
-        let summonerName = (params.summonerName || params.summonername);
+        let summonerName = (params.summonerName || params.summonername || undefined);
+        let hasSummonerName = Object.keys(params).some(
+            key => key.toLowerCase() === "summonerName".toLowerCase()
+        );
 
-        if (summonerName.includes("#")) {
-            params.version = 2;
-            let splitValue =  summonerName.split("#")          
-            params.gameName = splitValue[0];
-            params.tagLine = splitValue[1];
+        if (hasSummonerName) {
+            if (typeof summonerName !== "undefined" && summonerName.includes("#")) {
+                let splitValue = summonerName.split("#")
+                params.gameName = splitValue[0];
+                params.tagLine = splitValue[1];
 
-        } else if (summonerName.includes("-")) {
-            params.version = 2;
-
-            let splitValue =  summonerName.split("-")
-            params.gameName = splitValue[0];
-            params.tagLine = splitValue[1];
-
+            } else if (typeof summonerName !== "undefined" && summonerName.includes("-")) {
+                let splitValue = summonerName.split("-")
+                params.gameName = splitValue[0];
+                params.tagLine = splitValue[1];
+            }
+        } else {
+            if (typeof summonerName === "undefined" && params && Array.isArray(params)) {
+                params.gameName = params[Object.keys(params).find(key => key.toLowerCase() === "gameName".toLowerCase())];
+                params.tagLine = params[Object.keys(params).find(key => key.toLowerCase() === "tagLine".toLowerCase())];
+            }
         }
 
-        switch (method) {
-            case this.METHOD_ENUM.ROTATE:
+        // Validate MainMethod
+        switch (mainMethod) {
+            // case this.METHOD_ENUM.ROTATE:
+            //     if (this.requireArguments(params)) {
+            //         this.validateRegion(params.region);
+
+            //         this.convertToRealRegion(params);
+            //     }
+            //     break;
+
+            case this.METHOD_ENUM.ACCOUNT:
                 if (this.requireArguments(params)) {
                     this.validateRegion(params.region);
+                    this.validateGameNameAndTag(params.gameName, params.tagLine);
 
                     this.convertToRealRegion(params);
+                    params.globalRegion = this.getGlobalRegion(params.region);
                 }
                 break;
 
@@ -125,9 +141,10 @@ validator.lol = {
             case this.METHOD_ENUM.SUMMONER_INFO:
                 if (this.requireArguments(params)) {
                     this.validateRegion(params.region);
-                    this.validateSummonerName((params.summonerName || params.summonername));
+                    this.validateGameNameAndTag((params.gameName || params.gamename), (params.tagLine || params.tagline));
 
                     this.convertToRealRegion(params);
+                    params.globalRegion = this.getGlobalRegion(params.region);
                 }
                 break;
 
@@ -136,14 +153,9 @@ validator.lol = {
                 if (this.requireArguments(params)) {
                     this.validateRegion(params.region);
                     this.convertToRealRegion(params);
-                           
-                    if (params.version == 2) {
-                        this.validateGameNameAndTag(params.gameName, params.tagLine);
-                        params.globalRegion = this.getGlobalRegion(params.region);
 
-                    } else {
-                        this.validateSummonerName((params.summonerName || params.summonername));
-                    }
+                    this.validateGameNameAndTag(params.gameName, params.tagLine);
+                    params.globalRegion = this.getGlobalRegion(params.region);
 
                     this.validateQueueType(params.queuetype);
                     this.convertToRealQueueType(params);
@@ -181,7 +193,7 @@ validator.lol = {
                 break;
 
             case "EUN1":
-                globalRegion= "EUROPE" // routeInfo.globalRegion.EUROPE; // "EUROPE"
+                globalRegion = "EUROPE" // routeInfo.globalRegion.EUROPE; // "EUROPE"
                 break;
         }
         return globalRegion;
@@ -252,7 +264,7 @@ validator.lol = {
                     if (optionalParams && optionalParams.fulltag && (optionalParams.fulltag === "1" || optionalParams.fulltag === 1)) {
                         queryParameters.fulltag = 1;
                     }
-                    
+
 
                     // If Overlay = mode
                     if (method === this.METHOD_ENUM.OVERLAY) {
@@ -269,13 +281,35 @@ validator.lol = {
 
     requireArguments: function (queryString) {
         if (Object.keys(queryString).length === 0) {
-            if (this.version == 2) {
-                // this.errors.push("Paramètres marquant (region, gameName, tagLine) / missing parameters (region, gameName, tagLine)");
-                this.errors.push("Paramètres marquant (region, summonerName) / missing parameters (region, summonerName)");
-            } else {
-                this.errors.push("Paramètres marquant (region, summonerName) / missing parameters (region, summonerName)");
-            }
+            this.errors.push("Paramètres marquant (region, gameName, tagLine) / missing parameters (region, gameName, tagLine)");
             return false;
+
+        } else {
+            let hasGameName = Object.keys(queryString).some(
+                key => key.toLowerCase() === "gameName".toLowerCase()
+            );
+            let hastagLine = Object.keys(queryString).some(
+                key => key.toLowerCase() === "tagLine".toLowerCase()
+            );
+            let hasRegion = Object.keys(queryString).some(
+                key => key.toLowerCase() === "region".toLowerCase()
+            );
+
+            let missing = [];
+            if (!hasRegion) {
+                missing.push('region');
+            }
+            if (!hasGameName) {
+                missing.push('gameName');
+            }
+            if (!hastagLine) {
+                missing.push('tagLine');
+            }
+
+            if (missing && missing.length > 0) {
+                this.errors.push(`Paramètres marquant (${missing.join(',')}) / missing parameters (${missing.join(',')})`);
+                return false;
+            }
         }
         return true;
     },

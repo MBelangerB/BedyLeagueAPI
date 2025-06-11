@@ -17,9 +17,8 @@ module.exports = class LeagueEntry {
 
     constructor(params, url) {
         // Paramètre obligatoire
-        this.encryptedSummonerId = params.summoner.id;
-        this.summonerDTO = params.summoner;
         this.accountDTO = params.accountInfo;
+        this.encryptedPuuid = params.accountInfo.puuid;
         this.region = params.region;
         this.url = url;
 
@@ -45,19 +44,19 @@ module.exports = class LeagueEntry {
     }
 
     getCacheKey() {
-        return `LeagueEntry-${this.summonerDTO.id}-${this.region}-${this.queueType}`
+        return `LeagueEntry-${this.accountDTO.puuid}-${this.region}-${this.queueType}`
     }
-    getUrlBySummonerName(encryptedSummonerId, region, queueType) {
-        if (!encryptedSummonerId) { encryptedSummonerId = this.encryptedSummonerId; }
+    getUrlBySummonerName(encryptedPuuid, region, queueType) {
+        if (!encryptedPuuid) { encryptedPuuid = this.encryptedPuuid; }
         if (!region) { region = this.region; }
         if (!queueType) { queueType = this.queueType; }
 
 
-        let baseUrl = routeInfo.lol.routes.league.v4.getLeagueEntriesForSummoner;
+        let baseUrl = routeInfo.lol.routes.league.v4.getLeagueEntriesForSummonerByPuuid;
         if (queueType === "tft") {
-            baseUrl = routeInfo.lol.routes.tft_league.v1.getTFTLeagueEntriesForSummoner;
+            baseUrl = routeInfo.lol.routes.tft_league.v1.getTFTLeagueEntriesForSummonerByPuuid;
         }
-        baseUrl = baseUrl.replace("{encryptedSummonerId}", encryptedSummonerId);
+        baseUrl = baseUrl.replace("{encryptedPUUID}", encryptedPuuid);
         baseUrl = baseUrl.replace("{region}", region);
 
         return baseUrl;
@@ -193,11 +192,9 @@ module.exports = class LeagueEntry {
 
         // Préparer le retour
         var data = {
-            "summoner": {
-                "name": this.summonerDTO.name,
-                "profileIcon": this.summonerDTO.profileIconId,
-                "profileIconUrl": "",
-                "level": this.summonerDTO.summonerLevel
+            "account": {
+                "gameName": this.accountDTO.gameName,
+                "tagLine": this.accountDTO.tagLine,
             },
             "region": this.region,
             "queues": []
@@ -285,7 +282,7 @@ module.exports = class LeagueEntry {
                     returnValue = `${CapSummonerName} est actuellement Unranked.`;
                 } else {
                     returnValue = `unranked`;
-                }           
+                }
             }
         }
         return returnValue;
@@ -314,6 +311,7 @@ module.exports = class LeagueEntry {
     }
 
     async getOverlayData(mode) {
+        // TODO: Remove SummonerName
         var returnValue = {
             mode: parseInt(mode),
             summoner: {
@@ -329,7 +327,7 @@ module.exports = class LeagueEntry {
                     enabled: 0,
                     result: ''
                 }
-            },      
+            },
             rank: {
                 colorRank: "",
                 tier: "",

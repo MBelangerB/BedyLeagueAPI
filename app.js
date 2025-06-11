@@ -27,13 +27,13 @@ var validateCaptchaRouteur = require('./routes/api/validateCaptcha');
 var app = express();
 
 /* Add morgan token */
-logger.token('host', function(req, res) {
+logger.token('host', function (req, res) {
     return req.hostname;
 });
-logger.token('origin', function(req, res) {
+logger.token('origin', function (req, res) {
     return req.header('Origin');
 });
-logger.token('liveBot', function(req, res) {
+logger.token('liveBot', function (req, res) {
     let bot = '';
     try {
         if (req.header('user-agent')?.toLocaleLowerCase().includes('nightbot-url-fetcher')) {
@@ -70,8 +70,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 //TODO: Whitelist in config
 // FrontEnd Address
 var allowlist = ['http://bedyapi.com', 'https://bedyapi.com',
-                'http://localhost:4200', 'http://localhost:8080', 
-                'http://web.bedyapi.com', 'https://web.bedyapi.com'];
+    'http://localhost:4200', 'http://localhost:8080',
+    'http://web.bedyapi.com', 'https://web.bedyapi.com'];
 
 const corsOptions = {
     origin: (origin, callback) => {
@@ -82,7 +82,7 @@ const corsOptions = {
         }
     },
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders:'Content-Type, Authorization, Origin, X-Requested-With, Accept'
+    allowedHeaders: 'Content-Type, Authorization, Origin, X-Requested-With, Accept'
 }
 
 /* Dragon Load on start */
@@ -90,7 +90,7 @@ const dragonLoading = require('./controller/dragonLoading');
 app.use(async function (req, res, next) {
     try {
         let dragLoad = new dragonLoading();
-        await dragLoad.loadChampion('fr_fr').then(async function (result) {       
+        await dragLoad.loadChampion('fr_fr').then(async function (result) {
             if (result) {
                 await dragLoad.convertToLeagueChampion('fr_fr');
             }
@@ -108,15 +108,20 @@ app.use('/dragon', dragonsRouter);
 // League route
 app.get('/:lang?/lol/rotate', leagueRouter.rotate);
 app.get('/:lang?/lol/rotate/:region', leagueRouter.rotate);
+
 app.get('/:lang?/lol/topMasteries', summonerRouter.topMasteries);
 app.get('/:lang?/lol/topMasteries/:region/:summonerName', summonerRouter.topMasteries);
+app.get('/:lang?/lol/topMasteries/:region/:gameName/:tagLine', summonerRouter.topMasteries);
+
 app.get('/:lang?/lol/summonerInfo', summonerRouter.summonerInfo);
 app.get('/:lang?/lol/summonerInfo/:region/:summonerName', summonerRouter.summonerInfo);
+app.get('/:lang?/lol/summonerInfo/:region/:gameName/:tagLine', summonerRouter.summonerInfo);
 
 // V1
 app.get('/:lang?/lol/v1/rank', cors(), rankRouter.rank);
-app.get('/:lang?/lol/v1/rank/:region/:summonerName',cors(), rankRouter.rank);
-app.get('/:lang?/lol/rank/:region/:summonerName',cors(), rankRouter.rank);
+app.get('/:lang?/lol/v1/rank/:region/:summonerName', cors(), rankRouter.rank);
+app.get('/:lang?/lol/rank/:region/:summonerName', cors(), rankRouter.rank);
+app.get('/:lang?/lol/rank/:region/:gameName/:tagLine', cors(), rankRouter.rank);
 
 // v2RankRouter
 // app.get('/:lang?/lol/rank', cors(), v2RankRouter.rank);

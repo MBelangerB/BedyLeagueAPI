@@ -8,7 +8,7 @@ class RequestManager {
         LOL: 'LOL'
     }
 
-    constructor(data) {
+    constructor() {
     }
 
     static getToken(tokenType) {
@@ -17,7 +17,7 @@ class RequestManager {
             case this.TokenType.TFT:
                 token = `${process.env.tftKey}`;
                 break;
- 
+
             case this.TokenType.LOL:
                 token = `${process.env.lolKey}`;
                 break;
@@ -41,7 +41,7 @@ class RequestManager {
             const instance = axios({
                 url: encodeURI(requestUrl),
                 method: 'get',
-                headers: { 'X-Riot-Token': authToken}, // , 'Origin': 'https://bedyapi.com' },
+                headers: { 'X-Riot-Token': authToken }, // , 'Origin': 'https://bedyapi.com' },
                 responseType: 'json',
                 transformResponse: [function (data) {
                     try {

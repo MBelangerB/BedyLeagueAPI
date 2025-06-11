@@ -5,11 +5,14 @@ var routeInfo = require('../../static/info.json');
 const validator = require('../../util/validator');
 const staticFunc = require('../../util/staticFunction');
 
-/* Temp */
-const dragonLoading = require('../../controller/dragonLoading');
+/* Controller */
 const ChampionRotations = require('../../module/lol/league');
 
-/* GET home page. */
+/**
+ *  Verb : Get
+ *  Data : Rotate
+ *  2025-06 : OK
+*/
 exports.rotate = async function (req, res, next) {
     try {
         let { query, params } = req;
@@ -23,7 +26,7 @@ exports.rotate = async function (req, res, next) {
         console.log(`Params: ${JSON.stringify(params)}, Query string : ${queryString}`);
 
         /*
-            On effectue initialement la validation des Params (region/platform/tag).
+            On effectue initialement la validation des Params (region).
             Si on ne retrouve pas les informations on valider ensuite si les paramètres n'ont pas été passé
             en QueryString
         */
@@ -43,14 +46,14 @@ exports.rotate = async function (req, res, next) {
 
         var championRotate = new ChampionRotations(queryParameters, generateUrl(queryParameters));
 
-        await championRotate.getLeagueRotate().then(async function(result) {
+        await championRotate.getLeagueRotate().then(async function (result) {
             if (result.code === 200) {
                 await championRotate.getReturnValue().then(result => {
                     if (championRotate.getJson && championRotate.getJson == true) {
                         res.json(result);
                     } else {
                         res.send(result);
-                    }    
+                    }
                 });
             }
             return;

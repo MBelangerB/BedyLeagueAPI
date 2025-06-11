@@ -57,34 +57,9 @@ exports.rank = async function (req, res, next) {
             Validation de la version
         */
         var toContinue = true;
-        if (queryParameters.version == 2) {
-            await summoner.getAccountInfo().then(async function (result) {
-                if (result.code !== 200) {
-                    console.error(`Return code is invalid in getAccountInfo`);
-                    console.error(`${result.code} - ${result}`);
-                    res.send(`'please try again'`);
-                } else {
-                    return result.data;
-                }
-                return;
-    
-            }).catch(error => {
-                console.error(`An error occured during getAccountInfo`);
-                console.error(`${error.code} - ${error.err.statusMessage}`);
-                toContinue = false;
-                return;
-            });
-            queryParameters.accountInfo = summoner.accountInfo;
-        }
-
-        if (!toContinue) {
-            res.send(``);
-            return;
-        }
-
-        await summoner.getSummonerInfo().then(async function (result) {
+        await summoner.getAccountInfo().then(async function (result) {
             if (result.code !== 200) {
-                console.error(`Return code is invalid in getSummonerInfo`);
+                console.error(`Return code is invalid in getAccountInfo`);
                 console.error(`${result.code} - ${result}`);
                 res.send(`'please try again'`);
             } else {
@@ -93,12 +68,17 @@ exports.rank = async function (req, res, next) {
             return;
 
         }).catch(error => {
-            console.error(`An error occured during getSummonerInfo`);
+            console.error(`An error occured during getAccountInfo`);
             console.error(`${error.code} - ${error.err.statusMessage}`);
-            res.send(``);
+            toContinue = false;
             return;
         });
-        queryParameters.summoner = summoner.summonerInfo;
+        queryParameters.accountInfo = summoner.accountInfo;
+
+        if (!toContinue) {
+            res.send(``);
+            return;
+        }
 
         var leagueEntries = new LeagueEntry(queryParameters);
         await leagueEntries.getLeagueRank().then(async function (result) {
