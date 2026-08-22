@@ -43,4 +43,5 @@
 
 # dotenv environment variables file
 .env
+.env_old
 routes/lol/v2/rank.js

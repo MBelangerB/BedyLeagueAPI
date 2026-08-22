@@ -41,10 +41,13 @@ module.exports = {
         }
 
         getAccountCacheKey() {
+            if (this.queueType == "tft") {
+                return `AccountInfo-${this.gameName}-${this.tagLine}-${this.region}-${this.queueType}-$${this.queueType}`;
+            }
             return `AccountInfo-${this.gameName}-${this.tagLine}-${this.region}`;
         }
         getSummonerCacheKey() {
-            return `SummonerInfo-${this.gameName}-${this.tagLine}-${this.region}`;
+            return `SummonerInfo-${this.gameName}-${this.tagLine}-${this.region}-${this.queueType}`;
         }
 
         // Todo Rename

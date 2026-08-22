@@ -107,7 +107,7 @@ module.exports = class LeagueEntry {
                     // Vérifie si les données sont déjà en cache, si OUI on utilise la cache
                     if (typeof resultData === "undefined") {
                         var data = await self._queryRankData(RequestManager, result);
-                        if (data) {
+                        if (data && data.code !== 0) {
                             rankCache.setCacheValue(key, data);
                             return data;
                         } else {
